@@ -12,89 +12,69 @@ import numpy as np
 from itertools import  cycle
 
 
-GenFsPar = {'name': 'Fs',
-            'tip': 'FsKw.Fs',
-            'type': 'float',
-            'value': 1e4,
-            'step': 100,
-            'siPrefix': True,
-            'suffix': 'Hz'}
+ColConfPars = ({'name': 'Frequency',
+                'value': 100e3,
+                'type': 'float',
+                'siPrefix': True,
+                'suffix': 'Hz'},
+               {'name': 'Amplitude',
+                'value': 1,
+                'type': 'float',
+                'siPrefix': True,
+                'suffix': 'V'},
+               {'name': 'ModFact',
+                'value': 0.1,
+                'type': 'float',},
+               {'name': 'FreqMod',
+                'value': 1e3,
+                'type': 'float',
+                'siPrefix': True,
+                'suffix': 'Hz'},
+               )
 
-GenIntTimePar = {'name': 'IntervalTime',
-                 'tip': 'FsKw.Fs',
-                 'type': 'float',
-                 'value': 0.9,
-                 'step': 0.1,
-                 'siPrefix': True,
-                 'suffix': 's'}
-
-GenIntSamplesPar = {'name': 'nSamples',
-                    'tip': 'Interval samples',
-                    'type': 'int',
-                    'value': 1e4,
-                    }
-
-GenNChannelsPar = {'name': 'nChannels',
-                   'tip': 'Channels Number',
-                   'type': 'int',
-                   'value': 16,
-                   'limits': (1, 128),
-                   'step': 1}
+GeneratorPars = ({'name': 'Fs',
+                  'value': 5e6,
+                  'type': 'float',
+                  'siPrefix': True,
+                  'suffix': 'Hz'},
+                 {'name': 'Rows',
+                  'value': 4,
+                  'type': 'int'},
+                 {'name': 'Cols',
+                  'type': 'group',
+                  'children': ({'name': 'Col1',
+                                'value': True,
+                                'type': 'bool'},
+                               {'name': 'Col1Conf',
+                                'type': 'group',
+                                'children': ColConfPars},
+                               {'name': 'Col2',
+                                'value': True,
+                                'type': 'bool'},
+                               {'name': 'Col2Conf',
+                                'type': 'group',
+                                'children': ColConfPars},
+                               {'name': 'Col3',
+                                'value': True,
+                                'type': 'bool'},
+                               {'name': 'Col3Conf',
+                                'type': 'group',
+                                'children': ColConfPars},
+                               {'name': 'Col4',
+                                'value': True,
+                                'type': 'bool'},
+                               {'name': 'Col4Conf',
+                                'type': 'group',
+                                'children': ColConfPars},
+                                )},
+                    )
 
 
 class DataGeneratorParameters(pTypes.GroupParameter):
     def __init__(self, **kwargs):
         pTypes.GroupParameter.__init__(self, **kwargs)
 
-        self.addChild(GenFsPar)
-        self.addChild(GenIntTimePar)
-        self.addChild(GenIntSamplesPar)
-        self.addChild(GenNChannelsPar)
-        self.Fs = self.param(GenFsPar['name'])
-        self.IntTime = self.param(GenIntTimePar['name'])
-        self.IntSamples = self.param(GenIntSamplesPar['name'])
-        self.NChannels = self.param(GenNChannelsPar['name'])
-
-        self.Fs.sigValueChanged.connect(self.on_Fs_Changed)
-        self.IntTime.sigValueChanged.connect(self.on_Time_Changed)
-        self.IntSamples.sigValueChanged.connect(self.on_Samples_Changed)
-
-    def on_Fs_Changed(self):
-        Fs = self.Fs.value()
-        Ts = 1/Fs
-        nSamps = self.IntSamples.value()
-
-        nTime = nSamps * Ts
-        self.IntTime.setValue(nTime, blockSignal=self.on_Time_Changed)
-
-    def on_Time_Changed(self):
-        Fs = self.Fs.value()
-        Ts = 1/Fs
-        nTime = self.IntTime.value()
-
-        nSamps = int(nTime/Ts)
-        self.IntSamples.setValue(nSamps, blockSignal=self.on_Samples_Changed)
-
-    def on_Samples_Changed(self):
-        Fs = self.Fs.value()
-        Ts = 1/Fs
-        nSamps = self.IntSamples.value()
-
-        nTime = nSamps * Ts
-        self.IntTime.setValue(nTime, blockSignal=self.on_Time_Changed)
-
-    def GetParams(self):
-        GenKwargs = {}
-        for p in self.children():
-            GenKwargs[p.name()] = p.value()
-        return GenKwargs
-
-    def GetChannels(self):
-        Channels = {}
-        for i in range(self.NChannels.value()):
-            chn = 'Ch{0:02}'.format(i)
-            Channels[chn] = i
-        return Channels
+        self.addChildren(GeneratorPars)
 
 
 class DataSamplingThread(Qt.QThread):
