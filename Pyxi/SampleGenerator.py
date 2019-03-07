@@ -37,6 +37,15 @@ GeneratorPars = ({'name': 'Fs',
                   'type': 'float',
                   'siPrefix': True,
                   'suffix': 'Hz'},
+                 {'name': 'SampsInt',
+                  'value': 4,
+                  'type': 'int'},
+                 {'name': 'tInt',
+                  'value': 4,
+                  'type': 'float',
+                  'siPrefix': True,
+                  'suffix': 's'},
+
                  {'name': 'Rows',
                   'value': 4,
                   'type': 'int'},
@@ -77,26 +86,34 @@ class DataGeneratorParameters(pTypes.GroupParameter):
         self.addChildren(GeneratorPars)
 
 
+def GenTestSignal(Freqs, t, Acarrier, Fsig, ModFact, Phase=0):
+    out = np.zeros(t.size)
+    for f in Freqs:        
+        s = Acarrier*(1+ModFact[0]*np.sin(Fsig[0]*2*np.pi*(t)))*np.cos(f*2*np.pi*(t)+Phase)
+        out = out + s
+        if len(Fsig) == 1:
+            continue
+        s = Acarrier*(1+ModFact[1]*np.cos(Fsig[1]*2*np.pi*(t)))*np.sin(f*2*np.pi*(t)+Phase)
+        out = out + s
+    return out
+
+
 class DataSamplingThread(Qt.QThread):
     ''' Data generator '''
     NewSample = Qt.pyqtSignal()
 
-    def __init__(self, Fs, nChannels, nSamples, IntervalTime):
+    def __init__(self):
         super(DataSamplingThread, self).__init__()
 
         self.Timer = Qt.QTimer()
         self.Timer.moveToThread(self)
         self.Timer.timeout.connect(self.GenData)
 
-        self.Fs = float(Fs)
-        self.nChannels = int(nChannels)
-        self.nSamples = int(nSamples)
-        self.OutData = np.ndarray((self.nSamples, self.nChannels))
-        self.IntervalTime = IntervalTime*1000
-        self.Timer.setInterval(self.IntervalTime)
-
-        Pcycle = np.round(self.Fs/10)
+        Fs = 1e6
+        Fsig = 1e3
+        Pcycle = int(Fs/Fsig)
         Fsig = Fs/Pcycle
+
 
         Ts = 1/self.Fs
         tstop = Ts*(Pcycle)

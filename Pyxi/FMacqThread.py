@@ -49,7 +49,7 @@ class SigScope(niscope.Session):
 
 
 class DataAcquisitionThread(Qt.QThread):
-    NewMuxData = Qt.pyqtSignal()
+    NewData = Qt.pyqtSignal()
 
     def __init__(self ):
         print ('TMacqThread, DataAcqThread')
@@ -84,7 +84,6 @@ class DataAcquisitionThread(Qt.QThread):
         self.NifGen.SetArbSignal(Sig0, Sig1)
         self.NifGen2.SetArbSignal(Sig2, Sig3)
         self.NiScope.GetSignal(Fs) 
-        self.PyXI.DataEveryNEvent = self.NewData
 #        self.SampKw = SampKw
 #        self.AvgIndex = AvgIndex
 
@@ -93,27 +92,17 @@ class DataAcquisitionThread(Qt.QThread):
 #        self.MuxBuffer = FileMod.FileBuffer()
 
     def run(self, *args, **kwargs):
-        self.DaqInterface.StartAcquisition(**self.SampKw)
-        print('Run')
-        Inputs = self.NiScope.channels[0,1,2,3].fetch(num_samples=self.BufferSize,
-                                                      relative_to=niscope.FetchRelativeTo.READ_POINTER,
-                                                      offset=0,
-                                                      record_number=0,
-                                                      num_records=1,
-                                                      timeout=2)
-        value = np.ndarray((self.BufferSize, 4))
-        for i, In in enumerate(Inputs):
-            InSig = np.array(In.samples)
+        print('start ')
+        while True:
+            Inputs = self.NiScope.channels[0,1,2,3].fetch(num_samples=self.BufferSize,
+                                                          relative_to=niscope.FetchRelativeTo.READ_POINTER,
+                                                          offset=0,
+                                                          record_number=0,
+                                                          num_records=1,
+                                                          timeout=2)
+            value = np.ndarray((self.BufferSize, 4))
+            for i, In in enumerate(Inputs):
+                InSig = np.array(In.samples)
             value[:, i] = InSig #to do a BufferSize x nChan Matrix
-        loop = Qt.QEventLoop()
-        loop.exec_()
+            NewData.emit()
 
-    def CalcAverage(self, MuxData):
-        print('CalcAverage')
-
-#        Avg = np.mean(LinesSorted[:,-2:,:], axis=1)
-        return np.mean(MuxData[:, self.AvgIndex:, :], axis=1)
-
-    def NewData(self, aiData, MuxData):
-        self.OutData = self.CalcAverage(MuxData)
-        self.NewMuxData.emit()
