@@ -9,7 +9,8 @@ Created on Wed Mar  6 12:25:45 2019
 from PyQt5 import Qt
 import pyqtgraph.parametertree.parameterTypes as pTypes
 import numpy as np
-
+import niscope
+import nifgen
 
 class SigGen(nifgen.Session):
      def SetArbSignal(self, Carr1, Carr2, offset, Fs):
@@ -53,11 +54,39 @@ class DataAcquisitionThread(Qt.QThread):
     def __init__(self ):
         print ('TMacqThread, DataAcqThread')
         super(DataAcquisitionThread, self).__init__()
-
-        self.DaqInterface = CoreMod.ChannelsConfig(**ChannelsConfigKW)
-        self.DaqInterface.DataEveryNEvent = self.NewData
-        self.SampKw = SampKw
-        self.AvgIndex = AvgIndex
+        
+        PXIGen1 = 'PXI1Slot2'
+        PXIGen2 = 'PXI1Slot3'
+        OptionsGen = 'Simulate=0,DriverSetup=Model:5413;Channels:0-1;BoardType:PXIe;MemorySize:268435456'
+    
+        PXIScope = 'PXI1Slot4'
+        OptionsScope = {'simulate': False,
+                        'driver_setup': {'Model': 'NI PXIe-5105',
+                                     'BoardType': 'PXIe',
+                                     },
+                                     }
+        Fs = 2e6
+        Ts = 1/Fs
+        self.BufferSize = int(5e3)
+        t = np.arange(0, Ts*self.BufferSize, Ts)
+        Fsig = np.array([1e3, 5e3, 10e3, 50e3])
+        Sig0=1*np.sin(2*np.pi*Fsig[0]*t)
+        Sig1=1*np.sin(2*np.pi*Fsig[1]*t)
+        Sig2=1*np.sin(2*np.pi*Fsig[2]*t)
+        Sig3=1*np.sin(2*np.pi*Fsig[3]*t)
+        
+        self.NifGen = SigGen(resource_name=PXIGen1, 
+                             options=OptionsGen)
+        self.NifGen2 = SigGen(resource_name=PXIGen2, 
+                             options=OptionsGen)
+        self.NiScope = SigScope(resource_name=PXIScope,
+                                options=OptionsScope)
+        self.NifGen.SetArbSignal(Sig0, Sig1)
+        self.NifGen2.SetArbSignal(Sig2, Sig3)
+        self.NiScope.GetSignal(Fs) 
+        self.PyXI.DataEveryNEvent = self.NewData
+#        self.SampKw = SampKw
+#        self.AvgIndex = AvgIndex
 
 #        self.MuxBuffer = Buffer(BufferSize=BufferSize,
 #                                nChannels=self.DaqInterface.nChannels)
@@ -66,6 +95,16 @@ class DataAcquisitionThread(Qt.QThread):
     def run(self, *args, **kwargs):
         self.DaqInterface.StartAcquisition(**self.SampKw)
         print('Run')
+        Inputs = self.NiScope.channels[0,1,2,3].fetch(num_samples=self.BufferSize,
+                                                      relative_to=niscope.FetchRelativeTo.READ_POINTER,
+                                                      offset=0,
+                                                      record_number=0,
+                                                      num_records=1,
+                                                      timeout=2)
+        value = np.ndarray((self.BufferSize, 4))
+        for i, In in enumerate(Inputs):
+            InSig = np.array(In.samples)
+            value[:, i] = InSig #to do a BufferSize x nChan Matrix
         loop = Qt.QEventLoop()
         loop.exec_()
 

@@ -87,10 +87,10 @@ NifGen_params = ({'name': 'Config_Var',
                                'value': '5413'},
                               {'name': 'Resource Name 0',
                                'type': 'str',
-                               'value': 'PXIGen1'},
+                               'value': 'PXI1Slot2'},
                               {'name': 'Resource Name 1',
                                'type': 'str',
-                               'value': 'PXIGen2'},
+                               'value': 'PXI1Slot3'},
                               )
                 }
                )
