@@ -24,6 +24,7 @@ from scipy.signal import welch
 import Pyxi.FileModule as FileMod
 import Pyxi.SampleGenerator as SampGen
 import Pyxi.PlotModule as PltMod
+import Pyxi.NifGen_Session as NifGen
 import Pyxi.FMacqThread as FMacq
 
 class MainWindow(Qt.QWidget):
