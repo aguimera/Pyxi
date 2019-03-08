@@ -67,6 +67,7 @@ class DataAcquisitionThread(Qt.QThread):
                                      }
         Fs = 2e6
         Ts = 1/Fs
+        offset = 0
         self.BufferSize = int(5e3)
         t = np.arange(0, Ts*self.BufferSize, Ts)
         Fsig = np.array([1e3, 5e3, 10e3, 50e3])
@@ -81,8 +82,8 @@ class DataAcquisitionThread(Qt.QThread):
                              options=OptionsGen)
         self.NiScope = SigScope(resource_name=PXIScope,
                                 options=OptionsScope)
-        self.NifGen.SetArbSignal(Sig0, Sig1)
-        self.NifGen2.SetArbSignal(Sig2, Sig3)
+        self.NifGen.SetArbSignal(Sig0, Sig1, offset, Fs)
+        self.NifGen2.SetArbSignal(Sig2, Sig3, offset, Fs)
         self.NiScope.GetSignal(Fs) 
 #        self.SampKw = SampKw
 #        self.AvgIndex = AvgIndex
