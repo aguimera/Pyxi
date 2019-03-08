@@ -161,12 +161,8 @@ OptionsGen = 'Simulate=0,DriverSetup=Model:5413;Channels:0-1;BoardType:PXIe;Memo
 class SigScope(niscope.Session):
     def GetSignal(self, Fs):
         self.acquisition_type=niscope.AcquisitionType.NORMAL
-#        self.channels[1].configure_vertical(range=2.0, coupling=niscope.VerticalCoupling.DC)
         self.channels[0,1,2,3,4,5,6,7].configure_vertical(range=1, coupling=niscope.VerticalCoupling.AC)
         self.channels[0,1,2,3,4,5,6,7].configure_chan_characteristics(1000000, 600000.0)
-#        self.resolution = 12 #Id not recognized
-#        niscope.Session.resolution 
-#        self.binary_sample_width = 32 #ID not recognized
         self.configure_horizontal_timing(min_sample_rate=Fs,
                                          min_num_pts=int(1e3),
                                          ref_position=50.0,
@@ -183,7 +179,7 @@ class SigScope(niscope.Session):
 class DataAcquisitionThread(Qt.QThread):
     NewData = Qt.pyqtSignal()
 
-    def __init__(self, GenConfig):
+    def __init__(self, Fs, BS, Offset, ch0='In0', ch1='In1', ch2='In2', ch3='In3'):
         print ('TMacqThread, DataAcqThread')
         super(DataAcquisitionThread, self).__init__()
         
@@ -197,11 +193,12 @@ class DataAcquisitionThread(Qt.QThread):
                                      'BoardType': 'PXIe',
                                      },
                                      }
-        Fs = 2e6
+#        Fs = 2e6
+        print(Fs)
         Ts = 1/Fs
-        offset = 0
-        self.BufferSize = int(5e3)
-        t = np.arange(0, Ts*self.BufferSize, Ts)
+#        offset = 0
+        self.BS = int(BS)
+        t = np.arange(0, Ts*self.BS, Ts)
         Fsig = np.array([1e3, 5e3, 10e3, 50e3])
         Sig0=Asig[0]*np.sin(2*np.pi*Fsig[0]*t)
         Sig1=Asig[1]*np.sin(2*np.pi*Fsig[1]*t)
@@ -227,15 +224,15 @@ class DataAcquisitionThread(Qt.QThread):
     def run(self, *args, **kwargs):
         print('start ')
         while True:
-            Inputs = self.NiScope.channels[0,1,2,3].fetch(num_samples=self.BufferSize,
+            Inputs = self.NiScope.channels[0,1,2,3].fetch(num_samples=self.BS,
                                                           relative_to=niscope.FetchRelativeTo.READ_POINTER,
                                                           offset=0,
                                                           record_number=0,
                                                           num_records=1,
                                                           timeout=2)
-            value = np.ndarray((self.BufferSize, 4))
+            value = np.ndarray((self.BS, 4))
             for i, In in enumerate(Inputs):
                 InSig = np.array(In.samples)
             value[:, i] = InSig #to do a BufferSize x nChan Matrix
-            NewData.emit()
+            self.NewData.emit()
 
