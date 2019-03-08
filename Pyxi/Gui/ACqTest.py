@@ -24,7 +24,6 @@ from scipy.signal import welch
 import Pyxi.FileModule as FileMod
 import Pyxi.SampleGenerator as SampGen
 import Pyxi.PlotModule as PltMod
-import Pyxi.NifGen_Session as NifGen
 import Pyxi.FMacqThread as FMacq
 
 class MainWindow(Qt.QWidget):
@@ -38,7 +37,7 @@ class MainWindow(Qt.QWidget):
         self.btnGen = Qt.QPushButton("Start Gen!")
         layout.addWidget(self.btnGen)
 
-        self.NifGenParams = NifGen.NifGeneratorParameters(name='NifGenerator')
+        self.NifGenParams = FMacq.NifGeneratorParameters(name='NifGenerator')
         self.Parameters = Parameter.create(name='params',
                                            type='group',
                                            children=(self.NifGenParams,))
@@ -73,7 +72,8 @@ class MainWindow(Qt.QWidget):
     def on_btnGen(self):
         print('h')
         if self.threadAqc is None:
-            self.threadAqc = FMacq.DataAcquisitionThread()
+            GenKwargs = self.NifGenParams.GetParams()
+            self.threadAqc = FMacq.DataAcquisitionThread(**GenKwargs)
             self.threadAqc.NewData.connect(self.on_NewSample)
             self.threadGen.start()
 

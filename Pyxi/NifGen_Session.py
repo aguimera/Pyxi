@@ -12,7 +12,8 @@ from PyQt5 import Qt
 import numpy as np
 from itertools import  cycle
 
-In_Config = ({'name': 'Frequency',
+ColConfig={}
+CarrierPars = ({'name': 'Frequency',
               'value': 100e3,
               'type': 'float',
               'siPrefix': True,

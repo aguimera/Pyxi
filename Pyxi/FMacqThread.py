@@ -12,7 +12,112 @@ import numpy as np
 import niscope
 import nifgen
 
+ColConfig={}
+CarrierPars = ({'name': 'Frequency',
+              'value': 100e3,
+              'type': 'float',
+              'siPrefix': True,
+              'suffix': 'Hz'},
+             {'name': 'Amplitude',
+              'value': 1,
+              'type': 'float',
+              'siPrefix': True,
+              'suffix': 'V'},
+             {'name': 'Gain',
+              'value': 1,
+              'type': 'float',}
+             )
+
+NifGen_params = ({'name': 'Config_Var',
+                          'type': 'group',
+                          'children':({'name': 'Fs',
+                                       'title': 'Sampling Rate',
+                                       'type': 'float',
+                                       'value': 2e6,
+                                       'step': 100,
+                                       'siPrefix': True,
+                                       'suffix': 'Hz'},
+                                      {'name': 'BS',
+                                       'title': 'Buffer Size',
+                                       'type': 'int',
+                                       'value': int(5e3),
+                                       'limits': (int(1e3), int(2e6)),
+                                       'step': 100,
+                                       'siPrefix': True,
+                                       'suffix': 'Samples'},
+                                      {'name': 'Offset',
+                                       'value': 0.0,
+                                       'type': 'float',
+                                       'siPrefix': True,
+                                       'suffix': 'V'})
+                 },
+                {'name': 'Channels',
+                         'type': 'group',
+                         'children': ({'name': 'Chn0',
+                                       'type': 'bool',
+                                       'value': True},
+                                      {'name': 'In0',
+                                       'type': 'group',
+                                       'children': CarrierPars},
+                                      {'name': 'Chn1',
+                                       'type': 'bool',
+                                       'value': True},
+                                      {'name': 'In1',
+                                       'type': 'group',
+                                       'children': CarrierPars},
+                                      {'name': 'Chn2',
+                                       'type': 'bool',
+                                       'value': True},
+                                      {'name': 'In2',
+                                       'type': 'group',
+                                       'children': CarrierPars},
+                                      {'name': 'Chn3',
+                                       'type': 'bool',
+                                       'value': True},
+                                      {'name': 'In3',
+                                       'type': 'group',
+                                       'children': CarrierPars}
+                                     )
+                 },
+                {'name': 'Info.',
+                 'type': 'group',
+                 'children': ({'name': 'Model',
+                               'type': 'str',
+                               'value': '5413'},
+                              {'name': 'Resource Name 0',
+                               'type': 'str',
+                               'value': 'PXI1Slot2'},
+                              {'name': 'Resource Name 1',
+                               'type': 'str',
+                               'value': 'PXI1Slot3'},
+                              )
+                }
+               )
+
+class NifGeneratorParameters(pTypes.GroupParameter):
+    def __init__(self, **kwargs):
+        pTypes.GroupParameter.__init__(self, **kwargs)
+
+        self.addChildren(NifGen_params)
+
+    def GetParams(self):
+        
+        Generator = {}
+        for var in self.param('Config_Var').children():
+             Generator[var.name()] = var.value()
+
+        for child in self.param('Channels').children():
+             Config = {}
+             if child.name() is 'Chn0' or 'Chn1' or 'Chn2' or 'Chn3':
+                  continue
+             for conf in child.children:
+                  Config[conf.name()] = conf.value()
+             Generator[child.name()] = Config
+
+        return Generator
+   
 class SigGen(nifgen.Session):
+
      def SetArbSignal(self, Carr1, Carr2, offset, Fs):
         self.output_mode = nifgen.OutputMode.ARB
         Handle1 = self.create_waveform(Carr1)
@@ -25,7 +130,34 @@ class SigGen(nifgen.Session):
         self.arb_sample_rate=Fs/2
         self.start_trigger_type = nifgen.StartTriggerType.DIGITAL_EDGE
         self.digital_edge_start_trigger_source = 'PXI_Trig0'
-        self.initiate() #init_adquisitionn   
+        self.initiate() #init_adquisitionn
+        
+PXIGen1 = 'PXI1Slot2'
+PXIGen2 = 'PXI1Slot3'
+OptionsGen = 'Simulate=0,DriverSetup=Model:5413;Channels:0-1;BoardType:PXIe;MemorySize:268435456'
+
+#class Columns():
+##     Columns = {'Col1': {siggen, index}}
+#     def __init_(self, ColumnsConfig):
+##          ColumnsConfig={'Col1': {(resource_name=PXIGen1, 
+##                                   options=OptionsGen),
+##                                   index}
+#          Res = [conf['resource_name'] for col, conf in ColumnsConfig.items()]        
+#          self.Resoures = {}
+#          for re in set(Res):
+#              self.Resoures[re] = SigGen(resource_name=re, 
+#                                         options=OptionsGen)
+#          
+#          for col, conf in ColumnsConfig.items():
+#               self.Columns[col] = {'session': Resoures[conf['resource_name']],
+#                                    'index':conf['index']
+#                                    }
+#     def SetSignal(self, Col='Col0', signalprops):
+#          self.Columns[Col]['session'].SetArbbritary(index=self.Columns[Col]['index'],
+#                                                     signalprops)
+     
+
+        
 class SigScope(niscope.Session):
     def GetSignal(self, Fs):
         self.acquisition_type=niscope.AcquisitionType.NORMAL
@@ -51,7 +183,7 @@ class SigScope(niscope.Session):
 class DataAcquisitionThread(Qt.QThread):
     NewData = Qt.pyqtSignal()
 
-    def __init__(self ):
+    def __init__(self, GenConfig):
         print ('TMacqThread, DataAcqThread')
         super(DataAcquisitionThread, self).__init__()
         
@@ -71,10 +203,10 @@ class DataAcquisitionThread(Qt.QThread):
         self.BufferSize = int(5e3)
         t = np.arange(0, Ts*self.BufferSize, Ts)
         Fsig = np.array([1e3, 5e3, 10e3, 50e3])
-        Sig0=1*np.sin(2*np.pi*Fsig[0]*t)
-        Sig1=1*np.sin(2*np.pi*Fsig[1]*t)
-        Sig2=1*np.sin(2*np.pi*Fsig[2]*t)
-        Sig3=1*np.sin(2*np.pi*Fsig[3]*t)
+        Sig0=Asig[0]*np.sin(2*np.pi*Fsig[0]*t)
+        Sig1=Asig[1]*np.sin(2*np.pi*Fsig[1]*t)
+        Sig2=Asig[2]*np.sin(2*np.pi*Fsig[2]*t)
+        Sig3=Asig[3]*np.sin(2*np.pi*Fsig[3]*t)
         
         self.NifGen = SigGen(resource_name=PXIGen1, 
                              options=OptionsGen)
