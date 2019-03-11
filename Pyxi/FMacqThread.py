@@ -24,39 +24,39 @@ CarrierPars = {'name':'ColX',
                              'type': 'float',
                              'siPrefix': True,
                              'suffix': 'Hz'},
-                 {'name': 'Amplitude',
-              'value': 1,
-              'type': 'float',
-              'siPrefix': True,
-              'suffix': 'V'},
-             {'name': 'Gain',
-              'value': 1,
-              'type': 'float',}
-             )}
-
+                            {'name': 'Amplitude',
+                             'value': 1,
+                             'type': 'float',
+                             'siPrefix': True,
+                             'suffix': 'V'},
+                            {'name': 'Gain',
+                             'value': 1,
+                             'type': 'float',}
+                            )
+               }
 
 NifGenSamplingPars =  {'name': 'SamplingConfig',
-                 'type': 'group',
-                 'children':({'name': 'Fs',
-                                       'title': 'Sampling Rate',
-                                       'type': 'float',
-                                       'value': 2e6,
-                                       'step': 100,
-                                       'siPrefix': True,
-                                       'suffix': 'Hz'},
-                                      {'name': 'BS',
-                                       'title': 'Buffer Size',
-                                       'type': 'int',
-                                       'value': int(5e3),
-                                       'limits': (int(1e3), int(2e6)),
-                                       'step': 100,
-                                       'siPrefix': True,
-                                       'suffix': 'Samples'},
-                                      {'name': 'Offset',
-                                       'value': 0.0,
-                                       'type': 'float',
-                                       'siPrefix': True,
-                                       'suffix': 'V'})
+                       'type': 'group',
+                       'children':({'name': 'Fs',
+                                    'title': 'Sampling Rate',
+                                    'type': 'float',
+                                    'value': 2e6,
+                                    'step': 100,
+                                    'siPrefix': True,
+                                    'suffix': 'Hz'},
+                                   {'name': 'BS',
+                                    'title': 'Buffer Size',
+                                    'type': 'int',
+                                    'value': int(5e3),
+                                    'limits': (int(1e3), int(2e6)),
+                                    'step': 100,
+                                    'siPrefix': True,
+                                    'suffix': 'Samples'},
+                                   {'name': 'Offset',
+                                    'value': 0.0,
+                                    'type': 'float',
+                                    'siPrefix': True,
+                                    'suffix': 'V'})
                  }
                  
 NifGenColumnsPars = {'name': 'ColumnsConfig',
@@ -189,11 +189,13 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         self.addChild(NifGenColumnsPars)
         self.ColConfig = self.param('ColumnsConfig')
         self.addChild(NifGenSamplingPars)
+        self.SamplingConfig = self.param('SamplingConfig')
         
         self.addChild(CarriersConfigPars)
         self.CarrierConfig = self.param('CarriersConfig')
 
         self.ColConfig.sigTreeStateChanged.connect(self.on_ColConf_Changed)
+        self.CarrierConfig.sigTreeStateChanged.connect(self.on_Fsig_Changed)
 #
     def on_ColConf_Changed(self):
         Cols = []
@@ -206,6 +208,40 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             cc = copy.deepcopy(CarrierPars)
             cc['name'] = col
             self.CarrierConfig.addChild(cc)
+
+    def on_Fsig_Changed(self):
+        conf = self.GetParams()
+        Freqs = np.array([])
+        print(conf)
+        for Cols, params in conf.items():
+            if Cols is 'Fs' or Cols is 'BS' or Cols is 'Offset':
+                continue
+            for pars, val in params.items():
+                if pars != 'Frequency':
+                        continue
+                Freqs = np.append(Freqs, val)
+        Fmin = np.min(Freqs)
+        Fs = conf['Fs']
+        Samps = int(Fs/Fmin)
+        print(Samps)
+    
+    def GetParams(self):
+        Generator = {}
+        for Config in self.CarrierConfig.children():
+            Generator[Config.name()] = {}
+            for Values in Config.children():
+                Generator[Config.name()][Values.name()] = Values.value()
+        
+        for Config in self.SamplingConfig.children():
+            Generator[Config.name()] = Config.value()
+        
+        for Config in self.ColConfig.children():
+            for Values in Config.children():
+                if Values.name() == 'Enable':
+                    continue
+                Generator[Config.name()][Values.name()] = Values.value()
+            
+        return Generator
             
 #    def GetParams(self):
 #        
@@ -232,19 +268,19 @@ class SigGen(nifgen.Session):
         self.initiate() #To check
 
 #        
-PXIGen1 = 'PXI1Slot2'
-PXIGen2 = 'PXI1Slot3'
-OptionsGen = 'Simulate=0,DriverSetup=Model:5413;Channels:0-1;BoardType:PXIe;MemorySize:268435456'
+#PXIGen1 = 'PXI1Slot2'
+#PXIGen2 = 'PXI1Slot3'
+#OptionsGen = 'Simulate=0,DriverSetup=Model:5413;Channels:0-1;BoardType:PXIe;MemorySize:268435456'
 
-ColumnsConfig={'Col1': {'resource_name': 'PXI1Slot2',
-                        'index': 0},
-               'Col2': {'resource_name': 'PXI1Slot2',
-                        'index': 1},
-               'Col3': {'resource_name': 'PXI1Slot3',
-                        'index': 0},
-               'Col4': {'resource_name': 'PXI1Slot3',
-                        'index': 1},
-                }
+#ColumnsConfig={'Col1': {'resource_name': 'PXI1Slot2',
+#                        'index': 0},
+#               'Col2': {'resource_name': 'PXI1Slot2',
+#                        'index': 1},
+#               'Col3': {'resource_name': 'PXI1Slot3',
+#                        'index': 0},
+#               'Col4': {'resource_name': 'PXI1Slot3',
+#                        'index': 1},
+#                }
 
 
 class Columns():
@@ -266,11 +302,11 @@ class Columns():
             SesGen.arb_sample_rate=Fs/2
             SesGen.start_trigger_type = nifgen.StartTriggerType.DIGITAL_EDGE
             SesGen.digital_edge_start_trigger_source = 'PXI_Trig0'
-            self.Resoures[re] = SesGen
+            self.Resources[re] = SesGen
 
 # Init columns indexing dictionaries
         for col, conf in ColumnsConfig.items():
-            self.Columns[col] = {'session': Resoures[conf['resource_name']],
+            self.Columns[col] = {'session': self.Resources[conf['resource_name']],
                                  'index':conf['index']
                                  }
 #    
