@@ -37,7 +37,7 @@ class MainWindow(Qt.QWidget):
         self.btnGen = Qt.QPushButton("Start Gen!")
         layout.addWidget(self.btnGen)
 
-        self.NifGenParams = FMacq.NifGeneratorParameters(name='NifGenerator')
+        self.NifGenParams = FMacq.NifGeneratorParameters(name='NifGenerator')        
         self.Parameters = Parameter.create(name='params',
                                            type='group',
                                            children=(self.NifGenParams,))
@@ -73,8 +73,8 @@ class MainWindow(Qt.QWidget):
         print('h')
         if self.threadAqc is None:
             GenKwargs = self.NifGenParams.GetParams()
-#            print(GenKwargs)            
-#            self.threadAqc = FMacq.DataAcquisitionThread(**GenKwargs)
+            print(GenKwargs)            
+            self.threadAqc = FMacq.DataAcquisitionThread(**GenKwargs)
 #            self.threadAqc.NewData.connect(self.on_NewSample)
 #            self.threadGen.start()
 #

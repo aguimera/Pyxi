@@ -193,7 +193,6 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         
         self.addChild(CarriersConfigPars)
         self.CarrierConfig = self.param('CarriersConfig')
-
         self.ColConfig.sigTreeStateChanged.connect(self.on_ColConf_Changed)
         self.CarrierConfig.sigTreeStateChanged.connect(self.on_Fsig_Changed)
 #
@@ -210,27 +209,41 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             self.CarrierConfig.addChild(cc)
 
     def on_Fsig_Changed(self):
-        conf = self.GetParams()
-        Freqs = np.array([])
-        print(conf)
-        for Cols, params in conf.items():
-            if Cols is 'Fs' or Cols is 'BS' or Cols is 'Offset':
-                continue
-            for pars, val in params.items():
-                if pars != 'Frequency':
-                        continue
-                Freqs = np.append(Freqs, val)
+        Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
         Fmin = np.min(Freqs)
-        Fs = conf['Fs']
-        Samps = int(Fs/Fmin)
-        print(Samps)
+        
+        Fs = self.SamplingConfig.param('Fs').value()
+        Samps = round(Fs/Fmin)
+        
+        for p in self.CarrierConfig.children():
+            Fc = p.param('Frequency').value()
+            nc = round((Samps*Fc)/Fs)
+            Fnew =  (nc*Fs)/Samps
+            p.param('Frequency').setValue(Fnew)
+#        
+#        conf = self.GetParams()
+#        Freqs = np.array([])
+#        print(conf)
+#        for Cols, params in conf.items():
+#            if Cols is 'Fs' or Cols is 'BS' or Cols is 'Offset':
+#                continue
+#            for pars, val in params.items():
+#                if pars != 'Frequency':
+#                        continue
+#                Freqs = np.append(Freqs, val)
+#        Fmin = np.min(Freqs)
+#        Fs = conf['Fs']
+#        Samps = int(Fs/Fmin)
+#        print(Samps)
+        
     
     def GetParams(self):
-        Generator = {}
+        Generator = {'ColumnsConfig':{},
+                     }
         for Config in self.CarrierConfig.children():
-            Generator[Config.name()] = {}
+            Generator['ColumnsConfig'][Config.name()] = {}
             for Values in Config.children():
-                Generator[Config.name()][Values.name()] = Values.value()
+                Generator['ColumnsConfig'][Config.name()][Values.name()] = Values.value()
         
         for Config in self.SamplingConfig.children():
             Generator[Config.name()] = Config.value()
@@ -239,7 +252,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             for Values in Config.children():
                 if Values.name() == 'Enable':
                     continue
-                Generator[Config.name()][Values.name()] = Values.value()
+                Generator['ColumnsConfig'][Config.name()][Values.name()] = Values.value()
             
         return Generator
             
@@ -270,7 +283,7 @@ class SigGen(nifgen.Session):
 #        
 #PXIGen1 = 'PXI1Slot2'
 #PXIGen2 = 'PXI1Slot3'
-#OptionsGen = 'Simulate=0,DriverSetup=Model:5413;Channels:0-1;BoardType:PXIe;MemorySize:268435456'
+OptionsGen = 'Simulate=0,DriverSetup=Model:5413;Channels:0-1;BoardType:PXIe;MemorySize:268435456'
 
 #ColumnsConfig={'Col1': {'resource_name': 'PXI1Slot2',
 #                        'index': 0},
@@ -287,12 +300,12 @@ class Columns():
     Columns = {} # {'Col1': {'session': sessionnifgen, 
 #                             'index': int}}
     Resoures = {} # 'PXI1Slot2': sessionnifgen
-    def __init_(self, ColumnsConfig, Fs, BufferSize):
+    def __init__(self, ColumnsConfig, Fs, BufferSize):
         self.Fs = Fs
         self.BufferSize= BufferSize
         
 # Init resources and store sessions
-        Res = [conf['resource_name'] for col, conf in ColumnsConfig.items()]                
+        Res = [conf['Resource'] for col, conf in ColumnsConfig.items()]                
         for re in set(Res):
             SesGen = SigGen(resource_name=re, options=OptionsGen)
             SesGen.output_mode = nifgen.OutputMode.ARB
@@ -306,8 +319,8 @@ class Columns():
 
 # Init columns indexing dictionaries
         for col, conf in ColumnsConfig.items():
-            self.Columns[col] = {'session': self.Resources[conf['resource_name']],
-                                 'index':conf['index']
+            self.Columns[col] = {'session': self.Resources[conf['Resource']],
+                                 'index':conf['Index']
                                  }
 #    
 #    def SetSignal(self, Col='Col0', Freq, Amp, gain, offset):
@@ -346,10 +359,12 @@ class SigScope(niscope.Session):
 class DataAcquisitionThread(Qt.QThread):
     NewData = Qt.pyqtSignal()
 
-    def __init__(self, Fs, BS, Offset, ch0='In0', ch1='In1', ch2='In2', ch3='In3'):
+    def __init__(self, ColumnsConfig, Fs, BS, Offset):
         print ('TMacqThread, DataAcqThread')
         super(DataAcquisitionThread, self).__init__()
         
+        print(ColumnsConfig)
+        ColSettings = Columns(ColumnsConfig, Fs, BS)
         PXIGen1 = 'PXI1Slot2'
         PXIGen2 = 'PXI1Slot3'
         OptionsGen = 'Simulate=0,DriverSetup=Model:5413;Channels:0-1;BoardType:PXIe;MemorySize:268435456'
@@ -364,8 +379,7 @@ class DataAcquisitionThread(Qt.QThread):
         print(Fs)
         Ts = 1/Fs
 #        offset = 0
-        self.BS = int(BS)
-        t = np.arange(0, Ts*self.BS, Ts)
+        t = np.arange(0, Ts*BS, Ts)
         Fsig = np.array([1e3, 5e3, 10e3, 50e3])
         Sig0=Asig[0]*np.sin(2*np.pi*Fsig[0]*t)
         Sig1=Asig[1]*np.sin(2*np.pi*Fsig[1]*t)
