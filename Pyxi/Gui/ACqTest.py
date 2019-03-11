@@ -73,12 +73,13 @@ class MainWindow(Qt.QWidget):
         print('h')
         if self.threadAqc is None:
             GenKwargs = self.NifGenParams.GetParams()
-            self.threadAqc = FMacq.DataAcquisitionThread(**GenKwargs)
-            self.threadAqc.NewData.connect(self.on_NewSample)
-            self.threadGen.start()
-
-            self.btnGen.setText("Stop Gen")
-            self.OldTime = time.time()
+            print(GenKwargs)            
+#            self.threadAqc = FMacq.DataAcquisitionThread(**GenKwargs)
+#            self.threadAqc.NewData.connect(self.on_NewSample)
+#            self.threadGen.start()
+#
+#            self.btnGen.setText("Stop Gen")
+#            self.OldTime = time.time()
         else:
             self.threadAqc.NewData.disconnect()
             self.threadAqc.terminate()
