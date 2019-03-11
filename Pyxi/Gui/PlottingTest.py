@@ -38,6 +38,11 @@ class MainWindow(Qt.QWidget):
         self.btnGen = Qt.QPushButton("Start Gen!")
         layout.addWidget(self.btnGen)
 
+        self.SaveStateParams = FileMod.SaveSateParameters(self, name='State')        
+        self.Parameters = Parameter.create(name='params',
+                                           type='group',
+                                           children=(self.SaveStateParams,))
+
         self.DataGenParams = SampGen.DataGeneratorParameters(name='Data Generator')
         self.DataGenParams.param('Col0').param('Freq').setValue(75e3)
         self.DataGenParams.param('Col1').param('Freq').setValue(100e3)
@@ -48,9 +53,8 @@ class MainWindow(Qt.QWidget):
         self.DataGenParams.param('Col1').param('Fsig').setValue(800)
         self.DataGenParams.param('Col2').param('Fsig').setValue(250)
         self.DataGenParams.param('Col3').param('Fsig').setValue(10)
-        self.Parameters = Parameter.create(name='params',
-                                           type='group',
-                                           children=(self.DataGenParams,))
+        
+        self.Parameters.addChild(self.DataGenParams)
 
         self.FileParameters = FileMod.SaveFileParameters(QTparent=self,
                                                          name='Record File')

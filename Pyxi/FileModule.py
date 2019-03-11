@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import QFileDialog
 import h5py
 from PyQt5 import Qt
 import os
-
+import pickle
 
 SaveFilePars = [{'name': 'Save File',
                  'type': 'action'},
@@ -104,3 +104,57 @@ class DataSavingThread(Qt.QThread):
         if self.NewData is not None:
             print('Error Saving !!!!')
         self.NewData = NewData
+
+SaveStatePars = [{'name': 'Save State',
+                  'type': 'action'},
+                 {'name': 'Load State',
+                  'type': 'action'},
+                ]
+
+
+class SaveSateParameters(pTypes.GroupParameter):
+    def __init__(self, QTparent, **kwargs):
+        pTypes.GroupParameter.__init__(self, **kwargs)
+
+        self.QTparent = QTparent
+        self.addChildren(SaveStatePars)
+        self.param('Save State').sigActivated.connect(self.on_Save)
+        self.param('Load State').sigActivated.connect(self.on_Load)
+
+    def _GetParent(self):
+        parent = self.parent()
+        while parent is None:
+            parent = self.parent()
+        return parent
+
+    def on_Load(self):
+        parent = self._GetParent()        
+        
+        RecordFile, _ = QFileDialog.getOpenFileName(self.QTparent,
+                                                    "state File",
+                                                    "",
+                                                   )
+        
+        if RecordFile:
+            with open(RecordFile, 'rb') as file:
+                parent.restoreState(pickle.loads(file.read()))
+
+    def on_Save(self):
+        parent = self._GetParent()        
+        
+        RecordFile, _ = QFileDialog.getSaveFileName(self.QTparent,
+                                                    "state File",
+                                                    "",
+                                                   )
+        
+        if RecordFile:
+            with open(RecordFile, 'wb') as file:
+                file.write(pickle.dumps(parent.saveState()))
+
+
+
+
+
+
+
+
