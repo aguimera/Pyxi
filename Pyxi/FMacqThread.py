@@ -44,11 +44,11 @@ NifGenSamplingPars =  {'name': 'SamplingConfig',
                                     'step': 100,
                                     'siPrefix': True,
                                     'suffix': 'Hz'},
-                                   {'name': 'BS',
-                                    'title': 'Buffer Size',
+                                   {'name': 'GS',
+                                    'title': 'Generation Size',
                                     'type': 'int',
                                     'value': int(5e3),
-                                    'limits': (int(1e3), int(2e6)),
+                                    'limits': (int(0), int(2e6)),
                                     'step': 100,
                                     'siPrefix': True,
                                     'suffix': 'Samples'},
@@ -184,7 +184,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         self.addChild(NifGenSamplingPars)
         self.SamplingConfig = self.param('SamplingConfig')
         self.Fs = self.SamplingConfig.param('Fs')
-        self.BS = self.SamplingConfig.param('BS')
+        self.GS = self.SamplingConfig.param('GS')
         
         self.addChild(CarriersConfigPars)
         self.CarrierConfig = self.param('CarriersConfig')
@@ -193,6 +193,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         self.CarrierConfig.sigTreeStateChanged.connect(self.on_Fsig_Changed)
     
         self.Fs.sigValueChanged.connect(self.on_Fs_Changed)
+        self.GS.sigValueChanged.connect(self.on_GS_Changed)
 #
     def on_ColConf_Changed(self):
         Cols = []
@@ -210,10 +211,9 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
         Fmin = np.min(Freqs)
         
-        Fs = self.SamplingConfig.param('Fs').value()
+        Fs = self.Fs.value()
         Samps = round(Fs/Fmin)
-        self.BS.setValue(Samps)
-        
+        self.GS.setValue(Samps)
         for p in self.CarrierConfig.children():
             Fc = p.param('Frequency').value()
             nc = round((Samps*Fc)/Fs)
@@ -224,17 +224,21 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
         Fmin = np.min(Freqs)
         
-        Fs = self.SamplingConfig.param('Fs').value()
+        Fs = self.Fs.value()
         Samps = round(Fs/Fmin)
-        print(Samps)
         Fs = Samps*Fmin
-        print(Fs)
         self.Fs.setValue(Fs)
         self.on_Fsig_Changed()
         
-#    def on_BS_Changed(self):
+    def on_GS_Changed(self):
+        Samps = self.GS.value()
+        Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
+        Fmin = np.min(Freqs)
         
-#    def on_offset_Changed(self):
+        Fs = Samps*Fmin
+        self.Fs.setValue(Fs)
+        self.on_Fsig_Changed()
+        
     def GetParams(self):
         Generator = {'ColumnsConfig':{},
                      }
@@ -344,12 +348,12 @@ class SigScope(niscope.Session):
 class DataAcquisitionThread(Qt.QThread):
     NewData = Qt.pyqtSignal()
 
-    def __init__(self, ColumnsConfig, Fs, BS, Offset):
+    def __init__(self, ColumnsConfig, Fs, GS, Offset):
         print ('TMacqThread, DataAcqThread')
         super(DataAcquisitionThread, self).__init__()
         
         print(ColumnsConfig)
-        ColSettings = Columns(ColumnsConfig, Fs, BS)
+        ColSettings = Columns(ColumnsConfig, Fs, GS)
         
         Sig = {}
         for col, pars in ColumnsConfig.items():
@@ -380,13 +384,13 @@ class DataAcquisitionThread(Qt.QThread):
     def run(self, *args, **kwargs):
         print('start ')
         while True:
-            Inputs = self.NiScope.channels[0,1,2,3].fetch(num_samples=self.BS,
+            Inputs = self.NiScope.channels[0,1,2,3].fetch(num_samples=self.GS,
                                                           relative_to=niscope.FetchRelativeTo.READ_POINTER,
                                                           offset=0,
                                                           record_number=0,
                                                           num_records=1,
                                                           timeout=2)
-            value = np.ndarray((self.BS, 4))
+            value = np.ndarray((self.GS, 4))
             for i, In in enumerate(Inputs):
                 InSig = np.array(In.samples)
             value[:, i] = InSig #to do a BufferSize x nChan Matrix
