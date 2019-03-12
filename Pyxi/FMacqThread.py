@@ -184,13 +184,15 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         self.addChild(NifGenSamplingPars)
         self.SamplingConfig = self.param('SamplingConfig')
         self.Fs = self.SamplingConfig.param('Fs')
-        self.Fs.sigValueChanged.connect(self.on_Fs_Changed)
+        self.BS = self.SamplingConfig.param('BS')
         
         self.addChild(CarriersConfigPars)
         self.CarrierConfig = self.param('CarriersConfig')
         self.ColConfig.sigTreeStateChanged.connect(self.on_ColConf_Changed)
+        self.on_ColConf_Changed()
         self.CarrierConfig.sigTreeStateChanged.connect(self.on_Fsig_Changed)
     
+        self.Fs.sigValueChanged.connect(self.on_Fs_Changed)
 #
     def on_ColConf_Changed(self):
         Cols = []
@@ -210,6 +212,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         
         Fs = self.SamplingConfig.param('Fs').value()
         Samps = round(Fs/Fmin)
+        self.BS.setValue(Samps)
         
         for p in self.CarrierConfig.children():
             Fc = p.param('Frequency').value()
@@ -218,9 +221,20 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             p.param('Frequency').setValue(Fnew)
         
     def on_Fs_Changed(self):
+        Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
+        Fmin = np.min(Freqs)
+        
+        Fs = self.SamplingConfig.param('Fs').value()
         Samps = round(Fs/Fmin)
+        print(Samps)
+        Fs = Samps*Fmin
+        print(Fs)
+        self.Fs.setValue(Fs)
+        self.on_Fsig_Changed()
+        
 #    def on_BS_Changed(self):
         
+#    def on_offset_Changed(self):
     def GetParams(self):
         Generator = {'ColumnsConfig':{},
                      }
@@ -249,8 +263,8 @@ class SigGen(nifgen.Session):
         self.channels[index].configure_arb_waveform(Handle,
                                                     gain=gain,
                                                     offset=offset)
-        self.initiate() #To check
-
+        if index == 1:
+            self.initiate()
 #ColumnsConfig={'Col1': {'resource_name': 'PXI1Slot2',
 #                        'index': 0},
 #               'Col2': {'resource_name': 'PXI1Slot2',
@@ -265,7 +279,7 @@ OptionsGen = 'Simulate=0,DriverSetup=Model:5413;Channels:0-1;BoardType:PXIe;Memo
 class Columns():
     Columns = {} # {'Col1': {'session': sessionnifgen, 
 #                             'index': int}}
-    Resoures = {} # 'PXI1Slot2': sessionnifgen
+    Resources = {} # 'PXI1Slot2': sessionnifgen
     def __init__(self, ColumnsConfig, Fs, BufferSize):
         self.Fs = Fs
         self.BufferSize= BufferSize
@@ -289,20 +303,19 @@ class Columns():
                                  'index':conf['Index']
                                  }
 
-    def SetSignal(self, SigsPars):
+    def SetSignal(self, SigsPars, Offset):
         
-        self.Ts = 1/self.Fsf
-        t = np.arange(0, self.Ts*self.BS, self.Ts)
-        self.Offset = SigsPars['Offset']
+        self.Ts = 1/self.Fs
+        t = np.arange(0, self.Ts*self.BufferSize, self.Ts)
      
         for Col,pars in SigsPars.items():
             if Col == 'Offset':
                 continue
     
             signal = pars['Amplitude']*np.sin(2*np.pi*pars['Frequency']*t)
-            self.Columns[Col]['session'].SetArbbritary(index=self.Columns[Col]['index'],
+            self.Columns[Col]['session'].SetArbSignal(index=self.Columns[Col]['index'],
                                                        Signal=signal, gain=pars['Gain'], 
-                                                       offset=self.Offset)
+                                                       offset=Offset)
 ##############################SCOPE##########################################
 #class NiScopeParameters(pTypes.GroupParameter):
 #    def __init__(self, **kwargs):
@@ -341,20 +354,14 @@ class DataAcquisitionThread(Qt.QThread):
         Sig = {}
         for col, pars in ColumnsConfig.items():
             PropSig = {}
-            if col == 'Fs' or col == 'BS':
-                continue
-            if col == 'Offset':
-                Sig[str(col)] = pars
-                continue
-            
             for p, val in pars.items():
                 if p == 'Resource' or p == 'Index':
                     continue
                 PropSig[str(p)] = val
                 
             Sig[str(col)]= PropSig
-            
-        ColSettings.SetSignal(Sig)
+        
+        ColSettings.SetSignal(Sig, Offset)
 #        Sig0=Asig[0]*np.sin(2*np.pi*Fsig[0]*t)
 #        Sig1=Asig[1]*np.sin(2*np.pi*Fsig[1]*t)
 #        Sig2=Asig[2]*np.sin(2*np.pi*Fsig[2]*t)
@@ -368,7 +375,7 @@ class DataAcquisitionThread(Qt.QThread):
 #                                options=OptionsScope)
 #        self.NifGen.SetArbSignal(Sig0, Sig1, offset, Fs)
 #        self.NifGen2.SetArbSignal(Sig2, Sig3, offset, Fs)
-        self.NiScope.GetSignal(Fs) 
+#        self.NiScope.GetSignal(Fs) 
 
     def run(self, *args, **kwargs):
         print('start ')
