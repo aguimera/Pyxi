@@ -220,23 +220,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             nc = round((Samps*Fc)/Fs)
             Fnew =  (nc*Fs)/Samps
             p.param('Frequency').setValue(Fnew)
-#        
-#        conf = self.GetParams()
-#        Freqs = np.array([])
-#        print(conf)
-#        for Cols, params in conf.items():
-#            if Cols is 'Fs' or Cols is 'BS' or Cols is 'Offset':
-#                continue
-#            for pars, val in params.items():
-#                if pars != 'Frequency':
-#                        continue
-#                Freqs = np.append(Freqs, val)
-#        Fmin = np.min(Freqs)
-#        Fs = conf['Fs']
-#        Samps = int(Fs/Fmin)
-#        print(Samps)
         
-    
     def GetParams(self):
         Generator = {'ColumnsConfig':{},
                      }
@@ -255,22 +239,6 @@ class NifGeneratorParameters(pTypes.GroupParameter):
                 Generator['ColumnsConfig'][Config.name()][Values.name()] = Values.value()
             
         return Generator
-            
-#    def GetParams(self):
-#        
-#        Generator = {}
-#        for var in self.param('Config_Var').children():
-#             Generator[var.name()] = var.value()
-#
-#        for child in self.param('Channels').children():
-#             Config = {}
-#             if child.name() is 'Chn0' or 'Chn1' or 'Chn2' or 'Chn3':
-#                  continue
-#             for conf in child.children:
-#                  Config[conf.name()] = conf.value()
-#             Generator[child.name()] = Config
-#
-#        return Generator
    
 class SigGen(nifgen.Session):    
     def SetArbSignal(self, Signal, index, gain, offset):
@@ -322,6 +290,20 @@ class Columns():
             self.Columns[col] = {'session': self.Resources[conf['Resource']],
                                  'index':conf['Index']
                                  }
+
+    def SetSignal(self, SigsPars):
+        
+        self.Ts = 1/self.Fsf
+        t = np.arange(0, self.Ts*self.BS, self.Ts)
+        self.Offset = SigsPars['Offset']
+     
+        for Col,pars in SigsPars.items():
+            if Col == 'Offset':
+                continue
+    
+            signal = pars['Amplitude']*np.sin(2*np.pi*pars['Frequency']*t)
+            self.Columns[Col]['session'].SetArbbritary(self.Columns[Col]['index'],signal, pars['Gain'], self.Offset)
+    
 #    
 #    def SetSignal(self, Col='Col0', Freq, Amp, gain, offset):
 #        Fr
@@ -335,9 +317,7 @@ class Columns():
 #        self.Columns[Col]['session'].SetArbbritary(index=self.Columns[Col]['index'],
 #                                                    signal, gain, offset)
 #          
-         
-
-        
+               
 class SigScope(niscope.Session):
     def GetSignal(self, Fs):
         self.acquisition_type=niscope.AcquisitionType.NORMAL
@@ -365,35 +345,37 @@ class DataAcquisitionThread(Qt.QThread):
         
         print(ColumnsConfig)
         ColSettings = Columns(ColumnsConfig, Fs, BS)
-        PXIGen1 = 'PXI1Slot2'
-        PXIGen2 = 'PXI1Slot3'
-        OptionsGen = 'Simulate=0,DriverSetup=Model:5413;Channels:0-1;BoardType:PXIe;MemorySize:268435456'
-    
-        PXIScope = 'PXI1Slot4'
-        OptionsScope = {'simulate': False,
-                        'driver_setup': {'Model': 'NI PXIe-5105',
-                                     'BoardType': 'PXIe',
-                                     },
-                                     }
-#        Fs = 2e6
-        print(Fs)
-        Ts = 1/Fs
-#        offset = 0
-        t = np.arange(0, Ts*BS, Ts)
-        Fsig = np.array([1e3, 5e3, 10e3, 50e3])
-        Sig0=Asig[0]*np.sin(2*np.pi*Fsig[0]*t)
-        Sig1=Asig[1]*np.sin(2*np.pi*Fsig[1]*t)
-        Sig2=Asig[2]*np.sin(2*np.pi*Fsig[2]*t)
-        Sig3=Asig[3]*np.sin(2*np.pi*Fsig[3]*t)
         
-        self.NifGen = SigGen(resource_name=PXIGen1, 
-                             options=OptionsGen)
-        self.NifGen2 = SigGen(resource_name=PXIGen2, 
-                             options=OptionsGen)
-        self.NiScope = SigScope(resource_name=PXIScope,
-                                options=OptionsScope)
-        self.NifGen.SetArbSignal(Sig0, Sig1, offset, Fs)
-        self.NifGen2.SetArbSignal(Sig2, Sig3, offset, Fs)
+        Sig = {}
+        for col, pars in ColumnsConfig.items():
+            PropSig = {}
+            if col == 'Fs' or col == 'BS':
+                continue
+            if col == 'Offset':
+                Sig[str(col)] = pars
+                continue
+            
+            for p, val in pars.items():
+                if p == 'Resource' or p == 'Index':
+                    continue
+                PropSig[str(p)] = val
+                
+            Sig[str(col)]= PropSig
+            
+        ColSettings.SetSignal(Sig)
+#        Sig0=Asig[0]*np.sin(2*np.pi*Fsig[0]*t)
+#        Sig1=Asig[1]*np.sin(2*np.pi*Fsig[1]*t)
+#        Sig2=Asig[2]*np.sin(2*np.pi*Fsig[2]*t)
+#        Sig3=Asig[3]*np.sin(2*np.pi*Fsig[3]*t)
+        
+#        self.NifGen = SigGen(resource_name=PXIGen1, 
+#                             options=OptionsGen)
+#        self.NifGen2 = SigGen(resource_name=PXIGen2, 
+#                             options=OptionsGen)
+#        self.NiScope = SigScope(resource_name=PXIScope,
+#                                options=OptionsScope)
+#        self.NifGen.SetArbSignal(Sig0, Sig1, offset, Fs)
+#        self.NifGen2.SetArbSignal(Sig2, Sig3, offset, Fs)
         self.NiScope.GetSignal(Fs) 
 #        self.SampKw = SampKw
 #        self.AvgIndex = AvgIndex
