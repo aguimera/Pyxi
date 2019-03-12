@@ -116,72 +116,65 @@ NifGenColumnsPars = {'name': 'ColumnsConfig',
 
                                             ) 
                                }
-#NifGen_params = ({'name': 'ColumnsConfig',
-#                  'type': 'group',
-#                  'children':({'name': 'Fs',
-#                                       'title': 'Sampling Rate',
-#                                       'type': 'float',
-#                                       'value': 2e6,
-#                                       'step': 100,
-#                                       'siPrefix': True,
-#                                       'suffix': 'Hz'},
-#                                      {'name': 'BS',
-#                                       'title': 'Buffer Size',
-#                                       'type': 'int',
-#                                       'value': int(5e3),
-#                                       'limits': (int(1e3), int(2e6)),
-#                                       'step': 100,
-#                                       'siPrefix': True,
-#                                       'suffix': 'Samples'},
-#                                      {'name': 'Offset',
-#                                       'value': 0.0,
-#                                       'type': 'float',
-#                                       'siPrefix': True,
-#                                       'suffix': 'V'})
-#                 },
-#                {'name': 'Channels',
-#                         'type': 'group',
-#                         'children': ({'name': 'Chn0',
-#                                       'type': 'bool',
-#                                       'value': True},
-#                                      {'name': 'In0',
-#                                       'type': 'group',
-#                                       'children': CarrierPars},
-#                                      {'name': 'Chn1',
-#                                       'type': 'bool',
-#                                       'value': True},
-#                                      {'name': 'In1',
-#                                       'type': 'group',
-#                                       'children': CarrierPars},
-#                                      {'name': 'Chn2',
-#                                       'type': 'bool',
-#                                       'value': True},
-#                                      {'name': 'In2',
-#                                       'type': 'group',
-#                                       'children': CarrierPars},
-#                                      {'name': 'Chn3',
-#                                       'type': 'bool',
-#                                       'value': True},
-#                                      {'name': 'In3',
-#                                       'type': 'group',
-#                                       'children': CarrierPars}
-#                                     )
-#                 },
-#                {'name': 'Info.',
-#                 'type': 'group',
-#                 'children': ({'name': 'Model',
-#                               'type': 'str',
-#                               'value': '5413'},
-#                              {'name': 'Resource Name 0',
-#                               'type': 'str',
-#                               'value': 'PXI1Slot2'},
-#                              {'name': 'Resource Name 1',
-#                               'type': 'str',
-#                               'value': 'PXI1Slot3'},
-#                              )
-#                }
-#               )
-
+#NiScopeRawsPars = {'name': 'Rows Config',
+#                   'type': 'group',
+#                   'children':({'name':'Row1',
+#                                'type': 'group',
+#                                'children':({'name': 'Enable',
+#                                             'type': 'bool',
+#                                             'value': True,},
+#                                            {'name':'Resource',
+#                                             'type': 'str',
+#                                             'readonly': True,
+#                                             'value': 'PXI1Slot2'},
+#                                            {'name':'Index',
+#                                             'type': 'int',
+#                                             'readonly': True,
+#                                             'value': 0})},
+#                               {'name':'Col2',
+#                                'type': 'group',
+#                                'children':({'name': 'Enable',
+#                                             'type': 'bool',
+#                                             'value': True,},
+#                                            {'name':'Resource',
+#                                             'type': 'str',
+#                                             'readonly': True,
+#                                             'value': 'PXI1Slot2'},
+#                                            {'name':'Index',
+#                                             'type': 'int',
+#                                             'readonly': True,
+#                                             'value': 1})},
+#                                   {'name':'Col3',
+#                                   'type': 'group',
+#                                   'children':({'name': 'Enable',
+#                                                 'type': 'bool',
+#                                                 'value': True,},
+#                                                {'name':'Resource',
+#                                                'type': 'str',
+#                                                'readonly': True,
+#                                                'value': 'PXI1Slot3'},
+#                                               {'name':'Index',
+#                                                'type': 'int',
+#                                                'readonly': True,
+#                                                'value': 0})},
+#                                 {'name':'Col4',
+#                                   'type': 'group',
+#                                   'children':({'name': 'Enable',
+#                                                 'type': 'bool',
+#                                                 'value': True,},
+#                                                {'name':'Resource',
+#                                                'type': 'str',
+#                                                'readonly': True,
+#                                                'value': 'PXI1Slot3'},
+#                                               {'name':'Index',
+#                                                'type': 'int',
+#                                                'readonly': True,
+#                                                'value': 1})},                                                
+#
+#                                            ) 
+#                               }
+  
+##############################Generator##########################################
 class NifGeneratorParameters(pTypes.GroupParameter):
     def __init__(self, **kwargs):
         pTypes.GroupParameter.__init__(self, **kwargs)
@@ -190,11 +183,14 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         self.ColConfig = self.param('ColumnsConfig')
         self.addChild(NifGenSamplingPars)
         self.SamplingConfig = self.param('SamplingConfig')
+        self.Fs = self.SamplingConfig.param('Fs')
+        self.Fs.sigValueChanged.connect(self.on_Fs_Changed)
         
         self.addChild(CarriersConfigPars)
         self.CarrierConfig = self.param('CarriersConfig')
         self.ColConfig.sigTreeStateChanged.connect(self.on_ColConf_Changed)
         self.CarrierConfig.sigTreeStateChanged.connect(self.on_Fsig_Changed)
+    
 #
     def on_ColConf_Changed(self):
         Cols = []
@@ -221,6 +217,10 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             Fnew =  (nc*Fs)/Samps
             p.param('Frequency').setValue(Fnew)
         
+    def on_Fs_Changed(self):
+        Samps = round(Fs/Fmin)
+#    def on_BS_Changed(self):
+        
     def GetParams(self):
         Generator = {'ColumnsConfig':{},
                      }
@@ -239,19 +239,17 @@ class NifGeneratorParameters(pTypes.GroupParameter):
                 Generator['ColumnsConfig'][Config.name()][Values.name()] = Values.value()
             
         return Generator
-   
+ 
+    
 class SigGen(nifgen.Session):    
     def SetArbSignal(self, Signal, index, gain, offset):
         Handle = self.create_waveform(Signal)
+        if index != 0: #only needed if the CM is applied through VG0 to all the channels connected
+            offset = 0  #if not done, the other channels will have 2*CM as offset
         self.channels[index].configure_arb_waveform(Handle,
                                                     gain=gain,
                                                     offset=offset)
         self.initiate() #To check
-
-#        
-#PXIGen1 = 'PXI1Slot2'
-#PXIGen2 = 'PXI1Slot3'
-OptionsGen = 'Simulate=0,DriverSetup=Model:5413;Channels:0-1;BoardType:PXIe;MemorySize:268435456'
 
 #ColumnsConfig={'Col1': {'resource_name': 'PXI1Slot2',
 #                        'index': 0},
@@ -262,7 +260,7 @@ OptionsGen = 'Simulate=0,DriverSetup=Model:5413;Channels:0-1;BoardType:PXIe;Memo
 #               'Col4': {'resource_name': 'PXI1Slot3',
 #                        'index': 1},
 #                }
-
+OptionsGen = 'Simulate=0,DriverSetup=Model:5413;Channels:0-1;BoardType:PXIe;MemorySize:268435456'
 
 class Columns():
     Columns = {} # {'Col1': {'session': sessionnifgen, 
@@ -302,22 +300,16 @@ class Columns():
                 continue
     
             signal = pars['Amplitude']*np.sin(2*np.pi*pars['Frequency']*t)
-            self.Columns[Col]['session'].SetArbbritary(self.Columns[Col]['index'],signal, pars['Gain'], self.Offset)
-    
-#    
-#    def SetSignal(self, Col='Col0', Freq, Amp, gain, offset):
-#        Fr
-##        Ts = 1/Fs
-###        offset = 0
-##        self.BS = int(BS)
-##        t = np.arange(0, Ts*self.BS, Ts)
-##        Fsig = np.array([1e3, 5e3, 10e3, 50e3])
+            self.Columns[Col]['session'].SetArbbritary(index=self.Columns[Col]['index'],
+                                                       Signal=signal, gain=pars['Gain'], 
+                                                       offset=self.Offset)
+##############################SCOPE##########################################
+#class NiScopeParameters(pTypes.GroupParameter):
+#    def __init__(self, **kwargs):
+#        pTypes.GroupParameter.__init__(self, **kwargs)
 #
-#        
-#        self.Columns[Col]['session'].SetArbbritary(index=self.Columns[Col]['index'],
-#                                                    signal, gain, offset)
-#          
-               
+#        self.addChild(NiScopeRawsPars)
+#      
 class SigScope(niscope.Session):
     def GetSignal(self, Fs):
         self.acquisition_type=niscope.AcquisitionType.NORMAL
@@ -377,12 +369,6 @@ class DataAcquisitionThread(Qt.QThread):
 #        self.NifGen.SetArbSignal(Sig0, Sig1, offset, Fs)
 #        self.NifGen2.SetArbSignal(Sig2, Sig3, offset, Fs)
         self.NiScope.GetSignal(Fs) 
-#        self.SampKw = SampKw
-#        self.AvgIndex = AvgIndex
-
-#        self.MuxBuffer = Buffer(BufferSize=BufferSize,
-#                                nChannels=self.DaqInterface.nChannels)
-#        self.MuxBuffer = FileMod.FileBuffer()
 
     def run(self, *args, **kwargs):
         print('start ')
