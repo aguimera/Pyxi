@@ -8,6 +8,7 @@ Created on Wed Mar  6 12:25:45 2019
 
 from PyQt5 import Qt
 import pyqtgraph.parametertree.parameterTypes as pTypes
+import pyqtgraph.parametertree.Parameter as pParams
 import numpy as np
 import niscope
 import nifgen
@@ -257,20 +258,7 @@ class Columns():
                                                        Signal=signal, gain=pars['Gain'], 
                                                        offset=Offset)
 ##############################SCOPE##########################################
-RowsConfigPars={'name': 'ChnConfig',
-                'type': 'group',
-                'children': ()}
 
-RowPars = {'name':'RowX',
-           'type': 'group',
-           'children': ({'name': 'Range',
-                        'type': 'list',
-                        'values': {"0.05": 0.05, 
-                                  "0.2": 0.2, 
-                                  "1": 1, 
-                                  "6": 6},
-                                       },)
-        }
 
 NiScopeFetchingPars =  {'name': 'FetchConfig',
                        'type': 'group',
@@ -284,7 +272,7 @@ NiScopeFetchingPars =  {'name': 'FetchConfig',
                                    {'name': 'NRow',
                                     'title': 'Number of Channels',
                                     'type': 'int',
-                                    'value': 8,
+                                    'value': 0,
                                     'readonly': True,
                                     'siPrefix': True,
                                     'suffix': 'Chan'},
@@ -296,7 +284,7 @@ NiScopeFetchingPars =  {'name': 'FetchConfig',
                                     'step': 100,
                                     'siPrefix': True,
                                     'suffix': 'Samples'},
-                                   {'name': 'Offset',
+                                   {'name': 'OffsetRows',
                                     'value': 0,
                                     'type': 'int',
                                     'siPrefix': True,
@@ -316,7 +304,16 @@ NiScopeRowsPars = {'name': 'RowsConfig',
                                             {'name':'Index',
                                              'type': 'int',
                                              'readonly': True,
-                                             'value': 0})},
+                                             'value': 0},
+                                            {'name': 'Range',
+                                             'type': 'list',
+                                             'values': {"0.05": 0.05, 
+                                                        "0.2": 0.2, 
+                                                        "1": 1, 
+                                                        "6": 6},
+                                             'visible': True
+                                             }
+                                            )},
                                {'name':'Row2',
                                 'type': 'group',
                                 'children':({'name': 'Enable',
@@ -325,28 +322,54 @@ NiScopeRowsPars = {'name': 'RowsConfig',
                                             {'name':'Index',
                                              'type': 'int',
                                              'readonly': True,
-                                             'value': 1})},
-                                   {'name':'Row3',
-                                   'type': 'group',
-                                   'children':({'name': 'Enable',
-                                                 'type': 'bool',
-                                                 'value': True,},
-                                               {'name':'Index',
-                                                'type': 'int',
-                                                'readonly': True,
-                                                'value': 0})},
-                                 {'name':'Row4',
-                                   'type': 'group',
-                                   'children':({'name': 'Enable',
-                                                 'type': 'bool',
-                                                 'value': True,},
-                                               {'name':'Index',
-                                                'type': 'int',
-                                                'readonly': True,
-                                                'value': 1})},                                                
-
-                                            ) 
-                               }           
+                                             'value': 1},
+                                            {'name': 'Range',
+                                             'type': 'list',
+                                             'values': {"0.05": 0.05, 
+                                                        "0.2": 0.2, 
+                                                        "1": 1, 
+                                                        "6": 6},
+                                             'visible': True
+                                             }
+                                            )},
+                               {'name':'Row3',
+                                'type': 'group',
+                                'children':({'name': 'Enable',
+                                             'type': 'bool',
+                                             'value': True,},
+                                            {'name':'Index',
+                                             'type': 'int',
+                                             'readonly': True,
+                                             'value': 2},
+                                            {'name': 'Range',
+                                             'type': 'list',
+                                             'values': {"0.05": 0.05, 
+                                                        "0.2": 0.2, 
+                                                        "1": 1, 
+                                                        "6": 6},
+                                             'visible': True
+                                             }
+                                            )},
+                               {'name':'Row4',
+                                'type': 'group',
+                                'children':({'name': 'Enable',
+                                             'type': 'bool',
+                                             'value': True,},
+                                            {'name':'Index',
+                                             'type': 'int',
+                                             'readonly': True,
+                                             'value': 3},
+                                            {'name': 'Range',
+                                             'type': 'list',
+                                             'values': {"0.05": 0.05, 
+                                                        "0.2": 0.2, 
+                                                        "1": 1, 
+                                                        "6": 6},
+                                             'visible': True
+                                             }
+                                            )},                                                
+                               ) 
+                        }           
 
 class NiScopeParameters(pTypes.GroupParameter):
         
@@ -362,44 +385,26 @@ class NiScopeParameters(pTypes.GroupParameter):
         self.Fs = self.FetchConfig.param('Fs')
         self.BS = self.FetchConfig.param('BS')
         self.NRows = self.FetchConfig.param('NRow')
-                
+        self.OffsetRows = self.FetchConfig.param('OffsetRows')
 #        NifGenPars = NifGeneratorParameters()
 #        self.Fs.setValue(NifGeneratorParameters.Fs.value())
         
-        self.addChild(RowsConfigPars)
-        self.ChnConfig = self.param('ChnConfig')
+
         self.RowsConfig.sigTreeStateChanged.connect(self.on_RowConf_Changed)
         self.on_RowConf_Changed()
 #        
-#        self.addChild(CarriersConfigPars)
-#        self.CarrierConfig = self.param('CarriersConfig')
-#        self.ColConfig.sigTreeStateChanged.connect(self.on_ColConf_Changed)
-#        self.on_ColConf_Changed()
-#        self.CarrierConfig.sigTreeStateChanged.connect(self.on_Fsig_Changed)
-#        self.addChild(CarriersConfigPars)
-#        self.CarrierConfig = self.param('CarriersConfig')
-#        self.ColConfig.sigTreeStateChanged.connect(self.on_ColConf_Changed)
-#        self.on_ColConf_Changed()
-#        self.CarrierConfig.sigTreeStateChanged.connect(self.on_Fsig_Changed)
-#    
-#        self.Fs.sigValueChanged.connect(self.on_Fs_Changed)
-#        self.GS.sigValueChanged.connect(self.on_GS_Changed)
 #
     def on_RowConf_Changed(self):
         Rows = []
         for p in self.RowsConfig.children():
             if p.param('Enable').value():
                 Rows.append(p.name())
-        
-        self.ChnConfig.clearChildren()
-        for i, row in enumerate(Rows):
-            cc = copy.deepcopy(RowPars)
-            print(cc)
-            print(row)
-            cc['name'] = row
-            print(cc['name'])
-            self.ChnConfig.addChild(cc)
-            self.NRows.setValue(i+1)
+#                p.param('Range').show()
+#                print(p.param('Range').setVisible(True))
+#                p.param('Range').setWritable()
+#            else:
+#               p.param('Range').setReadonly()
+        self.NRows.setValue(len(Rows))
             
     def on_Fs_Changed(self):
         Fs = self.Fs.value()
@@ -414,6 +419,23 @@ class NiScopeParameters(pTypes.GroupParameter):
         n = round(Samps*Fs) # Fs/Ts
         Samps = n/Fs
         self.BS.setValue(Samps)
+    
+    def GetParams(self):
+        Scope = {'RowsConfig':{},
+               }
+        for Config in self.RowsConfig.children():
+            if Config.param('Enable').value() == True:
+                Scope['RowsConfig'][Config.name()]={}
+                for Values in Config.children():
+                    if Values == 'Enable':
+                        continue
+                    Scope['RowsConfig'][Config.name()][Values.name()] = Values.value()
+        for Config in self.FetchConfig.children():
+            if Config.name() =='Fs':
+                continue
+            Scope[Config.name()] = Config.value()
+
+        return Scope
 #     
 #PXIScope = 'PXI1Slot4'
 OptionsScope = {'simulate': False,
@@ -453,7 +475,7 @@ class SigScope(niscope.Session):
 class DataAcquisitionThread(Qt.QThread):
     NewData = Qt.pyqtSignal()
 
-    def __init__(self, ColumnsConfig, Fs, GS, Offset, RowsConfig, BS, NRow, OffsetRow, Resource):
+    def __init__(self, ColumnsConfig, Fs, GS, Offset, RowsConfig, BS, NRow, OffsetRows, Resource):
         print ('TMacqThread, DataAcqThread')
         super(DataAcquisitionThread, self).__init__()
         
@@ -463,8 +485,7 @@ class DataAcquisitionThread(Qt.QThread):
         self.Rows = Rows(RowsConfig, Fs, Resource)
         self.BS = BS
         self.channels = list(range(NRow))
-        self.offset = OffsetRow
-        
+        self.offset = OffsetRows
         Sig = {}
         for col, pars in ColumnsConfig.items():
             PropSig = {}

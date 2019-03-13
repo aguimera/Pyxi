@@ -86,8 +86,9 @@ class MainWindow(Qt.QWidget):
         print('h')
         if self.threadAqc is None:
             GenKwargs = self.NifGenParams.GetParams()
+            ScopeKwargs = self.NiScopeParams.GetParams()
             print(GenKwargs)            
-            self.threadAqc = FMacq.DataAcquisitionThread(**GenKwargs)
+            self.threadAqc = FMacq.DataAcquisitionThread(**GenKwargs, **ScopeKwargs)
 #            self.threadAqc.NewData.connect(self.on_NewSample)
 #            self.threadGen.start()
 #
