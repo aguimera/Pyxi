@@ -116,63 +116,7 @@ NifGenColumnsPars = {'name': 'ColumnsConfig',
 
                                             ) 
                                }
-#NiScopeRawsPars = {'name': 'Rows Config',
-#                   'type': 'group',
-#                   'children':({'name':'Row1',
-#                                'type': 'group',
-#                                'children':({'name': 'Enable',
-#                                             'type': 'bool',
-#                                             'value': True,},
-#                                            {'name':'Resource',
-#                                             'type': 'str',
-#                                             'readonly': True,
-#                                             'value': 'PXI1Slot2'},
-#                                            {'name':'Index',
-#                                             'type': 'int',
-#                                             'readonly': True,
-#                                             'value': 0})},
-#                               {'name':'Col2',
-#                                'type': 'group',
-#                                'children':({'name': 'Enable',
-#                                             'type': 'bool',
-#                                             'value': True,},
-#                                            {'name':'Resource',
-#                                             'type': 'str',
-#                                             'readonly': True,
-#                                             'value': 'PXI1Slot2'},
-#                                            {'name':'Index',
-#                                             'type': 'int',
-#                                             'readonly': True,
-#                                             'value': 1})},
-#                                   {'name':'Col3',
-#                                   'type': 'group',
-#                                   'children':({'name': 'Enable',
-#                                                 'type': 'bool',
-#                                                 'value': True,},
-#                                                {'name':'Resource',
-#                                                'type': 'str',
-#                                                'readonly': True,
-#                                                'value': 'PXI1Slot3'},
-#                                               {'name':'Index',
-#                                                'type': 'int',
-#                                                'readonly': True,
-#                                                'value': 0})},
-#                                 {'name':'Col4',
-#                                   'type': 'group',
-#                                   'children':({'name': 'Enable',
-#                                                 'type': 'bool',
-#                                                 'value': True,},
-#                                                {'name':'Resource',
-#                                                'type': 'str',
-#                                                'readonly': True,
-#                                                'value': 'PXI1Slot3'},
-#                                               {'name':'Index',
-#                                                'type': 'int',
-#                                                'readonly': True,
-#                                                'value': 1})},                                                
-#
-#                                            ) 
-#                               }
+
   
 ##############################Generator##########################################
 class NifGeneratorParameters(pTypes.GroupParameter):
@@ -258,7 +202,6 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             
         return Generator
  
-    
 class SigGen(nifgen.Session):    
     def SetArbSignal(self, Signal, index, gain, offset):
         Handle = self.create_waveform(Signal)
@@ -267,26 +210,16 @@ class SigGen(nifgen.Session):
         self.channels[index].configure_arb_waveform(Handle,
                                                     gain=gain,
                                                     offset=offset)
-        if index == 1:
-            self.initiate()
-#ColumnsConfig={'Col1': {'resource_name': 'PXI1Slot2',
-#                        'index': 0},
-#               'Col2': {'resource_name': 'PXI1Slot2',
-#                        'index': 1},
-#               'Col3': {'resource_name': 'PXI1Slot3',
-#                        'index': 0},
-#               'Col4': {'resource_name': 'PXI1Slot3',
-#                        'index': 1},
-#                }
+            
 OptionsGen = 'Simulate=0,DriverSetup=Model:5413;Channels:0-1;BoardType:PXIe;MemorySize:268435456'
 
 class Columns():
     Columns = {} # {'Col1': {'session': sessionnifgen, 
 #                             'index': int}}
     Resources = {} # 'PXI1Slot2': sessionnifgen
-    def __init__(self, ColumnsConfig, Fs, BufferSize):
+    def __init__(self, ColumnsConfig, Fs, GenSize):
         self.Fs = Fs
-        self.BufferSize= BufferSize
+        self.GenSize= GenSize
         
 # Init resources and store sessions
         Res = [conf['Resource'] for col, conf in ColumnsConfig.items()]                
@@ -306,11 +239,14 @@ class Columns():
             self.Columns[col] = {'session': self.Resources[conf['Resource']],
                                  'index':conf['Index']
                                  }
+    def Initiate(self):
+        for res, ses in self.Resources.item():
+            ses.initiate()
 
     def SetSignal(self, SigsPars, Offset):
         
         self.Ts = 1/self.Fs
-        t = np.arange(0, self.Ts*self.BufferSize, self.Ts)
+        t = np.arange(0, self.Ts*self.GenSize, self.Ts)
      
         for Col,pars in SigsPars.items():
             if Col == 'Offset':
@@ -321,39 +257,213 @@ class Columns():
                                                        Signal=signal, gain=pars['Gain'], 
                                                        offset=Offset)
 ##############################SCOPE##########################################
-#class NiScopeParameters(pTypes.GroupParameter):
-#    def __init__(self, **kwargs):
-#        pTypes.GroupParameter.__init__(self, **kwargs)
+RowsConfigPars={'name': 'ChnConfig',
+                'type': 'group',
+                'children': ()}
+
+RowPars = {'name':'RowX',
+           'type': 'group',
+           'children': ({'name': 'Range',
+                        'type': 'list',
+                        'values': {"0.05": 0.05, 
+                                  "0.2": 0.2, 
+                                  "1": 1, 
+                                  "6": 6},
+                                       },)
+        }
+
+NiScopeFetchingPars =  {'name': 'FetchConfig',
+                       'type': 'group',
+                       'children':({'name': 'Fs',
+                                    'title': 'Sampling Rate',
+                                    'type': 'float',
+                                    'value': 2e6,
+                                    'readonly': True,
+                                    'siPrefix': True,
+                                    'suffix': 'Hz'},
+                                   {'name': 'NRow',
+                                    'title': 'Number of Channels',
+                                    'type': 'int',
+                                    'value': 8,
+                                    'readonly': True,
+                                    'siPrefix': True,
+                                    'suffix': 'Chan'},
+                                   {'name': 'BS',
+                                    'title': 'Buffer Size',
+                                    'type': 'int',
+                                    'value': int(20e3),
+                                    'limits': (int(0), int(2e6)),
+                                    'step': 100,
+                                    'siPrefix': True,
+                                    'suffix': 'Samples'},
+                                   {'name': 'Offset',
+                                    'value': 0,
+                                    'type': 'int',
+                                    'siPrefix': True,
+                                    'suffix': 'Samples'},
+                                   {'name':'Resource',
+                                    'type': 'str',
+                                    'readonly': True,
+                                    'value': 'PXI1Slot4'},)
+                 }
+NiScopeRowsPars = {'name': 'RowsConfig',
+                   'type': 'group',
+                   'children':({'name':'Row1',
+                                'type': 'group',
+                                'children':({'name': 'Enable',
+                                             'type': 'bool',
+                                             'value': True,},
+                                            {'name':'Index',
+                                             'type': 'int',
+                                             'readonly': True,
+                                             'value': 0})},
+                               {'name':'Row2',
+                                'type': 'group',
+                                'children':({'name': 'Enable',
+                                             'type': 'bool',
+                                             'value': True,},
+                                            {'name':'Index',
+                                             'type': 'int',
+                                             'readonly': True,
+                                             'value': 1})},
+                                   {'name':'Row3',
+                                   'type': 'group',
+                                   'children':({'name': 'Enable',
+                                                 'type': 'bool',
+                                                 'value': True,},
+                                               {'name':'Index',
+                                                'type': 'int',
+                                                'readonly': True,
+                                                'value': 0})},
+                                 {'name':'Row4',
+                                   'type': 'group',
+                                   'children':({'name': 'Enable',
+                                                 'type': 'bool',
+                                                 'value': True,},
+                                               {'name':'Index',
+                                                'type': 'int',
+                                                'readonly': True,
+                                                'value': 1})},                                                
+
+                                            ) 
+                               }           
+
+class NiScopeParameters(pTypes.GroupParameter):
+        
+    def __init__(self, **kwargs):
+        pTypes.GroupParameter.__init__(self, **kwargs)
+        
+        self.addChild(NiScopeRowsPars)
+        
+        self.RowsConfig = self.param('RowsConfig')
+        
+        self.addChild(NiScopeFetchingPars)
+        self.FetchConfig = self.param('FetchConfig')
+        self.Fs = self.FetchConfig.param('Fs')
+        self.BS = self.FetchConfig.param('BS')
+        self.NRows = self.FetchConfig.param('NRow')
+                
+#        NifGenPars = NifGeneratorParameters()
+#        self.Fs.setValue(NifGeneratorParameters.Fs.value())
+        
+        self.addChild(RowsConfigPars)
+        self.ChnConfig = self.param('ChnConfig')
+        self.RowsConfig.sigTreeStateChanged.connect(self.on_RowConf_Changed)
+        self.on_RowConf_Changed()
+#        
+#        self.addChild(CarriersConfigPars)
+#        self.CarrierConfig = self.param('CarriersConfig')
+#        self.ColConfig.sigTreeStateChanged.connect(self.on_ColConf_Changed)
+#        self.on_ColConf_Changed()
+#        self.CarrierConfig.sigTreeStateChanged.connect(self.on_Fsig_Changed)
+#        self.addChild(CarriersConfigPars)
+#        self.CarrierConfig = self.param('CarriersConfig')
+#        self.ColConfig.sigTreeStateChanged.connect(self.on_ColConf_Changed)
+#        self.on_ColConf_Changed()
+#        self.CarrierConfig.sigTreeStateChanged.connect(self.on_Fsig_Changed)
+#    
+#        self.Fs.sigValueChanged.connect(self.on_Fs_Changed)
+#        self.GS.sigValueChanged.connect(self.on_GS_Changed)
 #
-#        self.addChild(NiScopeRawsPars)
-#      
+    def on_RowConf_Changed(self):
+        Rows = []
+        for p in self.RowsConfig.children():
+            if p.param('Enable').value():
+                Rows.append(p.name())
+        
+        self.ChnConfig.clearChildren()
+        for i, row in enumerate(Rows):
+            cc = copy.deepcopy(RowPars)
+            print(cc)
+            print(row)
+            cc['name'] = row
+            print(cc['name'])
+            self.ChnConfig.addChild(cc)
+            self.NRows.setValue(i+1)
+            
+    def on_Fs_Changed(self):
+        Fs = self.Fs.value()
+        Samps = self.BS.value()
+        n = round(Samps*Fs) # Fs/Ts
+        Fs = n/Samps
+        self.Fs.setValue(Fs)
+        
+    def on_BS_Changed(self):
+        Fs = self.Fs.value()
+        Samps = self.BS.value()
+        n = round(Samps*Fs) # Fs/Ts
+        Samps = n/Fs
+        self.BS.setValue(Samps)
+#     
+#PXIScope = 'PXI1Slot4'
+OptionsScope = {'simulate': False,
+                'driver_setup': {'Model': 'NI PXIe-5105',
+                                 'BoardType': 'PXIe',
+                                 },
+                }
+class Rows():
+    Rows = {} #{'Row1': Range, Index}
+
+    #rowsconfig tiene que tener
+    def __init__(self, RowsConfig, Fs, Resource):
+        
+        self.SesScope = SigScope(Resource, OptionsScope)
+        self.SesScope.acquisition_type=niscope.AcquisitionType.NORMAL
+        self.SesScope.configure_horizontal_timing(min_sample_rate=Fs,
+                                                  min_num_pts=int(1e3),
+                                                  ref_position=50.0,
+                                                  num_records=1,
+                                                  enforce_realtime=True)
+        self.SesScope.exported_start_trigger_output_terminal = 'PXI_Trig0'
+        self.SesScope.input_clock_source='PXI_Clk'
+        self.SesScope.configure_trigger_software()
+        self.SesScope.GetSignal(RowsConfig)
+
+    def Initiate(self):
+        self.SesScope.initiate()
+        
 class SigScope(niscope.Session):
-    def GetSignal(self, Fs):
-        self.acquisition_type=niscope.AcquisitionType.NORMAL
-        self.channels[0,1,2,3,4,5,6,7].configure_vertical(range=1, coupling=niscope.VerticalCoupling.AC)
-        self.channels[0,1,2,3,4,5,6,7].configure_chan_characteristics(1000000, 600000.0)
-        self.configure_horizontal_timing(min_sample_rate=Fs,
-                                         min_num_pts=int(1e3),
-                                         ref_position=50.0,
-                                         num_records=1,
-                                         enforce_realtime=True)
-        self.exported_start_trigger_output_terminal = 'PXI_Trig0'
-        self.input_clock_source='PXI_Clk'
-        self.configure_trigger_software()
-        self.initiate()
+    def GetSignal(self, RowsConfig):#RowsConfig = {'Row1': Range, Index}
+        for Rows, params in RowsConfig.items():
+            self.channels[params['Index']].configure_vertical(range=params['Range'], coupling=niscope.VerticalCoupling.AC)
+            self.channels[params['Index']].configure_chan_characteristics(1000000, 600000.0) #input impedance, max_input:freq        
 
 ###############################################################################
-
 
 class DataAcquisitionThread(Qt.QThread):
     NewData = Qt.pyqtSignal()
 
-    def __init__(self, ColumnsConfig, Fs, GS, Offset):
+    def __init__(self, ColumnsConfig, Fs, GS, Offset, RowsConfig, BS, NRow, OffsetRow, Resource):
         print ('TMacqThread, DataAcqThread')
         super(DataAcquisitionThread, self).__init__()
         
         print(ColumnsConfig)
-        ColSettings = Columns(ColumnsConfig, Fs, GS)
+        print(RowsConfig)
+        self.Columns = Columns(ColumnsConfig, Fs, GS)
+        self.Rows = Rows(RowsConfig, Fs, Resource)
+        self.BS = BS
+        self.channels = list(range(NRow))
+        self.offset = OffsetRow
         
         Sig = {}
         for col, pars in ColumnsConfig.items():
@@ -365,32 +475,20 @@ class DataAcquisitionThread(Qt.QThread):
                 
             Sig[str(col)]= PropSig
         
-        ColSettings.SetSignal(Sig, Offset)
-#        Sig0=Asig[0]*np.sin(2*np.pi*Fsig[0]*t)
-#        Sig1=Asig[1]*np.sin(2*np.pi*Fsig[1]*t)
-#        Sig2=Asig[2]*np.sin(2*np.pi*Fsig[2]*t)
-#        Sig3=Asig[3]*np.sin(2*np.pi*Fsig[3]*t)
-        
-#        self.NifGen = SigGen(resource_name=PXIGen1, 
-#                             options=OptionsGen)
-#        self.NifGen2 = SigGen(resource_name=PXIGen2, 
-#                             options=OptionsGen)
-#        self.NiScope = SigScope(resource_name=PXIScope,
-#                                options=OptionsScope)
-#        self.NifGen.SetArbSignal(Sig0, Sig1, offset, Fs)
-#        self.NifGen2.SetArbSignal(Sig2, Sig3, offset, Fs)
-#        self.NiScope.GetSignal(Fs) 
+        self.Columns.SetSignal(Sig, Offset)
 
     def run(self, *args, **kwargs):
         print('start ')
+        self.Columns.Initiate()
+        self.Rows.Initiate()
         while True:
-            Inputs = self.NiScope.channels[0,1,2,3].fetch(num_samples=self.GS,
+            Inputs = self.NiScope.channels[self.channels].fetch(num_samples=self.BS,
                                                           relative_to=niscope.FetchRelativeTo.READ_POINTER,
-                                                          offset=0,
+                                                          offset=self.offset,
                                                           record_number=0,
                                                           num_records=1,
                                                           timeout=2)
-            value = np.ndarray((self.GS, 4))
+            value = np.ndarray((self.BS, len(self.channels)))
             for i, In in enumerate(Inputs):
                 InSig = np.array(In.samples)
             value[:, i] = InSig #to do a BufferSize x nChan Matrix

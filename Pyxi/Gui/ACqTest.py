@@ -37,17 +37,30 @@ class MainWindow(Qt.QWidget):
         self.btnGen = Qt.QPushButton("Start Gen!")
         layout.addWidget(self.btnGen)
 
-        self.NifGenParams = FMacq.NifGeneratorParameters(name='NifGenerator')        
+        self.StateParams = FileMod.SaveSateParameters(QTparent=self,
+                                                      name='State')
         self.Parameters = Parameter.create(name='params',
                                            type='group',
-                                           children=(self.NifGenParams,))
+                                           children=(self.StateParams,))
 
+        self.NifGenParams = FMacq.NifGeneratorParameters(name='NifGenerator')        
+        self.Parameters.addChild(self.NifGenParams)
+
+        
+        self.NiScopeParams = FMacq.NiScopeParameters(name = 'Scope')
+#        self.NiScopeParams = FMacq.NiScopeParameters(name='NiScope')        
+#        self.ParametersScope = Parameter.create(name='params',
+#                                                type='group',
+#                                                children=(self.NiScopeParams,))
+        
+        self.Parameters.addChild(self.NiScopeParams)
 #        
         self.Parameters.sigTreeStateChanged.connect(self.on_pars_changed)
         self.treepar = ParameterTree()
         self.treepar.setParameters(self.Parameters, showTop=False)
         self.treepar.setWindowTitle('pyqtgraph example: Parameter Tree')
-
+        
+        
         layout.addWidget(self.treepar)
 
         self.setGeometry(550, 10, 300, 700)

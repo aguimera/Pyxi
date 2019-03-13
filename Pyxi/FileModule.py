@@ -123,8 +123,8 @@ class SaveSateParameters(pTypes.GroupParameter):
 
     def _GetParent(self):
         parent = self.parent()
-        while parent is None:
-            parent = self.parent()
+#        while parent is None:
+#            parent = self.parent()
         return parent
 
     def on_Load(self):
