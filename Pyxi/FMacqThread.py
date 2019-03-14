@@ -477,11 +477,11 @@ class NiScopeParameters(pTypes.GroupParameter):
         self.BS.sigValueChanged.connect(self.on_BS_Changed)
 
     def on_RowConf_Changed(self):
-        Rows = []
+        self.Rows = []
         for p in self.RowsConfig.children():
             if p.param('Enable').value():
-                Rows.append(p.name())
-        self.NRows.setValue(len(Rows))
+                self.Rows.append(p.name())
+        self.NRows.setValue(len(self.Rows))
        
 #    def on_Fs_Changed(self):
 #        Fs = self.Fs.value()
@@ -497,7 +497,12 @@ class NiScopeParameters(pTypes.GroupParameter):
 #        n = round(Samps*Fs) # Fs/Ts
 #        Samps = round(n/Fs)
 #        self.BS.setValue(Samps)
-    
+    def GetChannels(self):
+        RowNames = {}
+        for i,r in enumerate(self.Rows):
+            RowNames[r]=i
+        return RowNames
+
     def GetParams(self):
         Scope = {'RowsConfig':{},
                }
@@ -579,6 +584,7 @@ class DataAcquisitionThread(Qt.QThread):
         print('start ')
         self.Columns.Initiate()
         self.Rows.Initiate()
+        self.OutData = np.ndarray((self.BS, len(self.channels)))
         while True:
             Inputs = self.Rows.SesScope.channels[self.channels].fetch(num_samples=self.BS,
                                                           relative_to=niscope.FetchRelativeTo.READ_POINTER,
@@ -586,9 +592,8 @@ class DataAcquisitionThread(Qt.QThread):
                                                           record_number=0,
                                                           num_records=1,
                                                           timeout=2)
-            value = np.ndarray((self.BS, len(self.channels)))
+            
             for i, In in enumerate(Inputs):
-                InSig = np.array(In.samples)
-            value[:, i] = InSig #to do a BufferSize x nChan Matrix
+                self.OutData[:, i] = np.array(In.samples)            
             self.NewData.emit()
 
