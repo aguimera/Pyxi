@@ -32,7 +32,9 @@ CarrierPars = {'name':'ColX',
                              'suffix': 'V'},
                             {'name': 'Gain',
                              'value': 1,
-                             'type': 'float',}
+                             'type': 'float',
+                             'siPrefix': True,
+                             'suffix': 'Vpk-pk'}
                             )
                }
 
@@ -133,8 +135,10 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         
         self.addChild(CarriersConfigPars)
         self.CarrierConfig = self.param('CarriersConfig')
+        
         self.ColConfig.sigTreeStateChanged.connect(self.on_ColConf_Changed)
         self.on_ColConf_Changed()
+        
         self.CarrierConfig.sigTreeStateChanged.connect(self.on_Fsig_Changed)
     
         self.Fs.sigValueChanged.connect(self.on_Fs_Changed)
@@ -241,7 +245,7 @@ class Columns():
                                  'index':conf['Index']
                                  }
     def Initiate(self):
-        for res, ses in self.Resources.item():
+        for res, ses in self.Resources.items():
             ses.initiate()
 
     def SetSignal(self, SigsPars, Offset):
@@ -473,12 +477,12 @@ class NiScopeParameters(pTypes.GroupParameter):
         self.BS.sigValueChanged.connect(self.on_BS_Changed)
 
     def on_RowConf_Changed(self):
-        Rows = []
+        self.Rows = []
         for p in self.RowsConfig.children():
             if p.param('Enable').value():
-                Rows.append(p.name())
-        self.NRows.setValue(len(Rows))
-            
+                self.Rows.append(p.name())
+        self.NRows.setValue(len(self.Rows))
+       
 #    def on_Fs_Changed(self):
 #        Fs = self.Fs.value()
 #        Samps = self.BS.value()
@@ -493,7 +497,12 @@ class NiScopeParameters(pTypes.GroupParameter):
 #        n = round(Samps*Fs) # Fs/Ts
 #        Samps = round(n/Fs)
 #        self.BS.setValue(Samps)
-    
+    def GetChannels(self):
+        RowNames = {}
+        for i,r in enumerate(self.Rows):
+            RowNames[r]=i
+        return RowNames
+
     def GetParams(self):
         Scope = {'RowsConfig':{},
                }
@@ -507,6 +516,8 @@ class NiScopeParameters(pTypes.GroupParameter):
         for Config in self.FetchConfig.children():
             if Config.name() =='Fs':
                 continue
+            if Config.name() =='tFetch':
+                continue
             Scope[Config.name()] = Config.value()
 
         return Scope
@@ -519,8 +530,7 @@ OptionsScope = {'simulate': False,
 class Rows():
     Rows = {} #{'Row1': Range, Index}
     def __init__(self, RowsConfig, Fs, Resource):
-        
-        self.SesScope = SigScope(Resource, OptionsScope)
+        self.SesScope = SigScope(resource_name=Resource, options=OptionsScope)
         self.SesScope.acquisition_type=niscope.AcquisitionType.NORMAL
         self.SesScope.configure_horizontal_timing(min_sample_rate=Fs,
                                                   min_num_pts=int(1e3),
@@ -567,23 +577,23 @@ class DataAcquisitionThread(Qt.QThread):
                 PropSig[str(p)] = val
                 
             Sig[str(col)]= PropSig
-        
+        print(Sig)
         self.Columns.SetSignal(Sig, Offset)
 
     def run(self, *args, **kwargs):
         print('start ')
         self.Columns.Initiate()
         self.Rows.Initiate()
+        self.OutData = np.ndarray((self.BS, len(self.channels)))
         while True:
-            Inputs = self.NiScope.channels[self.channels].fetch(num_samples=self.BS,
+            Inputs = self.Rows.SesScope.channels[self.channels].fetch(num_samples=self.BS,
                                                           relative_to=niscope.FetchRelativeTo.READ_POINTER,
                                                           offset=self.offset,
                                                           record_number=0,
                                                           num_records=1,
                                                           timeout=2)
-            value = np.ndarray((self.BS, len(self.channels)))
+            
             for i, In in enumerate(Inputs):
-                InSig = np.array(In.samples)
-            value[:, i] = InSig #to do a BufferSize x nChan Matrix
+                self.OutData[:, i] = np.array(In.samples)            
             self.NewData.emit()
 
