@@ -26,13 +26,14 @@ CarrierPars = {'name':'ColX',
                              'siPrefix': True,
                              'suffix': 'Hz'},
                             {'name': 'Amplitude',
-                             'value': 1,
+                             'value': 0.25,
                              'type': 'float',
                              'siPrefix': True,
                              'suffix': 'V'},
                             {'name': 'Gain',
                              'value': 1,
                              'type': 'float',
+                             'readonly': True,
                              'siPrefix': True,
                              'suffix': 'Vpk-pk'}
                             )
@@ -51,7 +52,7 @@ NifGenSamplingPars =  {'name': 'SamplingConfig',
                                     'title': 'Generation Size',
                                     'type': 'int',
                                     'value': int(5e3),
-                                    'limits': (int(0), int(2e6)),
+                                    'limits': (int(0), int(5e6)),
                                     'step': 100,
                                     'siPrefix': True,
                                     'suffix': 'Samples'},
@@ -154,6 +155,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         for col in Cols:
             cc = copy.deepcopy(CarrierPars)
             cc['name'] = col
+            cc['children'][2]['value'] = 2*cc['children'][1]['value']
             self.CarrierConfig.addChild(cc)
 
     def on_Fsig_Changed(self):
@@ -168,6 +170,8 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             nc = round((Samps*Fc)/Fs)
             Fnew =  (nc*Fs)/Samps
             p.param('Frequency').setValue(Fnew)
+            Gain = 2*p.param('Amplitude').value()
+            p.param('Gain').setValue(Gain)
         
     def on_Fs_Changed(self):
         Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
@@ -277,7 +281,7 @@ NiScopeFetchingPars =  {'name': 'FetchConfig',
                                     'title': 'Buffer Size',
                                     'type': 'int',
                                     'value': int(20e3),
-                                    'limits': (int(0), int(2e6)),
+                                    'limits': (int(0), int(5e6)),
                                     'step': 100,
                                     'siPrefix': True,
                                     'suffix': 'Samples'},
@@ -285,6 +289,7 @@ NiScopeFetchingPars =  {'name': 'FetchConfig',
                                     'title': 'Fetching Time',
                                     'type': 'float',
                                     'value': 1,
+                                    'readonly': True,
                                     'siPrefix': True,
                                     'suffix': 's'},
                                    {'name': 'NRow',
@@ -317,10 +322,8 @@ NiScopeRowsPars = {'name': 'RowsConfig',
                                              'value': 0},
                                             {'name': 'Range',
                                              'type': 'list',
-                                             'values': {"0.05": 0.05, 
-                                                        "0.2": 0.2, 
-                                                        "1": 1, 
-                                                        "6": 6},
+                                             'values': [0.05, 0.2, 1, 6],
+                                             'value': 1,
                                              'visible': True
                                              }
                                             )},
@@ -335,10 +338,8 @@ NiScopeRowsPars = {'name': 'RowsConfig',
                                              'value': 1},
                                             {'name': 'Range',
                                              'type': 'list',
-                                             'values': {"0.05": 0.05, 
-                                                        "0.2": 0.2, 
-                                                        "1": 1, 
-                                                        "6": 6},
+                                             'values': [0.05, 0.2, 1, 6],
+                                             'value': 1,
                                              'visible': True
                                              }
                                             )},
@@ -353,10 +354,8 @@ NiScopeRowsPars = {'name': 'RowsConfig',
                                              'value': 2},
                                             {'name': 'Range',
                                              'type': 'list',
-                                             'values': {"0.05": 0.05, 
-                                                        "0.2": 0.2, 
-                                                        "1": 1, 
-                                                        "6": 6},
+                                             'values': [0.05, 0.2, 1, 6],
+                                             'value': 1,
                                              'visible': True
                                              }
                                             )},
@@ -371,10 +370,8 @@ NiScopeRowsPars = {'name': 'RowsConfig',
                                              'value': 3},
                                             {'name': 'Range',
                                              'type': 'list',
-                                             'values': {"0.05": 0.05, 
-                                                        "0.2": 0.2, 
-                                                        "1": 1, 
-                                                        "6": 6},
+                                             'values': [0.05, 0.2, 1, 6],
+                                             'value': 1,
                                              'visible': True
                                              }
                                             )},
@@ -389,10 +386,8 @@ NiScopeRowsPars = {'name': 'RowsConfig',
                                              'value': 4},
                                             {'name': 'Range',
                                              'type': 'list',
-                                             'values': {"0.05": 0.05, 
-                                                        "0.2": 0.2, 
-                                                        "1": 1, 
-                                                        "6": 6},
+                                             'values': [0.05, 0.2, 1, 6],
+                                             'value': 1,
                                              'visible': True
                                              }
                                             )},
@@ -407,10 +402,8 @@ NiScopeRowsPars = {'name': 'RowsConfig',
                                              'value': 5},
                                             {'name': 'Range',
                                              'type': 'list',
-                                             'values': {"0.05": 0.05, 
-                                                        "0.2": 0.2, 
-                                                        "1": 1, 
-                                                        "6": 6},
+                                             'values': [0.05, 0.2, 1, 6],
+                                             'value': 1,
                                              'visible': True
                                              }
                                             )},
@@ -425,10 +418,8 @@ NiScopeRowsPars = {'name': 'RowsConfig',
                                              'value': 6},
                                             {'name': 'Range',
                                              'type': 'list',
-                                             'values': {"0.05": 0.05, 
-                                                        "0.2": 0.2, 
-                                                        "1": 1, 
-                                                        "6": 6},
+                                             'values': [0.05, 0.2, 1, 6],
+                                             'value': 1,
                                              'visible': True
                                              }
                                             )},  
@@ -443,10 +434,8 @@ NiScopeRowsPars = {'name': 'RowsConfig',
                                              'value': 7},
                                             {'name': 'Range',
                                              'type': 'list',
-                                             'values': {"0.05": 0.05, 
-                                                        "0.2": 0.2, 
-                                                        "1": 1, 
-                                                        "6": 6},
+                                             'values': [0.05, 0.2, 1, 6],
+                                             'value': 1,
                                              'visible': True
                                              }
                                             )},                                              
@@ -528,6 +517,7 @@ OptionsScope = {'simulate': False,
                                  },
                 }
 class Rows():
+#Init Scope Channels
     Rows = {} #{'Row1': Range, Index}
     def __init__(self, RowsConfig, Fs, Resource):
         self.SesScope = SigScope(resource_name=Resource, options=OptionsScope)
@@ -541,10 +531,11 @@ class Rows():
         self.SesScope.input_clock_source='PXI_Clk'
         self.SesScope.configure_trigger_software()
         self.SesScope.GetSignal(RowsConfig)
-
+#Init Acquisition
     def Initiate(self):
         self.SesScope.initiate()
-        
+
+# Init Session of Scope        
 class SigScope(niscope.Session):
     def GetSignal(self, RowsConfig):#RowsConfig = {'Row1': Range, Index}
         for Rows, params in RowsConfig.items():
