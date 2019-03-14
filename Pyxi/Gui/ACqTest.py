@@ -48,10 +48,6 @@ class MainWindow(Qt.QWidget):
 
         
         self.NiScopeParams = FMacq.NiScopeParameters(name = 'Scope')
-#        self.NiScopeParams = FMacq.NiScopeParameters(name='NiScope')        
-#        self.ParametersScope = Parameter.create(name='params',
-#                                                type='group',
-#                                                children=(self.NiScopeParams,))
         
         self.Parameters.addChild(self.NiScopeParams)
 #        
@@ -92,13 +88,14 @@ class MainWindow(Qt.QWidget):
         if self.threadAqc is None:
             GenKwargs = self.NifGenParams.GetParams()
             ScopeKwargs = self.NiScopeParams.GetParams()
-            print(GenKwargs)            
+            
             self.threadAqc = FMacq.DataAcquisitionThread(**GenKwargs, **ScopeKwargs)
-#            self.threadAqc.NewData.connect(self.on_NewSample)
+            self.threadAqc.start()
+            self.threadAqc.NewData.connect(self.on_NewSample)
 #            self.threadGen.start()
 #
-#            self.btnGen.setText("Stop Gen")
-#            self.OldTime = time.time()
+            self.btnGen.setText("Stop Gen")
+            self.OldTime = time.time()
         else:
             self.threadAqc.NewData.disconnect()
             self.threadAqc.terminate()
@@ -111,8 +108,8 @@ class MainWindow(Qt.QWidget):
         self.OldTime = time.time()
 #        if self.threadSave is not None:
 #            self.threadSave.AddData(self.threadGen.OutData)
-#        self.threadPlotter.AddData(self.threadGen.OutData)
-#        self.threadPSDPlotter.AddData(self.threadGen.OutData)
+        self.threadPlotter.AddData(self.threadGen.OutData)
+        self.threadPSDPlotter.AddData(self.threadGen.OutData)
         print('Sample time', Ts)
 
 

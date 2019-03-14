@@ -32,7 +32,9 @@ CarrierPars = {'name':'ColX',
                              'suffix': 'V'},
                             {'name': 'Gain',
                              'value': 1,
-                             'type': 'float',}
+                             'type': 'float',
+                             'siPrefix': True,
+                             'suffix': 'Vpk-pk'}
                             )
                }
 
@@ -133,8 +135,10 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         
         self.addChild(CarriersConfigPars)
         self.CarrierConfig = self.param('CarriersConfig')
+        
         self.ColConfig.sigTreeStateChanged.connect(self.on_ColConf_Changed)
         self.on_ColConf_Changed()
+        
         self.CarrierConfig.sigTreeStateChanged.connect(self.on_Fsig_Changed)
     
         self.Fs.sigValueChanged.connect(self.on_Fs_Changed)
@@ -241,7 +245,7 @@ class Columns():
                                  'index':conf['Index']
                                  }
     def Initiate(self):
-        for res, ses in self.Resources.item():
+        for res, ses in self.Resources.items():
             ses.initiate()
 
     def SetSignal(self, SigsPars, Offset):
@@ -478,7 +482,7 @@ class NiScopeParameters(pTypes.GroupParameter):
             if p.param('Enable').value():
                 Rows.append(p.name())
         self.NRows.setValue(len(Rows))
-            
+       
 #    def on_Fs_Changed(self):
 #        Fs = self.Fs.value()
 #        Samps = self.BS.value()
@@ -507,6 +511,8 @@ class NiScopeParameters(pTypes.GroupParameter):
         for Config in self.FetchConfig.children():
             if Config.name() =='Fs':
                 continue
+            if Config.name() =='tFetch':
+                continue
             Scope[Config.name()] = Config.value()
 
         return Scope
@@ -519,8 +525,7 @@ OptionsScope = {'simulate': False,
 class Rows():
     Rows = {} #{'Row1': Range, Index}
     def __init__(self, RowsConfig, Fs, Resource):
-        
-        self.SesScope = SigScope(Resource, OptionsScope)
+        self.SesScope = SigScope(resource_name=Resource, options=OptionsScope)
         self.SesScope.acquisition_type=niscope.AcquisitionType.NORMAL
         self.SesScope.configure_horizontal_timing(min_sample_rate=Fs,
                                                   min_num_pts=int(1e3),
@@ -567,7 +572,7 @@ class DataAcquisitionThread(Qt.QThread):
                 PropSig[str(p)] = val
                 
             Sig[str(col)]= PropSig
-        
+        print(Sig)
         self.Columns.SetSignal(Sig, Offset)
 
     def run(self, *args, **kwargs):
@@ -575,7 +580,7 @@ class DataAcquisitionThread(Qt.QThread):
         self.Columns.Initiate()
         self.Rows.Initiate()
         while True:
-            Inputs = self.NiScope.channels[self.channels].fetch(num_samples=self.BS,
+            Inputs = self.Rows.SesScope.channels[self.channels].fetch(num_samples=self.BS,
                                                           relative_to=niscope.FetchRelativeTo.READ_POINTER,
                                                           offset=self.offset,
                                                           record_number=0,
