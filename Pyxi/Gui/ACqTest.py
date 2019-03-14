@@ -82,6 +82,11 @@ class MainWindow(Qt.QWidget):
         print('  data:      %s'% str(data))
         print('  ----------')
 
+        if childName == 'NifGenerator.SamplingConfig.Fs':
+            self.NiScopeParams.Fs.setValue(data)
+            t = self.NiScopeParams.BS.value()/data
+            self.NiScopeParams.tFetch.setValue(t)
+
     def on_btnGen(self):
         print('h')
         if self.threadAqc is None:

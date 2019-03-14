@@ -269,13 +269,6 @@ NiScopeFetchingPars =  {'name': 'FetchConfig',
                                     'readonly': True,
                                     'siPrefix': True,
                                     'suffix': 'Hz'},
-                                   {'name': 'NRow',
-                                    'title': 'Number of Channels',
-                                    'type': 'int',
-                                    'value': 0,
-                                    'readonly': True,
-                                    'siPrefix': True,
-                                    'suffix': 'Chan'},
                                    {'name': 'BS',
                                     'title': 'Buffer Size',
                                     'type': 'int',
@@ -284,6 +277,19 @@ NiScopeFetchingPars =  {'name': 'FetchConfig',
                                     'step': 100,
                                     'siPrefix': True,
                                     'suffix': 'Samples'},
+                                   {'name': 'tFetch',
+                                    'title': 'Fetching Time',
+                                    'type': 'float',
+                                    'value': 1,
+                                    'siPrefix': True,
+                                    'suffix': 's'},
+                                   {'name': 'NRow',
+                                    'title': 'Number of Channels',
+                                    'type': 'int',
+                                    'value': 0,
+                                    'readonly': True,
+                                    'siPrefix': True,
+                                    'suffix': 'Chan'},
                                    {'name': 'OffsetRows',
                                     'value': 0,
                                     'type': 'int',
@@ -367,7 +373,79 @@ NiScopeRowsPars = {'name': 'RowsConfig',
                                                         "6": 6},
                                              'visible': True
                                              }
-                                            )},                                                
+                                            )},
+                               {'name':'Row5',
+                                'type': 'group',
+                                'children':({'name': 'Enable',
+                                             'type': 'bool',
+                                             'value': True,},
+                                            {'name':'Index',
+                                             'type': 'int',
+                                             'readonly': True,
+                                             'value': 4},
+                                            {'name': 'Range',
+                                             'type': 'list',
+                                             'values': {"0.05": 0.05, 
+                                                        "0.2": 0.2, 
+                                                        "1": 1, 
+                                                        "6": 6},
+                                             'visible': True
+                                             }
+                                            )},
+                               {'name':'Row6',
+                                'type': 'group',
+                                'children':({'name': 'Enable',
+                                             'type': 'bool',
+                                             'value': True,},
+                                            {'name':'Index',
+                                             'type': 'int',
+                                             'readonly': True,
+                                             'value': 5},
+                                            {'name': 'Range',
+                                             'type': 'list',
+                                             'values': {"0.05": 0.05, 
+                                                        "0.2": 0.2, 
+                                                        "1": 1, 
+                                                        "6": 6},
+                                             'visible': True
+                                             }
+                                            )},
+                               {'name':'Row7',
+                                'type': 'group',
+                                'children':({'name': 'Enable',
+                                             'type': 'bool',
+                                             'value': True,},
+                                            {'name':'Index',
+                                             'type': 'int',
+                                             'readonly': True,
+                                             'value': 6},
+                                            {'name': 'Range',
+                                             'type': 'list',
+                                             'values': {"0.05": 0.05, 
+                                                        "0.2": 0.2, 
+                                                        "1": 1, 
+                                                        "6": 6},
+                                             'visible': True
+                                             }
+                                            )},  
+                               {'name':'Row8',
+                                'type': 'group',
+                                'children':({'name': 'Enable',
+                                             'type': 'bool',
+                                             'value': True,},
+                                            {'name':'Index',
+                                             'type': 'int',
+                                             'readonly': True,
+                                             'value': 7},
+                                            {'name': 'Range',
+                                             'type': 'list',
+                                             'values': {"0.05": 0.05, 
+                                                        "0.2": 0.2, 
+                                                        "1": 1, 
+                                                        "6": 6},
+                                             'visible': True
+                                             }
+                                            )},                                              
                                ) 
                         }           
 
@@ -386,39 +464,35 @@ class NiScopeParameters(pTypes.GroupParameter):
         self.BS = self.FetchConfig.param('BS')
         self.NRows = self.FetchConfig.param('NRow')
         self.OffsetRows = self.FetchConfig.param('OffsetRows')
-#        NifGenPars = NifGeneratorParameters()
-#        self.Fs.setValue(NifGeneratorParameters.Fs.value())
+        self.tFetch = self.FetchConfig.param('tFetch')
+        t = self.BS.value()/self.Fs.value()
+        self.tFetch.setValue(t)
         
-
         self.RowsConfig.sigTreeStateChanged.connect(self.on_RowConf_Changed)
         self.on_RowConf_Changed()
-#        
-#
+        self.BS.sigValueChanged.connect(self.on_BS_Changed)
+
     def on_RowConf_Changed(self):
         Rows = []
         for p in self.RowsConfig.children():
             if p.param('Enable').value():
                 Rows.append(p.name())
-#                p.param('Range').show()
-#                print(p.param('Range').setVisible(True))
-#                p.param('Range').setWritable()
-#            else:
-#               p.param('Range').setReadonly()
         self.NRows.setValue(len(Rows))
             
-    def on_Fs_Changed(self):
-        Fs = self.Fs.value()
-        Samps = self.BS.value()
-        n = round(Samps*Fs) # Fs/Ts
-        Fs = n/Samps
-        self.Fs.setValue(Fs)
-        
+#    def on_Fs_Changed(self):
+#        Fs = self.Fs.value()
+#        Samps = self.BS.value()
+#        n = round(Samps*Fs) # Fs/Ts
+#        Fs = n/Samps
+#        self.Fs.setValue(Fs)
+#        
     def on_BS_Changed(self):
         Fs = self.Fs.value()
         Samps = self.BS.value()
-        n = round(Samps*Fs) # Fs/Ts
-        Samps = n/Fs
-        self.BS.setValue(Samps)
+        self.tFetch.setValue(Samps/Fs)
+#        n = round(Samps*Fs) # Fs/Ts
+#        Samps = round(n/Fs)
+#        self.BS.setValue(Samps)
     
     def GetParams(self):
         Scope = {'RowsConfig':{},
@@ -436,8 +510,7 @@ class NiScopeParameters(pTypes.GroupParameter):
             Scope[Config.name()] = Config.value()
 
         return Scope
-#     
-#PXIScope = 'PXI1Slot4'
+
 OptionsScope = {'simulate': False,
                 'driver_setup': {'Model': 'NI PXIe-5105',
                                  'BoardType': 'PXIe',
@@ -445,8 +518,6 @@ OptionsScope = {'simulate': False,
                 }
 class Rows():
     Rows = {} #{'Row1': Range, Index}
-
-    #rowsconfig tiene que tener
     def __init__(self, RowsConfig, Fs, Resource):
         
         self.SesScope = SigScope(Resource, OptionsScope)
@@ -486,6 +557,7 @@ class DataAcquisitionThread(Qt.QThread):
         self.BS = BS
         self.channels = list(range(NRow))
         self.offset = OffsetRows
+
         Sig = {}
         for col, pars in ColumnsConfig.items():
             PropSig = {}
