@@ -20,6 +20,7 @@ from pyqtgraph.parametertree import Parameter, ParameterTree, ParameterItem, reg
 from itertools import  cycle
 import copy
 from scipy.signal import welch
+import pickle
 
 import Pyxi.FileModule as FileMod
 import Pyxi.SampleGenerator as SampGen
@@ -133,7 +134,13 @@ class MainWindow(Qt.QWidget):
                                                            nChannels=GenKwargs['Rows'],
                                                            MaxSize=MaxSize)
                 self.threadSave.start()
-                
+             
+            GenName = FileName+'_GenConfig.dat'
+            ScopeName = FileName+'_ScopeConfig.dat'
+            
+            self.GenArchivo(GenName, GenKwargs)
+            self.GenArchivo(ScopeName, ScopeKwargs)
+            
             PlotterKwargs = self.PlotParams.GetParams()
       
             self.threadPlotter = PltMod.Plotter(**PlotterKwargs)
@@ -171,7 +178,10 @@ class MainWindow(Qt.QWidget):
         self.threadPSDPlotter.AddData(self.threadAqc.OutData)
         print('Sample time', Ts)
 
-
+    def GenArchivo(name, dic2Save):
+        with open(name, "wb") as f:
+            pickle.dump(dic2Save, f)
+            
 if __name__ == '__main__':
     app = Qt.QApplication([])
     mw  = MainWindow()
