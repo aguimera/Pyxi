@@ -142,8 +142,8 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         
         self.CarrierConfig.sigTreeStateChanged.connect(self.on_Fsig_Changed)
     
-        self.Fs.sigValueChanged.connect(self.on_Fs_Changed)
-        self.GS.sigValueChanged.connect(self.on_GS_Changed)
+        self.Fs.sigValueChanged.connect(self.on_Fsig_Changed)
+#        self.GS.sigValueChanged.connect(self.on_GS_Changed)
 #
     def on_ColConf_Changed(self):
         Cols = []
@@ -173,24 +173,24 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             Gain = 2*p.param('Amplitude').value()
             p.param('Gain').setValue(Gain)
         
-    def on_Fs_Changed(self):
-        Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
-        Fmin = np.min(Freqs)
-        
-        Fs = self.Fs.value()
-        Samps = round(Fs/Fmin)
-        Fs = Samps*Fmin
-        self.Fs.setValue(Fs)
-        self.on_Fsig_Changed()
-        
-    def on_GS_Changed(self):
-        Samps = self.GS.value()
-        Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
-        Fmin = np.min(Freqs)
-        
-        Fs = Samps*Fmin
-        self.Fs.setValue(Fs)
-        self.on_Fsig_Changed()
+#    def on_Fs_Changed(self):
+#        Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
+#        Fmin = np.min(Freqs)
+#        
+#        Fs = self.Fs.value()
+#        Samps = round(Fs/Fmin)
+#        Fs = Samps*Fmin
+#        self.Fs.setValue(Fs)
+#        self.on_Fsig_Changed()
+#        
+#    def on_GS_Changed(self):
+#        Samps = self.GS.value()
+#        Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
+#        Fmin = np.min(Freqs)
+#        
+#        Fs = Samps*Fmin
+#        self.Fs.setValue(Fs)
+#        self.on_Fsig_Changed()
         
     def GetParams(self):
         Generator = {'ColumnsConfig':{},
@@ -251,7 +251,11 @@ class Columns():
     def Initiate(self):
         for res, ses in self.Resources.items():
             ses.initiate()
-
+            
+    def Abort(self):
+        for res, ses in self.Resources.items():
+            ses.abort()
+            
     def SetSignal(self, SigsPars, Offset):
         
         self.Ts = 1/self.Fs
@@ -541,6 +545,8 @@ class Rows():
     def Initiate(self):
         self.SesScope.initiate()
 
+    def Abort(self):
+        self.SesScope.abort()
 # Init Session of Scope        
 class SigScope(niscope.Session):
     def GetSignal(self, RowsConfig):#RowsConfig = {'Row1': Range, Index}
@@ -596,6 +602,6 @@ class DataAcquisitionThread(Qt.QThread):
             self.NewData.emit()
             
     def stopSessions(self):
-        self.Columns.abort()
-        self.Rows.abort()
+        self.Columns.Abort()
+        self.Rows.Abort()
 

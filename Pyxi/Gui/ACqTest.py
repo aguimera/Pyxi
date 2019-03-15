@@ -83,6 +83,7 @@ class MainWindow(Qt.QWidget):
         self.btnGen.clicked.connect(self.on_btnGen)
         
         self.threadAqc = None
+        self.threadSave = None
 
     def on_pars_changed(self, param, changes):
         print("tree changes:")
@@ -117,10 +118,11 @@ class MainWindow(Qt.QWidget):
         if self.threadAqc is None:
             GenKwargs = self.NifGenParams.GetParams()
             ScopeKwargs = self.NiScopeParams.GetParams()
+#            print(GenKwargs, ScopeKwargs)
             
             self.threadAqc = FMacq.DataAcquisitionThread(**GenKwargs, **ScopeKwargs)
             self.threadAqc.NewData.connect(self.on_NewSample)
-            self.threadAqc.start()
+            
             
             FileName = self.FileParameters.param('File Path').value()
             if FileName ==  '':
@@ -131,7 +133,7 @@ class MainWindow(Qt.QWidget):
                     os.remove(FileName)  
                 MaxSize = self.FileParameters.param('MaxSize').value()
                 self.threadSave = FileMod.DataSavingThread(FileName=FileName,
-                                                           nChannels=GenKwargs['Rows'],
+                                                           nChannels=ScopeKwargs['NRow'],
                                                            MaxSize=MaxSize)
                 self.threadSave.start()
              
@@ -150,7 +152,8 @@ class MainWindow(Qt.QWidget):
                                                       nChannels=ScopeKwargs['NRow'],
                                                       **self.PSDParams.GetParams())
             self.threadPSDPlotter.start()    
-#
+
+            self.threadAqc.start()
             self.btnGen.setText("Stop Gen")
             self.OldTime = time.time()
         else:
@@ -178,7 +181,7 @@ class MainWindow(Qt.QWidget):
         self.threadPSDPlotter.AddData(self.threadAqc.OutData)
         print('Sample time', Ts)
 
-    def GenArchivo(name, dic2Save):
+    def GenArchivo(self, name, dic2Save):
         with open(name, "wb") as f:
             pickle.dump(dic2Save, f)
             
