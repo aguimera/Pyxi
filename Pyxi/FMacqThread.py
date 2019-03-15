@@ -304,6 +304,12 @@ NiScopeFetchingPars =  {'name': 'FetchConfig',
                                     'type': 'int',
                                     'siPrefix': True,
                                     'suffix': 'Samples'},
+                                   {'name': 'GainBoard',
+                                    'titel': 'System Gain',
+                                    'value': 5e3,
+                                    'type': 'int',
+                                    'siPrefix': True,
+                                    'suffix': 'Ohms'},
                                    {'name':'Resource',
                                     'type': 'str',
                                     'readonly': True,
@@ -547,7 +553,7 @@ class SigScope(niscope.Session):
 class DataAcquisitionThread(Qt.QThread):
     NewData = Qt.pyqtSignal()
 
-    def __init__(self, ColumnsConfig, Fs, GS, Offset, RowsConfig, BS, NRow, OffsetRows, Resource):
+    def __init__(self, ColumnsConfig, Fs, GS, Offset, RowsConfig, BS, NRow, OffsetRows, GainBoard, Resource):
         print ('TMacqThread, DataAcqThread')
         super(DataAcquisitionThread, self).__init__()
         
@@ -558,6 +564,7 @@ class DataAcquisitionThread(Qt.QThread):
         self.BS = BS
         self.channels = list(range(NRow))
         self.offset = OffsetRows
+        self.GainBoard = GainBoard
 
         Sig = {}
         for col, pars in ColumnsConfig.items():
@@ -568,7 +575,7 @@ class DataAcquisitionThread(Qt.QThread):
                 PropSig[str(p)] = val
                 
             Sig[str(col)]= PropSig
-        print(Sig)
+
         self.Columns.SetSignal(Sig, Offset)
 
     def run(self, *args, **kwargs):
@@ -585,6 +592,10 @@ class DataAcquisitionThread(Qt.QThread):
                                                           timeout=2)
             
             for i, In in enumerate(Inputs):
-                self.OutData[:, i] = np.array(In.samples)            
+                self.OutData[:, i] = np.array(In.samples)/self.GainBoard            
             self.NewData.emit()
+            
+    def stopSessions(self):
+        self.Columns.abort()
+        self.Rows.abort()
 

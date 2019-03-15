@@ -50,7 +50,11 @@ class MainWindow(Qt.QWidget):
         self.NiScopeParams = FMacq.NiScopeParameters(name = 'Scope')
         
         self.Parameters.addChild(self.NiScopeParams)
-#       
+#   
+        self.FileParameters = FileMod.SaveFileParameters(QTparent=self,
+                                                         name='Record File')
+        self.Parameters.addChild(self.FileParameters)
+        
         self.PSDParams = PltMod.PSDParameters(name='PSD Options')
         self.PSDParams.param('Fs').setValue(self.NifGenParams.Fs.value())
         self.PSDParams.param('Fmin').setValue(50)
@@ -96,17 +100,42 @@ class MainWindow(Qt.QWidget):
             self.NiScopeParams.Fs.setValue(data)
             self.PlotParams.param('Fs').setValue(data)
             self.PSDParams.param('Fs').setValue(data)
+            
         if childName == 'Scope.FetchConfig.NRow':
             self.PlotParams.SetChannels(self.NiScopeParams.GetChannels())
             
+        if childName == 'Plot options.RefreshTime':
+            if self.threadPlotter is not None:
+                self.threadPlotter.SetRefreshTime(data)    
+
+        if childName == 'Plot options.ViewTime':
+            if self.threadPlotter is not None:
+                self.threadPlotter.SetViewTime(data)   
     def on_btnGen(self):
         print('h')
         if self.threadAqc is None:
-            
-            PlotterKwargs = self.PlotParams.GetParams()
             GenKwargs = self.NifGenParams.GetParams()
             ScopeKwargs = self.NiScopeParams.GetParams()
             
+            self.threadAqc = FMacq.DataAcquisitionThread(**GenKwargs, **ScopeKwargs)
+            self.threadAqc.NewData.connect(self.on_NewSample)
+            self.threadAqc.start()
+            
+            FileName = self.FileParameters.param('File Path').value()
+            if FileName ==  '':
+                print('No file')
+            else:
+                if os.path.isfile(FileName):
+                    print('Remove File')
+                    os.remove(FileName)  
+                MaxSize = self.FileParameters.param('MaxSize').value()
+                self.threadSave = FileMod.DataSavingThread(FileName=FileName,
+                                                           nChannels=GenKwargs['Rows'],
+                                                           MaxSize=MaxSize)
+                self.threadSave.start()
+                
+            PlotterKwargs = self.PlotParams.GetParams()
+      
             self.threadPlotter = PltMod.Plotter(**PlotterKwargs)
             self.threadPlotter.start()
             
@@ -114,30 +143,30 @@ class MainWindow(Qt.QWidget):
                                                       nChannels=ScopeKwargs['NRow'],
                                                       **self.PSDParams.GetParams())
             self.threadPSDPlotter.start()    
- 
-
-            
-            self.threadAqc = FMacq.DataAcquisitionThread(**GenKwargs, **ScopeKwargs)
-            self.threadAqc.NewData.connect(self.on_NewSample)
-            
-            
-#            self.threadGen.start()
 #
             self.btnGen.setText("Stop Gen")
-            self.threadAqc.start()
             self.OldTime = time.time()
         else:
             self.threadAqc.NewData.disconnect()
+            self.threadAqc.stopSessions()
             self.threadAqc.terminate()
             self.threadAqc = None
+            
+            if self.threadSave is not None:
+                self.threadSave.terminate()
+                self.threadSave = None
+                
+            self.threadPlotter.terminate()
+            self.threadPlotter = None   
+            
             self.btnGen.setText("Start Gen")
             
     def on_NewSample(self):
         ''' Visualization of streaming data-WorkThread. '''
         Ts = time.time() - self.OldTime
         self.OldTime = time.time()
-#        if self.threadSave is not None:
-#            self.threadSave.AddData(self.threadGen.OutData)
+        if self.threadSave is not None:
+            self.threadSave.AddData(self.threadAqc.OutData)
         self.threadPlotter.AddData(self.threadAqc.OutData)
         self.threadPSDPlotter.AddData(self.threadAqc.OutData)
         print('Sample time', Ts)
