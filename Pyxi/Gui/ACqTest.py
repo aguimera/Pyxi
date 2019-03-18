@@ -139,7 +139,11 @@ class MainWindow(Qt.QWidget):
              
             GenName = FileName+'_GenConfig.dat'
             ScopeName = FileName+'_ScopeConfig.dat'
-            
+            if os.path.isfile(GenName):
+                print('Overwriting  file')
+            if os.path.isfile(ScopeName):
+                print('Overwriting  file')
+                
             self.GenArchivo(GenName, GenKwargs)
             self.GenArchivo(ScopeName, ScopeKwargs)
             
