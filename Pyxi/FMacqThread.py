@@ -586,21 +586,30 @@ class DataAcquisitionThread(Qt.QThread):
 
     def run(self, *args, **kwargs):
         print('start ')
-        self.Columns.Initiate()
-        self.Rows.Initiate()
+        self.initSessions()
         self.OutData = np.ndarray((self.BS, len(self.channels)))
         while True:
-            Inputs = self.Rows.SesScope.channels[self.channels].fetch(num_samples=self.BS,
-                                                          relative_to=niscope.FetchRelativeTo.READ_POINTER,
-                                                          offset=self.offset,
-                                                          record_number=0,
-                                                          num_records=1,
-                                                          timeout=2)
-            
-            for i, In in enumerate(Inputs):
-                self.OutData[:, i] = np.array(In.samples)/self.GainBoard            
-            self.NewData.emit()
-            
+            try: 
+                Inputs = self.Rows.SesScope.channels[self.channels].fetch(num_samples=self.BS,
+                                                              relative_to=niscope.FetchRelativeTo.READ_POINTER,
+                                                              offset=self.offset,
+                                                              record_number=0,
+                                                              num_records=1,
+                                                              timeout=2)
+                
+                for i, In in enumerate(Inputs):
+                    self.OutData[:, i] = np.array(In.samples)/self.GainBoard            
+                self.NewData.emit()
+
+            except Exception:
+                print('Requested data has been overwritten in memory')
+                self.stopSessions()
+                print('Gen and Scope Sessions Restarted')
+                self.initSessions()
+    
+    def initSessions(self):
+        self.Columns.Initiate()
+        self.Rows.Initiate()
     def stopSessions(self):
         self.Columns.Abort()
         self.Rows.Abort()
