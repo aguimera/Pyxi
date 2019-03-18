@@ -24,7 +24,7 @@ import pickle
 
 import Pyxi.FileModule as FileMod
 import Pyxi.SampleGenerator as SampGen
-import Pyxi.PlotModule as PltMod
+import Pyxi.PlotModule_LRB as PltMod
 import Pyxi.FMacqThread as FMacq
 
 class MainWindow(Qt.QWidget):
@@ -60,11 +60,13 @@ class MainWindow(Qt.QWidget):
         self.PSDParams.param('Fs').setValue(self.NifGenParams.Fs.value())
         self.PSDParams.param('Fmin').setValue(50)
         self.PSDParams.param('nAvg').setValue(50)
+        self.PSDEnable = self.PSDParams.param('PSDEnable').value()
         self.Parameters.addChild(self.PSDParams)
         
         self.PlotParams = PltMod.PlotterParameters(name='Plot options')
         self.PlotParams.SetChannels(self.NiScopeParams.GetChannels())
         self.PlotParams.param('Fs').setValue(self.NifGenParams.Fs.value())
+        self.PltEnable = self.PlotParams.param('PlotEnable').value()
 
         self.Parameters.addChild(self.PlotParams)
 
@@ -113,27 +115,38 @@ class MainWindow(Qt.QWidget):
         if childName == 'Plot options.ViewTime':
             if self.threadPlotter is not None:
                 self.threadPlotter.SetViewTime(data)   
+                
+        if childName == 'Plot options.PlotEnable':
+            if self.threadPlotter is not None:
+                if data == False:
+                    self.DestroyPlotter()
+            if self.threadPlotter is None:
+                if data == True:
+                    self.GenPlotter()
+                    
+        if childName == 'PSD Options.PSDEnable':
+            if self.threadPSDPlotter is not None:
+                if data == False:
+                    self.DestroyPSDPlotter()
+            if self.threadPSDPlotter is None:
+                if data == True:
+                    self.GenPSDPlotter()
+                    
     def on_btnGen(self):
         print('h')
         if self.threadAqc is None:
             self.GenKwargs = self.NifGenParams.GetParams()
             self.ScopeKwargs = self.NiScopeParams.GetParams()
-#            print(GenKwargs, ScopeKwargs)
             
             self.threadAqc = FMacq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
             self.threadAqc.NewData.connect(self.on_NewSample)
             
             self.SaveFiles()            
                 
-            PlotterKwargs = self.PlotParams.GetParams()
-      
-            self.threadPlotter = PltMod.Plotter(**PlotterKwargs)
-            self.threadPlotter.start()
-            
-            self.threadPSDPlotter = PltMod.PSDPlotter(ChannelConf=PlotterKwargs['ChannelConf'],
-                                                      nChannels=self.ScopeKwargs['NRow'],
-                                                      **self.PSDParams.GetParams())
-            self.threadPSDPlotter.start()    
+            if self.PltEnable == True:
+                self.GenPlotter()
+            if self.PSDEnable == True:
+                self.GenPSDPlotter()
 
             self.threadAqc.start()
             self.btnGen.setText("Stop Gen")
@@ -145,12 +158,15 @@ class MainWindow(Qt.QWidget):
             self.threadAqc = None
             
             if self.threadSave is not None:
-                self.threadSave.terminate()
+                self.threadSave.stop()
                 self.threadSave = None
-                
-            self.threadPlotter.terminate()
-            self.threadPlotter = None   
             
+            if self.threadPlotter is not None:
+                self.DestroyPlotter()
+                
+            if self.threadPSDPlotter is not None:
+                self.DestroyPSDPlotter()
+                
             self.btnGen.setText("Start Gen")
             
     def on_NewSample(self):
@@ -159,10 +175,36 @@ class MainWindow(Qt.QWidget):
         self.OldTime = time.time()
         if self.threadSave is not None:
             self.threadSave.AddData(self.threadAqc.OutData)
-        self.threadPlotter.AddData(self.threadAqc.OutData)
-        self.threadPSDPlotter.AddData(self.threadAqc.OutData)
+        
+        if self.threadPlotter is not None:
+            self.threadPlotter.AddData(self.threadAqc.OutData)
+            
+        if self.threadPSDPlotter is not None:  
+            self.threadPSDPlotter.AddData(self.threadAqc.OutData)
+            
         print('Sample time', Ts)
 
+    def GenPlotter(self):
+        PlotterKwargs = self.PlotParams.GetParams()
+        self.threadPlotter = PltMod.Plotter(**PlotterKwargs)
+        self.threadPlotter.start()
+        
+    def DestroyPlotter(self):
+        self.threadPlotter.stop()
+        self.threadPlotter = None
+        
+    def GenPSDPlotter(self):
+        PlotterKwargs = self.PlotParams.GetParams()
+        ScopeKwargs = self.NiScopeParams.GetParams()
+        self.threadPSDPlotter = PltMod.PSDPlotter(ChannelConf=PlotterKwargs['ChannelConf'],
+                                                  nChannels=ScopeKwargs['NRow'],
+                                                  **self.PSDParams.GetParams())
+        self.threadPSDPlotter.start() 
+        
+    def DestroyPSDPlotter(self):
+        self.threadPSDPlotter.stop()
+        self.threadPSDPlotter = None
+        
     def SaveFiles(self):
         FileName = self.FileParameters.param('File Path').value()
         if FileName ==  '':

@@ -285,15 +285,13 @@ NiScopeFetchingPars =  {'name': 'FetchConfig',
                                     'title': 'Buffer Size',
                                     'type': 'int',
                                     'value': int(20e3),
-                                    'limits': (int(0), int(5e6)),
-                                    'step': 100,
+                                    'readonly': True,
                                     'siPrefix': True,
                                     'suffix': 'Samples'},
                                    {'name': 'tFetch',
                                     'title': 'Fetching Time',
                                     'type': 'float',
                                     'value': 1,
-                                    'readonly': True,
                                     'siPrefix': True,
                                     'suffix': 's'},
                                    {'name': 'NRow',
@@ -473,7 +471,8 @@ class NiScopeParameters(pTypes.GroupParameter):
         
         self.RowsConfig.sigTreeStateChanged.connect(self.on_RowConf_Changed)
         self.on_RowConf_Changed()
-        self.BS.sigValueChanged.connect(self.on_BS_Changed)
+        self.Fs.sigValueChanged.connect(self.on_Fs_Changed)
+        self.tFetch.sigValueChanged.connect(self.on_BS_Changed)
 
     def on_RowConf_Changed(self):
         self.Rows = []
@@ -482,20 +481,17 @@ class NiScopeParameters(pTypes.GroupParameter):
                 self.Rows.append(p.name())
         self.NRows.setValue(len(self.Rows))
        
-#    def on_Fs_Changed(self):
-#        Fs = self.Fs.value()
-#        Samps = self.BS.value()
-#        n = round(Samps*Fs) # Fs/Ts
-#        Fs = n/Samps
-#        self.Fs.setValue(Fs)
-#        
+    def on_Fs_Changed(self):
+        self.on_BS_Changed()
+        
     def on_BS_Changed(self):
         Fs = self.Fs.value()
-        Samps = self.BS.value()
-        self.tFetch.setValue(Samps/Fs)
-#        n = round(Samps*Fs) # Fs/Ts
-#        Samps = round(n/Fs)
-#        self.BS.setValue(Samps)
+        tF = self.tFetch.value()
+        Samples = int(tF*Fs)
+        tF = Samples/Fs
+        self.tFetch.setValue(tF)
+        self.BS.setValue(Samples)
+        
     def GetChannels(self):
         RowNames = {}
         for i,r in enumerate(self.Rows):

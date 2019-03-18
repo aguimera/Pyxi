@@ -81,6 +81,7 @@ class FileBuffer():
         stat = os.stat(self.FileName)
         if stat.st_size > self.MaxSize:
 #            print(stat.st_size, self.MaxSize)
+            self.h5File.close()
             self._initFile()
 
 
@@ -105,6 +106,10 @@ class DataSavingThread(Qt.QThread):
             print('Error Saving !!!!')
         self.NewData = NewData
 
+    def stop (self):
+        self.FileBuff.h5File.close()
+        self.terminate()
+        
 SaveStatePars = [{'name': 'Save State',
                   'type': 'action'},
                  {'name': 'Load State',
