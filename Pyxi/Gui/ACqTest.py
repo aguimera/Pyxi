@@ -116,47 +116,22 @@ class MainWindow(Qt.QWidget):
     def on_btnGen(self):
         print('h')
         if self.threadAqc is None:
-            GenKwargs = self.NifGenParams.GetParams()
-            ScopeKwargs = self.NiScopeParams.GetParams()
+            self.GenKwargs = self.NifGenParams.GetParams()
+            self.ScopeKwargs = self.NiScopeParams.GetParams()
 #            print(GenKwargs, ScopeKwargs)
             
-            self.threadAqc = FMacq.DataAcquisitionThread(**GenKwargs, **ScopeKwargs)
+            self.threadAqc = FMacq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
             self.threadAqc.NewData.connect(self.on_NewSample)
             
-            
-            FileName = self.FileParameters.param('File Path').value()
-            if FileName ==  '':
-                print('No file')
-            else:
-                if os.path.isfile(FileName):
-                    print('Remove File')
-                    os.remove(FileName)  
-                MaxSize = self.FileParameters.param('MaxSize').value()
-                self.threadSave = FileMod.DataSavingThread(FileName=FileName,
-                                                           nChannels=ScopeKwargs['NRow'],
-                                                           MaxSize=MaxSize)
-                self.threadSave.start()
-             
-            GenName = FileName+'_GenConfig.dat'
-            ScopeName = FileName+'_ScopeConfig.dat'
-            if os.path.isfile(GenName):
-                print('Overwriting  file')
-                OutGen = input('y/n + press(Enter)')
-                if OutGen =='y':
-                    self.GenArchivo(GenName, GenKwargs)
-            if os.path.isfile(ScopeName):
-                print('Overwriting  file')
-                OutScope = input('y/n + press(Enter)')
-                if OutScope =='y':
-                    self.GenArchivo(ScopeName, ScopeKwargs)
-            
+            self.SaveFiles()            
+                
             PlotterKwargs = self.PlotParams.GetParams()
       
             self.threadPlotter = PltMod.Plotter(**PlotterKwargs)
             self.threadPlotter.start()
             
             self.threadPSDPlotter = PltMod.PSDPlotter(ChannelConf=PlotterKwargs['ChannelConf'],
-                                                      nChannels=ScopeKwargs['NRow'],
+                                                      nChannels=self.ScopeKwargs['NRow'],
                                                       **self.PSDParams.GetParams())
             self.threadPSDPlotter.start()    
 
@@ -188,6 +163,37 @@ class MainWindow(Qt.QWidget):
         self.threadPSDPlotter.AddData(self.threadAqc.OutData)
         print('Sample time', Ts)
 
+    def SaveFiles(self):
+        FileName = self.FileParameters.param('File Path').value()
+        if FileName ==  '':
+            print('No file')
+        else:
+            if os.path.isfile(FileName):
+                print('Remove File')
+                os.remove(FileName)  
+            MaxSize = self.FileParameters.param('MaxSize').value()
+            self.threadSave = FileMod.DataSavingThread(FileName=FileName,
+                                                       nChannels=self.ScopeKwargs['NRow'],
+                                                       MaxSize=MaxSize)
+            self.threadSave.start()
+         
+            GenName = FileName+'_GenConfig.dat'
+            ScopeName = FileName+'_ScopeConfig.dat'
+            if os.path.isfile(GenName):
+                print('Overwriting  file')
+                OutGen = input('y/n + press(Enter)')
+                if OutGen =='y':
+                    self.GenArchivo(GenName, self.GenKwargs)
+            else:
+                self.GenArchivo(GenName, self.GenKwargs)
+            if os.path.isfile(ScopeName):
+                print('Overwriting  file')
+                OutScope = input('y/n + press(Enter)')
+                if OutScope =='y':
+                    self.GenArchivo(ScopeName, self.ScopeKwargs)
+            else:
+                self.GenArchivo(ScopeName, self.ScopeKwargs)
+                
     def GenArchivo(self, name, dic2Save):
         with open(name, "wb") as f:
             pickle.dump(dic2Save, f)
