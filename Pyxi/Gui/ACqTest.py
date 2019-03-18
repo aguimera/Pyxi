@@ -141,11 +141,14 @@ class MainWindow(Qt.QWidget):
             ScopeName = FileName+'_ScopeConfig.dat'
             if os.path.isfile(GenName):
                 print('Overwriting  file')
+                OutGen = input('y/n + press(Enter)')
+                if OutGen =='y':
+                    self.GenArchivo(GenName, GenKwargs)
             if os.path.isfile(ScopeName):
                 print('Overwriting  file')
-                
-            self.GenArchivo(GenName, GenKwargs)
-            self.GenArchivo(ScopeName, ScopeKwargs)
+                OutScope = input('y/n + press(Enter)')
+                if OutScope =='y':
+                    self.GenArchivo(ScopeName, ScopeKwargs)
             
             PlotterKwargs = self.PlotParams.GetParams()
       
