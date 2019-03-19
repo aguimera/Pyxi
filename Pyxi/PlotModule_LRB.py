@@ -251,11 +251,12 @@ class Plotter(Qt.QThread):
 
     def run(self, *args, **kwargs):
         while True:
-            if self.Buffer.counter > self.RefreshInd:
-                t = self.Buffer.GetTimes(self.ViewInd)
+            if self.counter > self.RefreshInd:
+                t = self.GetTimes(self.ViewInd)
                 self.Buffer.Reset()
                 for i in range(self.nChannels):
-                    self.Curves[i].setData(t, self.Buffer[-self.ViewInd:, i])
+#                    self.Curves[i].setData(t, self.Buffer[-self.ViewInd:, i])
+                    self.Curves[i].setData(t, self.Data[-self.ViewInd:, i])
 #                    self.Curves[i].setData(NewData[:, i])
 #                self.Plots[i].setXRange(self.BufferSize/10,
 #                                        self.BufferSize)
@@ -264,8 +265,17 @@ class Plotter(Qt.QThread):
                 Qt.QThread.msleep(10)
 
     def AddData(self, NewData):
-        self.Buffer.AddData(NewData)
-
+#        self.Buffer.AddData(NewData)
+        self.Data = NewData
+        self.counter += self.Data.size[0]
+        self.totalind += self.Data.size[0]
+        
+    def GetTimes(self, Size):
+        stop = self.Ts * self.totalind
+        start = stop - self.Ts*Size
+        times = np.arange(start, stop, self.Ts)
+        return times[-Size:]
+    
     def stop(self):
         for wind in self.Winds:
             wind.close()
