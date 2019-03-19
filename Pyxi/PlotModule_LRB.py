@@ -251,12 +251,12 @@ class Plotter(Qt.QThread):
 
     def run(self, *args, **kwargs):
         while True:
-            if self.counter > self.RefreshInd:
-                t = self.GetTimes(self.ViewInd)
+            if self.Buffer.counter > self.RefreshInd:
+                t = self.Buffer.GetTimes(self.ViewInd)
                 self.Buffer.Reset()
                 for i in range(self.nChannels):
-#                    self.Curves[i].setData(t, self.Buffer[-self.ViewInd:, i])
-                    self.Curves[i].setData(t, self.Data[-self.ViewInd:, i])
+                    self.Curves[i].setData(t, self.Buffer[-self.ViewInd:, i])
+#                    self.Curves[i].setData(self.Data[-self.ViewInd:, i])
 #                    self.Curves[i].setData(NewData[:, i])
 #                self.Plots[i].setXRange(self.BufferSize/10,
 #                                        self.BufferSize)
@@ -265,16 +265,89 @@ class Plotter(Qt.QThread):
                 Qt.QThread.msleep(10)
 
     def AddData(self, NewData):
-#        self.Buffer.AddData(NewData)
-        self.Data = NewData
-        self.counter += self.Data.size[0]
-        self.totalind += self.Data.size[0]
-        
-    def GetTimes(self, Size):
-        stop = self.Ts * self.totalind
-        start = stop - self.Ts*Size
-        times = np.arange(start, stop, self.Ts)
-        return times[-Size:]
+        self.Buffer.AddData(NewData)
+#        self.Data = NewData
+#        self.counter += self.Data.size[0]
+#        self.totalind += self.Data.size[0]
+#        
+#    def GetTimes(self, Size):
+#        stop = self.Ts * self.totalind
+#        start = stop - self.Ts*Size
+#        times = np.arange(start, stop, self.Ts)
+#        return times[-Size:]
+    
+    def stop(self):
+        for wind in self.Winds:
+            wind.close()
+        self.terminate()
+
+##############################################################################
+class Plotter2(Qt.QThread):
+    def __init__(self, Fs, nChannels, ViewBuffer, ViewTime, RefreshTime,
+                 ChannelConf):
+        super(Plotter, self).__init__()
+
+        self.Winds = []
+        self.nChannels = nChannels
+        self.Plots = [None]*nChannels
+        self.Curves = [None]*nChannels
+
+        self.Fs = Fs
+        self.Ts = 1/float(self.Fs)
+        self.Buffer = Buffer2D(Fs, nChannels, ViewBuffer)
+        self.SetRefreshTime(RefreshTime)
+        self.SetViewTime(ViewTime)
+
+#        print(self.RefreshInd, self.ViewInd, self.Buffer.shape)
+
+        self.Winds = []
+        for win, chs in ChannelConf.items():
+            wind = PgPlotWindow()
+            self.Winds.append(wind)
+            xlink = None
+            for ch in chs:
+                wind.pgLayout.nextRow()
+                p = wind.pgLayout.addPlot()
+                p.hideAxis('bottom')
+                p.setLabel('left',
+                           ch['name'],
+                           units='A',
+                           **labelStyle)
+                p.setDownsampling(auto=True,
+                                  mode='subsample',
+#                                  mode='peak',
+                                  )
+                p.setClipToView(True)
+                c = p.plot(pen=pg.mkPen(ch['color'],
+                                        width=ch['width']))
+#                c = p.plot()
+                self.Plots[ch['Input']] = p
+                self.Curves[ch['Input']] = c
+
+                if xlink is not None:
+                    p.setXLink(xlink)
+                xlink = p
+            p.showAxis('bottom')
+            p.setLabel('bottom', 'Time', units='s', **labelStyle)
+
+    def SetViewTime(self, ViewTime):
+        self.ViewTime = ViewTime
+        self.ViewInd = int(ViewTime/self.Ts)
+
+    def SetRefreshTime(self, RefreshTime):
+        self.RefreshTime = RefreshTime
+        self.RefreshInd = int(RefreshTime/self.Ts)
+
+    def run(self, *args, **kwargs):
+        while True:
+            for i in range(self.nChannels):
+                    self.Curves[i].setData(self.Data[-self.ViewInd:, i])
+            self.Data = None
+            Qt.QThread.sleep(self.RefreshTime)
+
+    def AddData(self, NewData):
+        if self.Data == None:
+            self.Data = NewData.copy()
     
     def stop(self):
         for wind in self.Winds:
