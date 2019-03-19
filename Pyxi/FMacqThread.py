@@ -164,7 +164,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         Fmin = np.min(Freqs)
         
         Fs = self.Fs.value()
-        Samps = round(Fs/Fmin)*100
+        Samps = round(Fs/Fmin)*1000
         self.GS.setValue(Samps)
         for p in self.CarrierConfig.children():
             Fc = p.param('Frequency').value()

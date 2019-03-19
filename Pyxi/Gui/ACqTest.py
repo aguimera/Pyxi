@@ -154,11 +154,8 @@ class MainWindow(Qt.QWidget):
                 self.threadSave.stop()
                 self.threadSave = None
             
-            if self.threadPlotter is not None:
-                self.DestroyPlots()
-                
-            if self.threadPSDPlotter is not None:
-                self.DestroyPlots()
+            self.DestroyPlotter()
+            self.DestroyPSD()
                 
             self.btnGen.setText("Start Gen")
             
@@ -180,36 +177,35 @@ class MainWindow(Qt.QWidget):
     def GenPlots(self):
         PlotterKwargs = self.PlotParams.GetParams()
         ScopeKwargs = self.NiScopeParams.GetParams()
-        if self.PltEnable == True:           
-            self.threadPlotter = PltMod.Plotter(**PlotterKwargs)
-            self.threadPlotter.start()
-            
-        if self.PSDEnable == True:        
-            self.threadPSDPlotter = PltMod.PSDPlotter(ChannelConf=PlotterKwargs['ChannelConf'],
-                                                      nChannels=ScopeKwargs['NRow'],
-                                                      **self.PSDParams.GetParams())
-            self.threadPSDPlotter.start() 
-    def DestroyPlots(self):
-        if self.PltEnable == False:    
+        if self.threadPlotter is None:
+            if self.PltEnable == True:           
+                self.threadPlotter = PltMod.Plotter(**PlotterKwargs)
+                self.threadPlotter.start()
+        
+        if self.threadPSDPlotter is None:
+            if self.PSDEnable == True:        
+                self.threadPSDPlotter = PltMod.PSDPlotter(ChannelConf=PlotterKwargs['ChannelConf'],
+                                                          nChannels=ScopeKwargs['NRow'],
+                                                          **self.PSDParams.GetParams())
+                self.threadPSDPlotter.start() 
+                
+    def DestroyPlotter(self):
+        if self.threadPlotter is not None:    
             self.threadPlotter.stop()
             self.threadPlotter = None
-        if self.PSDEnable == False:     
+            
+    def DestroyPSD(self):
+        if self.threadPSDPlotter is not None: 
             self.threadPSDPlotter.stop()
             self.threadPSDPlotter = None 
             
     def UpdatePlots(self):
-        if self.threadPlotter is not None:
-            if self.PltEnable == False:
-                self.DestroyPlots()
-            if self.threadPlotter is None:
-                if self.PltEnable == True:
-                    self.GenPlots()
-        if self.threadPSDPlotter is not None:
-            if self.PSDEnable == False:
-                self.DestroyPlots()
-            if self.threadPSDPlotter is None:
-                if self.PSDEnable == True:
-                    self.GenPlots()
+        if self.PltEnable == False:
+            self.DestroyPlotter()
+        if self.PSDEnable == False:
+            self.DestroyPSD()
+        else:
+            self.GenPlots()
                     
     def SaveFiles(self):
         FileName = self.FileParameters.param('File Path').value()
