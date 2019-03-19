@@ -24,7 +24,7 @@ import pickle
 
 import Pyxi.FileModule as FileMod
 import Pyxi.SampleGenerator as SampGen
-import Pyxi.PlotModule_LRB as PltMod
+import Pyxi.PlotModule as PltMod
 import Pyxi.FMacqThread as FMacq
 
 class MainWindow(Qt.QWidget):
@@ -164,7 +164,9 @@ class MainWindow(Qt.QWidget):
         Ts = time.time() - self.OldTime
         self.OldTime = time.time()
         if self.threadSave is not None:
-            self.threadSave.AddData(self.threadAqc.OutData)
+            OutD = np.asarray(self.threadAqc.OutData, dtype=np.float64).view(np.int16)
+            print(OutD)
+            self.threadSave.AddData(OutD)
         
         if self.threadPlotter is not None:
             self.threadPlotter.AddData(self.threadAqc.OutData)

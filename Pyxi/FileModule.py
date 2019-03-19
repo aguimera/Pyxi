@@ -68,6 +68,7 @@ class FileBuffer():
         self.h5File = h5py.File(FileName, 'w')
         self.Dset = self.h5File.create_dataset('data',
                                                shape=(0, self.nChannels),
+                                               dtype='int16',
                                                maxshape=(None, self.nChannels),
                                                compression="gzip")
 
@@ -76,7 +77,7 @@ class FileBuffer():
         FileInd = self.Dset.shape[0]
         self.Dset.resize((FileInd + nSamples, self.nChannels))
         self.Dset[FileInd:, :] = Sample
-        self.h5File.flush()
+#        self.h5File.flush()
 
         stat = os.stat(self.FileName)
         if stat.st_size > self.MaxSize:
