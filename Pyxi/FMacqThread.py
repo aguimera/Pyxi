@@ -139,6 +139,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         
         self.ColConfig.sigTreeStateChanged.connect(self.on_ColConf_Changed)
         self.on_ColConf_Changed()
+        self.on_Fsig_Changed()
         
         self.CarrierConfig.sigTreeStateChanged.connect(self.on_Fsig_Changed)
     
@@ -163,7 +164,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         Fmin = np.min(Freqs)
         
         Fs = self.Fs.value()
-        Samps = round(Fs/Fmin)
+        Samps = round(Fs/Fmin)*100
         self.GS.setValue(Samps)
         for p in self.CarrierConfig.children():
             Fc = p.param('Frequency').value()

@@ -285,8 +285,9 @@ class Plotter(Qt.QThread):
 class Plotter2(Qt.QThread):
     def __init__(self, Fs, nChannels, ViewBuffer, ViewTime, RefreshTime,
                  ChannelConf):
-        super(Plotter, self).__init__()
+        super(Plotter2, self).__init__()
 
+        self.Data = None
         self.Winds = []
         self.nChannels = nChannels
         self.Plots = [None]*nChannels
@@ -294,7 +295,6 @@ class Plotter2(Qt.QThread):
 
         self.Fs = Fs
         self.Ts = 1/float(self.Fs)
-        self.Buffer = Buffer2D(Fs, nChannels, ViewBuffer)
         self.SetRefreshTime(RefreshTime)
         self.SetViewTime(ViewTime)
 
@@ -340,13 +340,14 @@ class Plotter2(Qt.QThread):
 
     def run(self, *args, **kwargs):
         while True:
-            for i in range(self.nChannels):
-                    self.Curves[i].setData(self.Data[-self.ViewInd:, i])
-            self.Data = None
+            if self.Data is not None:
+                for i in range(self.nChannels):
+                        self.Curves[i].setData(self.Data[-self.ViewInd:, i])
+                self.Data = None
             Qt.QThread.sleep(self.RefreshTime)
 
     def AddData(self, NewData):
-        if self.Data == None:
+        if self.Data is None:
             self.Data = NewData.copy()
     
     def stop(self):

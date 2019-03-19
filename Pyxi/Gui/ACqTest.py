@@ -186,7 +186,7 @@ class MainWindow(Qt.QWidget):
 
     def GenPlotter(self):
         PlotterKwargs = self.PlotParams.GetParams()
-        self.threadPlotter = PltMod.Plotter(**PlotterKwargs)
+        self.threadPlotter = PltMod.Plotter2(**PlotterKwargs)
         self.threadPlotter.start()
         
     def DestroyPlotter(self):

@@ -39,6 +39,10 @@ PlotterPars = ({'name': 'Fs',
                 'type': 'float',
                 'siPrefix': True,
                 'suffix': 'Hz'},
+               {'name': 'PlotEnable',
+                'title': 'Plot Enable',
+                'type': 'bool',
+                'value': True},
                {'name': 'nChannels',
                 'readonly': True,
                 'type': 'int',
@@ -106,7 +110,7 @@ class PlotterParameters(pTypes.GroupParameter):
     def GetParams(self):
         PlotterKwargs = {}
         for p in self.children():
-            if p.name() in ('Channels', 'Windows'):
+            if p.name() in ('Channels', 'Windows', 'PlotEnable'):
                 continue
             PlotterKwargs[p.name()] = p.value()
 
@@ -263,6 +267,83 @@ class Plotter(Qt.QThread):
     def AddData(self, NewData):
         self.Buffer.AddData(NewData)
 
+    def stop(self):
+        for wind in self.Winds:
+            wind.close()
+        self.terminate()
+##############################################################################
+class Plotter2(Qt.QThread):
+    def __init__(self, Fs, nChannels, ViewBuffer, ViewTime, RefreshTime,
+                 ChannelConf):
+        super(Plotter2, self).__init__()
+
+        self.Data = None
+        self.Winds = []
+        self.nChannels = nChannels
+        self.Plots = [None]*nChannels
+        self.Curves = [None]*nChannels
+
+        self.Fs = Fs
+        self.Ts = 1/float(self.Fs)
+        self.SetRefreshTime(RefreshTime)
+        self.SetViewTime(ViewTime)
+
+#        print(self.RefreshInd, self.ViewInd, self.Buffer.shape)
+
+        self.Winds = []
+        for win, chs in ChannelConf.items():
+            wind = PgPlotWindow()
+            self.Winds.append(wind)
+            xlink = None
+            for ch in chs:
+                wind.pgLayout.nextRow()
+                p = wind.pgLayout.addPlot()
+                p.hideAxis('bottom')
+                p.setLabel('left',
+                           ch['name'],
+                           units='A',
+                           **labelStyle)
+                p.setDownsampling(auto=True,
+                                  mode='subsample',
+#                                  mode='peak',
+                                  )
+                p.setClipToView(True)
+                c = p.plot(pen=pg.mkPen(ch['color'],
+                                        width=ch['width']))
+#                c = p.plot()
+                self.Plots[ch['Input']] = p
+                self.Curves[ch['Input']] = c
+
+                if xlink is not None:
+                    p.setXLink(xlink)
+                xlink = p
+            p.showAxis('bottom')
+            p.setLabel('bottom', 'Time', units='s', **labelStyle)
+
+    def SetViewTime(self, ViewTime):
+        self.ViewTime = ViewTime
+        self.ViewInd = int(ViewTime/self.Ts)
+
+    def SetRefreshTime(self, RefreshTime):
+        self.RefreshTime = RefreshTime
+        self.RefreshInd = int(RefreshTime/self.Ts)
+
+    def run(self, *args, **kwargs):
+        while True:
+            if self.Data is not None:
+                for i in range(self.nChannels):
+                        self.Curves[i].setData(self.Data[-self.ViewInd:, i])
+                self.Data = None
+            Qt.QThread.sleep(self.RefreshTime)
+
+    def AddData(self, NewData):
+        if self.Data is None:
+            self.Data = NewData.copy()
+    
+    def stop(self):
+        for wind in self.Winds:
+            wind.close()
+        self.terminate()
 
 ##############################################################################
 
@@ -271,7 +352,8 @@ PSDPars = ({'name': 'Fs',
             'type': 'float',
             'siPrefix': True,
             'suffix': 'Hz'},
-           {'name': 'PSD Enable',
+           {'name': 'PSDEnable',
+            'title': 'PSD Enable',
             'type': 'bool',
             'value': True},
            {'name': 'Fmin',
@@ -400,5 +482,7 @@ class PSDPlotter(Qt.QThread):
     def AddData(self, NewData):
         self.Buffer.AddData(NewData)
 
-
+    def stop(self):
+        self.wind.close()
+        self.terminate()
 
