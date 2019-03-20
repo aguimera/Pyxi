@@ -139,11 +139,10 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         
         self.ColConfig.sigTreeStateChanged.connect(self.on_ColConf_Changed)
         self.on_ColConf_Changed()
-        self.on_Fsig_Changed()
         
         self.CarrierConfig.sigTreeStateChanged.connect(self.on_Fsig_Changed)
-    
-        self.Fs.sigValueChanged.connect(self.on_Fsig_Changed)
+        self.Fs.sigValueChanged.connect(self.on_Fs_Changed)
+        self.on_Fsig_Changed()
 #        self.GS.sigValueChanged.connect(self.on_GS_Changed)
 #
     def on_ColConf_Changed(self):
@@ -160,6 +159,11 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             self.CarrierConfig.addChild(cc)
 
     def on_Fsig_Changed(self):
+        for p in self.CarrierConfig.children():
+            if p.param('Frequency').sigValueChanged():
+                self.on_Fs_Changed()
+                
+    def on_Fs_Changed(self):
         Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
         Fmin = np.min(Freqs)
         
@@ -595,7 +599,7 @@ class DataAcquisitionThread(Qt.QThread):
                                                               timeout=2)
                 
                 for i, In in enumerate(Inputs):
-                    self.OutData[:, i] = np.array(In.samples)/self.GainBoard            
+                    self.OutData[:, i] = np.array(In.samples)#/self.GainBoard            
                 self.NewData.emit()
 
             except Exception:
