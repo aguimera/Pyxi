@@ -142,7 +142,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         
         self.CarrierConfig.sigTreeStateChanged.connect(self.on_Fsig_Changed)
         self.Fs.sigValueChanged.connect(self.on_Fs_Changed)
-        self.on_Fsig_Changed()
+        self.on_Fs_Changed()
 #        self.GS.sigValueChanged.connect(self.on_GS_Changed)
 #
     def on_ColConf_Changed(self):
@@ -160,7 +160,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
 
     def on_Fsig_Changed(self):
         for p in self.CarrierConfig.children():
-            if p.param('Frequency').sigValueChanged():
+            if p.param('Frequency').sigValueChanged:
                 self.on_Fs_Changed()
                 
     def on_Fs_Changed(self):
