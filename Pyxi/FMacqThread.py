@@ -572,7 +572,9 @@ class DataAcquisitionThread(Qt.QThread):
         self.channels = list(range(NRow))
         self.offset = OffsetRows
         self.GainBoard = GainBoard
-
+        
+        for i in range(NRow):
+            self.LSB[i] = self.Rows['Range']
         Sig = {}
         for col, pars in ColumnsConfig.items():
             PropSig = {}
@@ -599,7 +601,8 @@ class DataAcquisitionThread(Qt.QThread):
                                                               timeout=2)
                 
                 for i, In in enumerate(Inputs):
-                    self.OutData[:, i] = np.array(In.samples)#/self.GainBoard            
+                    self.OutData[:, i] = np.array(In.samples)#/self.GainBoard 
+                    self.BinData[:,i] = 
                 self.NewData.emit()
 
             except Exception:
