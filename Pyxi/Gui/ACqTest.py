@@ -164,9 +164,7 @@ class MainWindow(Qt.QWidget):
         Ts = time.time() - self.OldTime
         self.OldTime = time.time()
         if self.threadSave is not None:
-            OutD = np.asarray(self.threadAqc.OutData, dtype=np.float64).view(np.int16)
-            print(OutD)
-            self.threadSave.AddData(OutD)
+            self.threadSave.AddData(self.threadAqc.IntData)
         
         if self.threadPlotter is not None:
             self.threadPlotter.AddData(self.threadAqc.OutData)

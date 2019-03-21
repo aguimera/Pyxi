@@ -211,6 +211,8 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         for Config in self.ColConfig.children():
             for Values in Config.children():
                 if Values.name() == 'Enable':
+                    if Values.value() == False:
+                        break
                     continue
                 Generator['ColumnsConfig'][Config.name()][Values.name()] = Values.value()
             
@@ -572,9 +574,10 @@ class DataAcquisitionThread(Qt.QThread):
         self.channels = list(range(NRow))
         self.offset = OffsetRows
         self.GainBoard = GainBoard
-        
+        self.LSB = np.array([])
         for i in range(NRow):
-            self.LSB[i] = self.Rows['Range']
+            self.LSB = np.append(self.LSB, RowsConfig['Row'+str(i+1)]['Range']/(2**16))
+            
         Sig = {}
         for col, pars in ColumnsConfig.items():
             PropSig = {}
@@ -602,7 +605,9 @@ class DataAcquisitionThread(Qt.QThread):
                 
                 for i, In in enumerate(Inputs):
                     self.OutData[:, i] = np.array(In.samples)#/self.GainBoard 
-                    self.BinData[:,i] = 
+                    self.BinData[:,i] = self.OutData[:,i]/self.LSB[i]
+                    self.IntData[:,i] = np.int16(np.round(self.BinData))
+                print(self.BinData)
                 self.NewData.emit()
 
             except Exception:
