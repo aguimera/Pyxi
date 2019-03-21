@@ -221,8 +221,8 @@ class NifGeneratorParameters(pTypes.GroupParameter):
 class SigGen(nifgen.Session):    
     def SetArbSignal(self, Signal, index, gain, offset):
         Handle = self.create_waveform(Signal)
-        if index != 0: #only needed if the CM is applied through VG0 to all the channels connected
-            offset = 0  #if not done, the other channels will have 2*CM as offset
+#        if index != 0: #only needed if the CM is applied through VG0 to all the channels connected
+#            offset = 0  #if not done, the other channels will have 2*CM as offset
         self.channels[index].configure_arb_waveform(Handle,
                                                     gain=gain,
                                                     offset=offset)
