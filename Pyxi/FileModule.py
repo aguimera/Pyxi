@@ -70,7 +70,8 @@ class FileBuffer():
                                                shape=(0, self.nChannels),
                                                dtype='int16',
                                                maxshape=(None, self.nChannels),
-                                               compression="gzip")
+#                                               compression="gzip"
+                                               )
 
     def AddSample(self, Sample):
         nSamples = Sample.shape[0]

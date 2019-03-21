@@ -594,6 +594,8 @@ class DataAcquisitionThread(Qt.QThread):
         print('start ')
         self.initSessions()
         self.OutData = np.ndarray((self.BS, len(self.channels)))
+        self.BinData = np.ndarray((self.BS, len(self.channels)))
+        self.IntData = np.ndarray((self.BS, len(self.channels)))
         while True:
             try: 
                 Inputs = self.Rows.SesScope.channels[self.channels].fetch(num_samples=self.BS,
