@@ -608,11 +608,11 @@ class DataAcquisitionThread(Qt.QThread):
                 for i, In in enumerate(Inputs):
                     self.OutData[:, i] = np.array(In.samples)#/self.GainBoard 
                     self.BinData[:,i] = self.OutData[:,i]/self.LSB[i]
-                    self.IntData[:,i] = np.int16(np.round(self.BinData))
-                print(self.BinData)
+                    self.IntData[:,i] = np.int16(np.round(self.BinData[:,i]))
                 self.NewData.emit()
 
             except Exception:
+                print(Exception.args)
                 print('Requested data has been overwritten in memory')
                 self.stopSessions()
                 print('Gen and Scope Sessions Restarted')
