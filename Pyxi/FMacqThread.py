@@ -605,3 +605,48 @@ class DataAcquisitionThread(Qt.QThread):
         self.Columns.Abort()
         self.Rows.Abort()
 
+class Acquisition():    
+    def __init__(self, ColumnsConfig, FsGen, GS, Vgs, RowsConfig, NRow, FsScope, ResourceScope):
+        self.Columns = Columns(ColumnsConfig, FsGen, GS)
+        self.Rows = Rows(RowsConfig, FsScope, ResourceScope)
+        self.LSB = np.array([])
+        for i in range(NRow):
+            self.LSB = np.append(self.LSB, RowsConfig['Row'+str(i+1)]['Range']/(2**16))
+        
+    def setSignals(self, ColumnsConfig, Vgs):
+        Sig = {}
+        for col, pars in ColumnsConfig.items():
+            PropSig = {}
+            for p, val in pars.items():
+                if p == 'Resource' or p == 'Index':
+                    continue
+                PropSig[str(p)] = val
+                
+            Sig[str(col)]= PropSig    
+            
+        self.Columns.SetSignal(Sig, Vgs)
+        
+    def GetData(self, FetchSize, channels, ScopeOffset):
+        Inputs = self.Rows.SesScope.channels[channels].fetch(num_samples=FetchSize,
+                                                              relative_to=niscope.FetchRelativeTo.READ_POINTER,
+                                                              offset=ScopeOffset,
+                                                              record_number=0,
+                                                              num_records=1,
+                                                              timeout=20)
+        OutData = np.ndarray((FetchSize, len(channels))) 
+        BinData = np.ndarray((FetchSize, len(channels)))
+        IntData = np.ndarray((FetchSize, len(channels)))
+        for i, In in enumerate(Inputs):
+            OutData[:, i] = np.array(In.samples)#/self.GainBoard 
+            BinData[:,i] = OutData[:,i]/LSB[i]
+            IntData[:,i] = np.int16(np.round(BinData[:,i]))
+            
+        
+        
+    def initSessions(self):
+        self.Columns.Initiate()
+        self.Rows.Initiate()
+        
+    def stopSessions(self):
+        self.Columns.Abort()
+        self.Rows.Abort()  
