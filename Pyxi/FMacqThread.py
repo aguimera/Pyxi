@@ -504,7 +504,7 @@ class NiScopeParameters(pTypes.GroupParameter):
 
         return Scope
 
-OptionsScope = {'simulate': True,
+OptionsScope = {'simulate': False,
                 'driver_setup': {'Model': 'NI PXIe-5105',
                                  'BoardType': 'PXIe',
                                  },
@@ -638,7 +638,7 @@ class Acquisition():
         IntData = np.ndarray((FetchSize, len(channels)))
         for i, In in enumerate(Inputs):
             OutData[:, i] = np.array(In.samples)#/self.GainBoard 
-            BinData[:,i] = OutData[:,i]/LSB[i]
+            BinData[:,i] = OutData[:,i]/self.LSB[i]
             IntData[:,i] = np.int16(np.round(BinData[:,i]))
             
         
