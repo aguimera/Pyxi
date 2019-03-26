@@ -608,7 +608,7 @@ class DataAcquisitionThread(Qt.QThread):
         self.Rows.Abort()
 
 class Acquisition():    
-    def __init__(self, ColumnsConfig, FsGen, GS, Vgs, RowsConfig, NRow, FsScope, ResourceScope):
+    def __init__(self, ColumnsConfig, FsGen, GS, RowsConfig, NRow, FsScope, ResourceScope):
         self.Columns = Columns(ColumnsConfig, FsGen, GS)
         self.Rows = Rows(RowsConfig, FsScope, ResourceScope)
         self.LSB = np.array([])
@@ -643,6 +643,7 @@ class Acquisition():
             BinData[:,i] = OutData[:,i]/self.LSB[i]
             IntData[:,i] = np.int16(np.round(BinData[:,i]))
             
+        return IntData
         
         
     def initSessions(self):

@@ -72,7 +72,20 @@ class FileBuffer():
                                                maxshape=(None, self.nChannels),
 #                                               compression="gzip"
                                                )
+        
+    def AddDset(self, DSname, Data):
+        self.h5File.create_dataset(DSname, data=Data)
 
+    def InitDset(self, DSname, nChannels=None): 
+        if nChannels is not None:
+             self.nChannels = nChannels
+#        print (self.nChannels)
+        self.Dset = self.h5File.create_dataset(DSname,
+                                               shape=(0, self.nChannels),
+                                               dtype='int16',
+                                               maxshape=(None, self.nChannels),
+#                                               compression="gzip"
+                                                )
     def AddSample(self, Sample):
         nSamples = Sample.shape[0]
         FileInd = self.Dset.shape[0]
@@ -85,7 +98,8 @@ class FileBuffer():
 #            print(stat.st_size, self.MaxSize)
             self.h5File.close()
             self._initFile()
-
+    def close(self):
+        self.h5File.close()
 
 class DataSavingThread(Qt.QThread):
     def __init__(self, FileName, nChannels, MaxSize=None):
