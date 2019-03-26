@@ -4,7 +4,7 @@ Created on Thu Mar  7 11:00:49 2019
 
 @author: Lucia
 """
-
+#Development Square Function
 from __future__ import print_function
 import os
 from PyQt5 import Qt
