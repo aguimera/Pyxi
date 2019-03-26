@@ -41,11 +41,11 @@ CarrierPars = {'name':'ColX',
 
 NifGenSamplingPars =  {'name': 'SamplingConfig',
                        'type': 'group',
-                       'children':({'name': 'Fs',
+                       'children':({'name': 'FsGen',
                                     'title': 'Sampling Rate',
                                     'type': 'float',
-                                    'value': 2e6,
-                                    'step': 100,
+                                    'value': 20e6,
+                                    'readonly': True,
                                     'siPrefix': True,
                                     'suffix': 'Hz'},
                                    {'name': 'GS',
@@ -131,7 +131,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         self.ColConfig = self.param('ColumnsConfig')
         self.addChild(NifGenSamplingPars)
         self.SamplingConfig = self.param('SamplingConfig')
-        self.Fs = self.SamplingConfig.param('Fs')
+        self.FsGen = self.SamplingConfig.param('FsGen')
         self.GS = self.SamplingConfig.param('GS')
         
         self.addChild(CarriersConfigPars)
@@ -141,7 +141,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         self.on_ColConf_Changed()
         
         self.CarrierConfig.sigTreeStateChanged.connect(self.on_Fsig_Changed)
-        self.Fs.sigValueChanged.connect(self.on_Fs_Changed)
+        self.FsGen.sigValueChanged.connect(self.on_Fs_Changed)
         self.on_Fs_Changed()
 #        self.GS.sigValueChanged.connect(self.on_GS_Changed)
 #
@@ -167,7 +167,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
         Fmin = np.min(Freqs)
         
-        Fs = self.Fs.value()
+        Fs = self.FsGen.value()
         Samps = round(Fs/Fmin)*1000
         self.GS.setValue(Samps)
         for p in self.CarrierConfig.children():
@@ -177,25 +177,6 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             p.param('Frequency').setValue(Fnew)
             Gain = 2*p.param('Amplitude').value()
             p.param('Gain').setValue(Gain)
-        
-#    def on_Fs_Changed(self):
-#        Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
-#        Fmin = np.min(Freqs)
-#        
-#        Fs = self.Fs.value()
-#        Samps = round(Fs/Fmin)
-#        Fs = Samps*Fmin
-#        self.Fs.setValue(Fs)
-#        self.on_Fsig_Changed()
-#        
-#    def on_GS_Changed(self):
-#        Samps = self.GS.value()
-#        Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
-#        Fmin = np.min(Freqs)
-#        
-#        Fs = Samps*Fmin
-#        self.Fs.setValue(Fs)
-#        self.on_Fsig_Changed()
         
     def GetParams(self):
         Generator = {'ColumnsConfig':{},
@@ -221,8 +202,8 @@ class NifGeneratorParameters(pTypes.GroupParameter):
 class SigGen(nifgen.Session):    
     def SetArbSignal(self, Signal, index, gain, offset):
         Handle = self.create_waveform(Signal)
-#        if index != 0: #only needed if the CM is applied through VG0 to all the channels connected
-#            offset = 0  #if not done, the other channels will have 2*CM as offset
+        if index != 0: #only needed if the CM is applied through VG0 to all the channels connected
+            offset = 0  #if not done, the other channels will have 2*CM as offset
         self.channels[index].configure_arb_waveform(Handle,
                                                     gain=gain,
                                                     offset=offset)
@@ -281,11 +262,10 @@ class Columns():
 
 NiScopeFetchingPars =  {'name': 'FetchConfig',
                        'type': 'group',
-                       'children':({'name': 'Fs',
+                       'children':({'name': 'FsScope',
                                     'title': 'Sampling Rate',
                                     'type': 'float',
                                     'value': 2e6,
-                                    'readonly': True,
                                     'siPrefix': True,
                                     'suffix': 'Hz'},
                                    {'name': 'BS',
@@ -468,17 +448,17 @@ class NiScopeParameters(pTypes.GroupParameter):
         
         self.addChild(NiScopeFetchingPars)
         self.FetchConfig = self.param('FetchConfig')
-        self.Fs = self.FetchConfig.param('Fs')
+        self.FsScope = self.FetchConfig.param('FsScope')
         self.BS = self.FetchConfig.param('BS')
         self.NRows = self.FetchConfig.param('NRow')
         self.OffsetRows = self.FetchConfig.param('OffsetRows')
         self.tFetch = self.FetchConfig.param('tFetch')
-        t = self.BS.value()/self.Fs.value()
+        t = self.BS.value()/self.FsScope.value()
         self.tFetch.setValue(t)
         
         self.RowsConfig.sigTreeStateChanged.connect(self.on_RowConf_Changed)
         self.on_RowConf_Changed()
-        self.Fs.sigValueChanged.connect(self.on_Fs_Changed)
+        self.FsScope.sigValueChanged.connect(self.on_Fs_Changed)
         self.tFetch.sigValueChanged.connect(self.on_BS_Changed)
 
     def on_RowConf_Changed(self):
@@ -492,7 +472,7 @@ class NiScopeParameters(pTypes.GroupParameter):
         self.on_BS_Changed()
         
     def on_BS_Changed(self):
-        Fs = self.Fs.value()
+        Fs = self.FsScope.value()
         tF = self.tFetch.value()
         Samples = int(tF*Fs)
         tF = Samples/Fs
@@ -516,15 +496,15 @@ class NiScopeParameters(pTypes.GroupParameter):
                         continue
                     Scope['RowsConfig'][Config.name()][Values.name()] = Values.value()
         for Config in self.FetchConfig.children():
-            if Config.name() =='Fs':
-                continue
+#            if Config.name() =='Fs':
+#                continue
             if Config.name() =='tFetch':
                 continue
             Scope[Config.name()] = Config.value()
 
         return Scope
 
-OptionsScope = {'simulate': False,
+OptionsScope = {'simulate': True,
                 'driver_setup': {'Model': 'NI PXIe-5105',
                                  'BoardType': 'PXIe',
                                  },
@@ -562,14 +542,14 @@ class SigScope(niscope.Session):
 class DataAcquisitionThread(Qt.QThread):
     NewData = Qt.pyqtSignal()
 
-    def __init__(self, ColumnsConfig, Fs, GS, Offset, RowsConfig, BS, NRow, OffsetRows, GainBoard, Resource):
+    def __init__(self, ColumnsConfig, FsGen, GS, Offset, RowsConfig, FsScope, BS, NRow, OffsetRows, GainBoard, Resource):
         print ('TMacqThread, DataAcqThread')
         super(DataAcquisitionThread, self).__init__()
         
         print(ColumnsConfig)
         print(RowsConfig)
-        self.Columns = Columns(ColumnsConfig, Fs, GS)
-        self.Rows = Rows(RowsConfig, Fs, Resource)
+        self.Columns = Columns(ColumnsConfig, FsGen, GS)
+        self.Rows = Rows(RowsConfig, FsScope, Resource)
         self.BS = BS
         self.channels = list(range(NRow))
         self.offset = OffsetRows
@@ -625,3 +605,48 @@ class DataAcquisitionThread(Qt.QThread):
         self.Columns.Abort()
         self.Rows.Abort()
 
+class Acquisition():    
+    def __init__(self, ColumnsConfig, FsGen, GS, Vgs, RowsConfig, NRow, FsScope, ResourceScope):
+        self.Columns = Columns(ColumnsConfig, FsGen, GS)
+        self.Rows = Rows(RowsConfig, FsScope, ResourceScope)
+        self.LSB = np.array([])
+        for i in range(NRow):
+            self.LSB = np.append(self.LSB, RowsConfig['Row'+str(i+1)]['Range']/(2**16))
+        
+    def setSignals(self, ColumnsConfig, Vgs):
+        Sig = {}
+        for col, pars in ColumnsConfig.items():
+            PropSig = {}
+            for p, val in pars.items():
+                if p == 'Resource' or p == 'Index':
+                    continue
+                PropSig[str(p)] = val
+                
+            Sig[str(col)]= PropSig    
+            
+        self.Columns.SetSignal(Sig, Vgs)
+        
+    def GetData(self, FetchSize, channels, ScopeOffset):
+        Inputs = self.Rows.SesScope.channels[channels].fetch(num_samples=FetchSize,
+                                                              relative_to=niscope.FetchRelativeTo.READ_POINTER,
+                                                              offset=ScopeOffset,
+                                                              record_number=0,
+                                                              num_records=1,
+                                                              timeout=20)
+        OutData = np.ndarray((FetchSize, len(channels))) 
+        BinData = np.ndarray((FetchSize, len(channels)))
+        IntData = np.ndarray((FetchSize, len(channels)))
+        for i, In in enumerate(Inputs):
+            OutData[:, i] = np.array(In.samples)#/self.GainBoard 
+            BinData[:,i] = OutData[:,i]/LSB[i]
+            IntData[:,i] = np.int16(np.round(BinData[:,i]))
+            
+        
+        
+    def initSessions(self):
+        self.Columns.Initiate()
+        self.Rows.Initiate()
+        
+    def stopSessions(self):
+        self.Columns.Abort()
+        self.Rows.Abort()  

@@ -57,7 +57,7 @@ class MainWindow(Qt.QWidget):
         self.Parameters.addChild(self.FileParameters)
         
         self.PSDParams = PltMod.PSDParameters(name='PSD Options')
-        self.PSDParams.param('Fs').setValue(self.NifGenParams.Fs.value())
+        self.PSDParams.param('Fs').setValue(self.NiScopeParams.FsScope.value())
         self.PSDParams.param('Fmin').setValue(50)
         self.PSDParams.param('nAvg').setValue(50)
         self.PSDEnable = self.PSDParams.param('PSDEnable').value()
@@ -65,7 +65,7 @@ class MainWindow(Qt.QWidget):
         
         self.PlotParams = PltMod.PlotterParameters(name='Plot options')
         self.PlotParams.SetChannels(self.NiScopeParams.GetChannels())
-        self.PlotParams.param('Fs').setValue(self.NifGenParams.Fs.value())
+        self.PlotParams.param('Fs').setValue(self.NiScopeParams.FsScope.value())
         self.PltEnable = self.PlotParams.param('PlotEnable').value()
 
         self.Parameters.addChild(self.PlotParams)
@@ -102,8 +102,10 @@ class MainWindow(Qt.QWidget):
         print('  data:      %s'% str(data))
         print('  ----------')
 
-        if childName == 'NifGenerator.SamplingConfig.Fs':
-            self.NiScopeParams.Fs.setValue(data)
+        if childName == 'Scope.FetchConfig.FsScope':
+            n =round(self.NifGenParams.FsGen.value()/data)
+            print(n)
+            self.NifGenParams.FsGen.setValue(data*n)
             self.PlotParams.param('Fs').setValue(data)
             self.PSDParams.param('Fs').setValue(data)
             
