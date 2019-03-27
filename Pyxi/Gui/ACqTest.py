@@ -31,6 +31,7 @@ class MainWindow(Qt.QWidget):
     ''' Main Window '''
 
     def __init__(self):
+        Qt.Qt.FocusPolicy = Qt.Qt.WheelFocus
         super(MainWindow, self).__init__()
 
         layout = Qt.QVBoxLayout(self) 
