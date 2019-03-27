@@ -77,7 +77,13 @@ NifGenColumnsPars = {'name': 'ColumnsConfig',
                                                {'name':'Index',
                                                 'type': 'int',
                                                 'readonly': True,
-                                                'value': 0})},
+                                                'value': 0},
+                                                {'name': 'Type',
+                                                 'title': 'Wf Type',
+                                                 'type': 'list',
+                                                 'values': ['Arbitrary', 'Func'],
+                                                 'value': 'Arbitrary'}
+                                                )},
                                    {'name':'Col2',
                                    'type': 'group',
                                    'children':({'name': 'Enable',
@@ -90,7 +96,13 @@ NifGenColumnsPars = {'name': 'ColumnsConfig',
                                                {'name':'Index',
                                                 'type': 'int',
                                                 'readonly': True,
-                                                'value': 1})},
+                                                'value': 1},
+                                                {'name': 'Type',
+                                                 'title': 'Wf Type',
+                                                 'type': 'list',
+                                                 'values': ['Arbitrary', 'Func'],
+                                                 'value': 'Arbitrary'}
+                                               )},
                                    {'name':'Col3',
                                    'type': 'group',
                                    'children':({'name': 'Enable',
@@ -103,7 +115,13 @@ NifGenColumnsPars = {'name': 'ColumnsConfig',
                                                {'name':'Index',
                                                 'type': 'int',
                                                 'readonly': True,
-                                                'value': 0})},
+                                                'value': 0},
+                                                {'name': 'Type',
+                                                 'title': 'Wf Type',
+                                                 'type': 'list',
+                                                 'values': ['Arbitrary', 'Func'],
+                                                 'value': 'Arbitrary'}
+                                               )},
                                  {'name':'Col4',
                                    'type': 'group',
                                    'children':({'name': 'Enable',
@@ -116,7 +134,13 @@ NifGenColumnsPars = {'name': 'ColumnsConfig',
                                                {'name':'Index',
                                                 'type': 'int',
                                                 'readonly': True,
-                                                'value': 1})},                                                
+                                                'value': 1},
+                                                {'name': 'Type',
+                                                 'title': 'Wf Type',
+                                                 'type': 'list',
+                                                 'values': ['Arbitrary', 'Func'],
+                                                 'value': 'Arbitrary'}
+                                                )},                                                
 
                                             ) 
                                }
@@ -222,6 +246,7 @@ class Columns():
         Res = [conf['Resource'] for col, conf in ColumnsConfig.items()]                
         for re in set(Res):
             SesGen = SigGen(resource_name=re, options=OptionsGen)
+            
             SesGen.output_mode = nifgen.OutputMode.ARB
             SesGen.reference_clock_source = nifgen.ReferenceClockSource.PXI_CLOCK
             SesGen.ref_clock_frequency=100e6
