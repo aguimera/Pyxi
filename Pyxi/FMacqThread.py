@@ -81,8 +81,8 @@ NifGenColumnsPars = {'name': 'ColumnsConfig',
                                                 {'name': 'Type',
                                                  'title': 'Wf Type',
                                                  'type': 'list',
-                                                 'values': ['Arbitrary', 'Func'],
-                                                 'value': 'Arbitrary'}
+                                                 'values': ['Sine', 'Square'],
+                                                 'value': 'Sine'}
                                                 )},
                                    {'name':'Col2',
                                    'type': 'group',
@@ -100,8 +100,8 @@ NifGenColumnsPars = {'name': 'ColumnsConfig',
                                                 {'name': 'Type',
                                                  'title': 'Wf Type',
                                                  'type': 'list',
-                                                 'values': ['Arbitrary', 'Func'],
-                                                 'value': 'Arbitrary'}
+                                                 'values': ['Sine', 'Square'],
+                                                 'value': 'Sine'}
                                                )},
                                    {'name':'Col3',
                                    'type': 'group',
@@ -119,8 +119,8 @@ NifGenColumnsPars = {'name': 'ColumnsConfig',
                                                 {'name': 'Type',
                                                  'title': 'Wf Type',
                                                  'type': 'list',
-                                                 'values': ['Arbitrary', 'Func'],
-                                                 'value': 'Arbitrary'}
+                                                 'values': ['Sine', 'Square'],
+                                                 'value': 'Sine'}
                                                )},
                                  {'name':'Col4',
                                    'type': 'group',
@@ -138,8 +138,8 @@ NifGenColumnsPars = {'name': 'ColumnsConfig',
                                                 {'name': 'Type',
                                                  'title': 'Wf Type',
                                                  'type': 'list',
-                                                 'values': ['Arbitrary', 'Func'],
-                                                 'value': 'Arbitrary'}
+                                                 'values': ['Sine', 'Square'],
+                                                 'value': 'Sine'}
                                                 )},                                                
 
                                             ) 
