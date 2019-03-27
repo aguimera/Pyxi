@@ -169,6 +169,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         self.on_Fs_Changed()
 #        self.GS.sigValueChanged.connect(self.on_GS_Changed)
 #
+        
     def on_ColConf_Changed(self):
         Cols = []
         for p in self.ColConfig.children():
@@ -275,10 +276,10 @@ class Columns():
         t = np.arange(0, self.Ts*self.GenSize, self.Ts)
      
         for Col,pars in SigsPars.items():
-            if Col == 'Offset':
-                continue
-    
-            signal = pars['Amplitude']*np.sin(2*np.pi*pars['Frequency']*t)
+#            if Col == 'Offset':
+#                continue
+            if pars['Type'] == 'Sine':
+                signal = pars['Amplitude']*np.sin(2*np.pi*pars['Frequency']*t)
             if Col != 'Col1':
                 Offset = 0
             self.Columns[Col]['session'].SetArbSignal(index=self.Columns[Col]['index'],
