@@ -149,7 +149,8 @@ class MainWindow(Qt.QWidget):
         else:
             self.threadAqc.NewData.disconnect()
             self.threadAqc.stopSessions()
-            self.threadAqc.stopTimer()
+#            self.threadAqc.stopTimer()
+            self.threadAqc.Timer.deleteLater()
             self.threadAqc.terminate()
             self.threadAqc = None
             
