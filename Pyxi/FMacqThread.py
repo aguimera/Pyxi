@@ -557,6 +557,9 @@ class DataAcquisitionThread(Qt.QThread):
         self.offset = OffsetRows
         self.GainBoard = GainBoard
         self.LSB = np.array([])
+        
+        self.ttimer = (self.BS/FsScope)-0.2
+        
         for i in range(NRow):
             self.LSB = np.append(self.LSB, RowsConfig['Row'+str(i+1)]['Range']/(2**16))
             
@@ -571,14 +574,22 @@ class DataAcquisitionThread(Qt.QThread):
             Sig[str(col)]= PropSig
 
         self.Columns.SetSignal(Sig, Offset)
-
+        
+        self.Timer = Qt.QTimer()
+        self.Timer.moveToThread(self)
+        
     def run(self, *args, **kwargs):
+
         print('start ')
         self.initSessions()
         self.OutData = np.ndarray((self.BS, len(self.channels)))
         self.BinData = np.ndarray((self.BS, len(self.channels)))
         self.IntData = np.ndarray((self.BS, len(self.channels)))
-        while True:
+        self.Timer.singleShot(self.ttimer, self.GenData)
+        loop = Qt.QEventLoop()
+        loop.exec_()
+    
+    def GenData(self):
             try: 
                 Inputs = self.Rows.SesScope.channels[self.channels].fetch(num_samples=self.BS,
                                                               relative_to=niscope.FetchRelativeTo.READ_POINTER,
@@ -587,11 +598,13 @@ class DataAcquisitionThread(Qt.QThread):
                                                               num_records=1,
                                                               timeout=2)
                 
+                self.Timer.singleShot(self.ttimer, self.GenData)
                 for i, In in enumerate(Inputs):
                     self.OutData[:, i] = np.array(In.samples)#/self.GainBoard 
                     self.BinData[:,i] = self.OutData[:,i]/self.LSB[i]
                     self.IntData[:,i] = np.int16(np.round(self.BinData[:,i]))
                 self.NewData.emit()
+#                self.Timer.start(700)
 
             except Exception:
                 print(Exception.args)
@@ -599,7 +612,8 @@ class DataAcquisitionThread(Qt.QThread):
                 self.stopSessions()
                 print('Gen and Scope Sessions Restarted')
                 self.initSessions()
-    
+                self.Timer.singleShot(self.ttimer, self.GenData)
+                 
     def initSessions(self):
         self.Columns.Initiate()
         self.Rows.Initiate()
