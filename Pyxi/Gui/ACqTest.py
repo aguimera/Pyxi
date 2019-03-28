@@ -29,9 +29,9 @@ import Pyxi.FMacqThread as FMacq
 
 class MainWindow(Qt.QWidget):
     ''' Main Window '''
-
+    Qt.Qt.FocusPolicy = Qt.Qt.WheelFocus
     def __init__(self):
-        Qt.Qt.FocusPolicy = Qt.Qt.WheelFocus
+        
         super(MainWindow, self).__init__()
 
         layout = Qt.QVBoxLayout(self) 
