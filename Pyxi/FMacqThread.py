@@ -574,6 +574,8 @@ class DataAcquisitionThread(Qt.QThread):
             Sig[str(col)]= PropSig
 
         self.Columns.SetSignal(Sig, Offset)
+        self.Timer = Qt.QTimer()
+        self.Timer.moveToThread(self)
         
     def run(self, *args, **kwargs):
 
@@ -581,8 +583,9 @@ class DataAcquisitionThread(Qt.QThread):
         self.OutData = np.ndarray((self.BS, len(self.channels)))
         self.BinData = np.ndarray((self.BS, len(self.channels)))
         self.IntData = np.ndarray((self.BS, len(self.channels)))
-#        self.Timer.singleShot(self.ttimer, self.GenData)
         self.initSessions()
+        self.Timer.singleShot(self.ttimer, self.GenData)
+        self.Id = self.Timer.timerId()
         loop = Qt.QEventLoop()
         loop.exec_()
     
@@ -594,8 +597,9 @@ class DataAcquisitionThread(Qt.QThread):
                                                               record_number=0,
                                                               num_records=1,
                                                               timeout=2)
-                
+                self.Timer.killTimer(self.Id)
                 self.Timer.singleShot(self.ttimer, self.GenData)
+                self.Id = self.Timer.timerId()
                 for i, In in enumerate(Inputs):
                     self.OutData[:, i] = np.array(In.samples)#/self.GainBoard 
                     self.BinData[:,i] = self.OutData[:,i]/self.LSB[i]
@@ -607,23 +611,22 @@ class DataAcquisitionThread(Qt.QThread):
                 print(Exception.args)
                 print('Requested data has been overwritten in memory')
                 self.stopSessions()
+                self.stopTimer()
                 print('Gen and Scope Sessions Restarted')
-                self.initSessions()
-#                self.Timer.singleShot(self.ttimer, self.GenData)
+                self.initSessions()             
                  
     def initSessions(self):
         self.Columns.Initiate()
         self.Rows.Initiate()
-        self.Timer = Qt.QTimer()
-        self.Timer.moveToThread(self)
-        self.Timer.singleShot(self.ttimer, self.GenData)
-        self.Id = self.Timer.timerId()
         
     def stopSessions(self):
         self.Columns.Abort()
         self.Rows.Abort()
+        
+    def stopTimer(self):
+        self.Timer.stop()
         self.Timer.killTimer(self.Id)
-
+        
 class Acquisition():    
     def __init__(self, ColumnsConfig, FsGen, GS, RowsConfig, NRow, FsScope, ResourceScope):
         self.Columns = Columns(ColumnsConfig, FsGen, GS)
