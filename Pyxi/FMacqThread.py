@@ -575,17 +575,14 @@ class DataAcquisitionThread(Qt.QThread):
 
         self.Columns.SetSignal(Sig, Offset)
         
-        self.Timer = Qt.QTimer()
-        self.Timer.moveToThread(self)
-        
     def run(self, *args, **kwargs):
 
-        print('start ')
-        self.initSessions()
+        print('start ')      
         self.OutData = np.ndarray((self.BS, len(self.channels)))
         self.BinData = np.ndarray((self.BS, len(self.channels)))
         self.IntData = np.ndarray((self.BS, len(self.channels)))
-        self.Timer.singleShot(self.ttimer, self.GenData)
+#        self.Timer.singleShot(self.ttimer, self.GenData)
+        self.initSessions()
         loop = Qt.QEventLoop()
         loop.exec_()
     
@@ -604,7 +601,7 @@ class DataAcquisitionThread(Qt.QThread):
                     self.BinData[:,i] = self.OutData[:,i]/self.LSB[i]
                     self.IntData[:,i] = np.int16(np.round(self.BinData[:,i]))
                 self.NewData.emit()
-#                self.Timer.start(700)
+
 
             except Exception:
                 print(Exception.args)
@@ -612,14 +609,20 @@ class DataAcquisitionThread(Qt.QThread):
                 self.stopSessions()
                 print('Gen and Scope Sessions Restarted')
                 self.initSessions()
-                self.Timer.singleShot(self.ttimer, self.GenData)
+#                self.Timer.singleShot(self.ttimer, self.GenData)
                  
     def initSessions(self):
         self.Columns.Initiate()
         self.Rows.Initiate()
+        self.Timer = Qt.QTimer()
+        self.Timer.moveToThread(self)
+        self.Timer.singleShot(self.ttimer, self.GenData)
+        self.Id = self.Timer.timerId()
+        
     def stopSessions(self):
         self.Columns.Abort()
         self.Rows.Abort()
+        self.Timer.killTimer(self.Id)
 
 class Acquisition():    
     def __init__(self, ColumnsConfig, FsGen, GS, RowsConfig, NRow, FsScope, ResourceScope):
