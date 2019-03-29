@@ -123,12 +123,18 @@ class MainWindow(Qt.QWidget):
         if childName == 'Plot options.PlotEnable':
             self.PltEnable = data
             if self.threadAqc is not None:
-                self.UpdatePlots()
+                if data == 'True':
+                    self.GenPlotter()
+                if data == 'False':
+                    self.DestroyPlotter()  
                 
         if childName == 'PSD Options.PSDEnable':
             self.PSDEnable = data
             if self.threadAqc is not None:
-                self.UpdatePlots()     
+                if data == 'True':
+                    self.GenPSD()
+                if data == 'False':
+                    self.DestroyPSD()     
                 
     def on_btnGen(self):
         print('h')
@@ -141,7 +147,8 @@ class MainWindow(Qt.QWidget):
             
             self.SaveFiles()            
                 
-            self.GenPlots()
+            self.GenPlotter()
+            self.GenPSD()
 
             self.threadAqc.start()
             self.btnGen.setText("Stop Gen")
@@ -178,21 +185,19 @@ class MainWindow(Qt.QWidget):
             
         print('Sample time', Ts)
 
-    def GenPlots(self):
+    def GenPlotter(self):
+        PlotterKwargs = self.PlotParams.GetParams()
+        self.threadPlotter = PltMod.Plotter(**PlotterKwargs)
+        self.threadPlotter.start()
+        
+    def GenPSD(self):
         PlotterKwargs = self.PlotParams.GetParams()
         ScopeKwargs = self.NiScopeParams.GetParams()
-        if self.threadPlotter is None:
-            if self.PltEnable == True:           
-                self.threadPlotter = PltMod.Plotter(**PlotterKwargs)
-                self.threadPlotter.start()
-        
-        if self.threadPSDPlotter is None:
-            if self.PSDEnable == True:        
-                self.threadPSDPlotter = PltMod.PSDPlotter(ChannelConf=PlotterKwargs['ChannelConf'],
+        self.threadPSDPlotter = PltMod.PSDPlotter(ChannelConf=PlotterKwargs['ChannelConf'],
                                                           nChannels=ScopeKwargs['NRow'],
                                                           **self.PSDParams.GetParams())
-                self.threadPSDPlotter.start() 
-                
+        self.threadPSDPlotter.start() 
+
     def DestroyPlotter(self):
         if self.threadPlotter is not None:    
             self.threadPlotter.stop()
@@ -202,14 +207,6 @@ class MainWindow(Qt.QWidget):
         if self.threadPSDPlotter is not None: 
             self.threadPSDPlotter.stop()
             self.threadPSDPlotter = None 
-            
-    def UpdatePlots(self):
-        if self.PltEnable == False:
-            self.DestroyPlotter()
-        if self.PSDEnable == False:
-            self.DestroyPSD()
-        else:
-            self.GenPlots()
                     
     def SaveFiles(self):
         FileName = self.FileParameters.param('File Path').value()
