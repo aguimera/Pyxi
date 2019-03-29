@@ -559,7 +559,7 @@ class DataAcquisitionThread(Qt.QThread):
         self.GainBoard = GainBoard
         self.LSB = np.array([])
         
-        self.ttimer = ((self.BS/FsScope)-(0.1*(self.BS/FsScope)))*1000
+        self.ttimer = ((self.BS/FsScope)-0.05)*1000
         
         for i in range(NRow):
             self.LSB = np.append(self.LSB, RowsConfig['Row'+str(i+1)]['Range']/(2**16))
