@@ -132,8 +132,10 @@ class PlotterParameters(pTypes.GroupParameter):
 class PgPlotWindow(Qt.QWidget):
     def __init__(self):
         super(PgPlotWindow, self).__init__()
+        self.setFocusPolicy(Qt.Qt.WheelFocus)
         layout = Qt.QVBoxLayout(self)
         self.pgLayout = pg.GraphicsLayoutWidget()
+        self.pgLayout.setFocusPolicy(Qt.Qt.WheelFocus)
         layout.addWidget(self.pgLayout)
         self.show()
 
@@ -262,7 +264,8 @@ class Plotter(Qt.QThread):
 #                                        self.BufferSize)
             else:
 #                pg.QtGui.QApplication.processEvents()
-                Qt.QThread.msleep(10)
+                Qt.QCoreApplication.processEvents()
+                Qt.QThread.msleep(200)
 
     def AddData(self, NewData):
         self.Buffer.AddData(NewData)
@@ -477,7 +480,8 @@ class PSDPlotter(Qt.QThread):
                 for i in range(self.nChannels):
                     self.Curves[i].setData(ff, psd[:, i])
             else:
-                Qt.QThread.msleep(10)
+                Qt.QCoreApplication.processEvents()
+                Qt.QThread.msleep(200)
 
     def AddData(self, NewData):
         self.Buffer.AddData(NewData)

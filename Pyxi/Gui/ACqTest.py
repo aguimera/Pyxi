@@ -29,10 +29,10 @@ import Pyxi.FMacqThread as FMacq
 
 class MainWindow(Qt.QWidget):
     ''' Main Window '''
-
     def __init__(self):
         super(MainWindow, self).__init__()
-
+        self.setFocusPolicy(Qt.Qt.WheelFocus)
+        
         layout = Qt.QVBoxLayout(self) 
 
         self.btnGen = Qt.QPushButton("Start Gen!")
@@ -56,13 +56,6 @@ class MainWindow(Qt.QWidget):
                                                          name='Record File')
         self.Parameters.addChild(self.FileParameters)
         
-        self.PSDParams = PltMod.PSDParameters(name='PSD Options')
-        self.PSDParams.param('Fs').setValue(self.NiScopeParams.FsScope.value())
-        self.PSDParams.param('Fmin').setValue(50)
-        self.PSDParams.param('nAvg').setValue(50)
-        self.PSDEnable = self.PSDParams.param('PSDEnable').value()
-        self.Parameters.addChild(self.PSDParams)
-        
         self.PlotParams = PltMod.PlotterParameters(name='Plot options')
         self.PlotParams.SetChannels(self.NiScopeParams.GetChannels())
         self.PlotParams.param('Fs').setValue(self.NiScopeParams.FsScope.value())
@@ -70,7 +63,12 @@ class MainWindow(Qt.QWidget):
 
         self.Parameters.addChild(self.PlotParams)
 
-        
+        self.PSDParams = PltMod.PSDParameters(name='PSD Options')
+        self.PSDParams.param('Fs').setValue(self.NiScopeParams.FsScope.value())
+        self.PSDParams.param('Fmin').setValue(50)
+        self.PSDParams.param('nAvg').setValue(50)
+        self.PSDEnable = self.PSDParams.param('PSDEnable').value()
+        self.Parameters.addChild(self.PSDParams)
         
         self.Parameters.sigTreeStateChanged.connect(self.on_pars_changed)
         self.treepar = ParameterTree()
@@ -123,17 +121,17 @@ class MainWindow(Qt.QWidget):
         if childName == 'Plot options.PlotEnable':
             self.PltEnable = data
             if self.threadAqc is not None:
-                if data == 'True':
+                if data == True:
                     self.GenPlotter()
-                if data == 'False':
+                if data == False:
                     self.DestroyPlotter()  
                 
         if childName == 'PSD Options.PSDEnable':
             self.PSDEnable = data
             if self.threadAqc is not None:
-                if data == 'True':
+                if data == True:
                     self.GenPSD()
-                if data == 'False':
+                if data == False:
                     self.DestroyPSD()     
                 
     def on_btnGen(self):
@@ -146,9 +144,11 @@ class MainWindow(Qt.QWidget):
             self.threadAqc.NewData.connect(self.on_NewSample)
             
             self.SaveFiles()            
-                
-            self.GenPlotter()
-            self.GenPSD()
+            
+            if self.PSDEnable == True:
+                self.GenPSD()
+            if self.PltEnable == True:
+                self.GenPlotter()
 
             self.threadAqc.start()
             self.btnGen.setText("Stop Gen")
@@ -157,8 +157,8 @@ class MainWindow(Qt.QWidget):
             self.threadAqc.NewData.disconnect()
             self.threadAqc.stopSessions()
 #            self.threadAqc.stopTimer()
-            self.threadAqc.Timer.deleteLater()
             self.threadAqc.terminate()
+#            print(self.threadAqc.isRunning())
             self.threadAqc = None
             
             if self.threadSave is not None:

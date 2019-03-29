@@ -13,6 +13,7 @@ import numpy as np
 import niscope
 import nifgen
 import copy
+import time
 
 CarriersConfigPars={'name': 'CarriersConfig',
                     'type': 'group',
@@ -558,7 +559,7 @@ class DataAcquisitionThread(Qt.QThread):
         self.GainBoard = GainBoard
         self.LSB = np.array([])
         
-        self.ttimer = (self.BS/FsScope)-0.2
+        self.ttimer = ((self.BS/FsScope)-(0.1*(self.BS/FsScope)))*1000
         
         for i in range(NRow):
             self.LSB = np.append(self.LSB, RowsConfig['Row'+str(i+1)]['Range']/(2**16))
@@ -584,40 +585,43 @@ class DataAcquisitionThread(Qt.QThread):
         self.BinData = np.ndarray((self.BS, len(self.channels)))
         self.IntData = np.ndarray((self.BS, len(self.channels)))
         self.initSessions()
-        self.Timer.singleShot(self.ttimer, self.GenData)
-        self.Id = self.Timer.timerId()
+#        self.Timer.singleShot(self.ttimer, self.GenData)
         loop = Qt.QEventLoop()
         loop.exec_()
     
     def GenData(self):
-            try: 
-                Inputs = self.Rows.SesScope.channels[self.channels].fetch(num_samples=self.BS,
-                                                              relative_to=niscope.FetchRelativeTo.READ_POINTER,
-                                                              offset=self.offset,
-                                                              record_number=0,
-                                                              num_records=1,
-                                                              timeout=2)
-                self.Timer.killTimer(self.Id)
-                self.Timer.singleShot(self.ttimer, self.GenData)
-                self.Id = self.Timer.timerId()
-                for i, In in enumerate(Inputs):
-                    self.OutData[:, i] = np.array(In.samples)#/self.GainBoard 
-                    self.BinData[:,i] = self.OutData[:,i]/self.LSB[i]
-                    self.IntData[:,i] = np.int16(np.round(self.BinData[:,i]))
-                self.NewData.emit()
+        if not self.isRunning():
+            return
+        
+        try:
+#            T1 = time.time()
+
+            Inputs = self.Rows.SesScope.channels[self.channels].fetch(num_samples=self.BS,
+                                                          relative_to=niscope.FetchRelativeTo.READ_POINTER,
+                                                          offset=self.offset,
+                                                          record_number=0,
+                                                          num_records=1,
+                                                          timeout=2)
+#            print('ftech', time.time()-T1)
+            self.Timer.singleShot(self.ttimer, self.GenData)
+            for i, In in enumerate(Inputs):
+                self.OutData[:, i] = np.array(In.samples)#/self.GainBoard 
+                self.BinData[:,i] = self.OutData[:,i]/self.LSB[i]
+                self.IntData[:,i] = np.int16(np.round(self.BinData[:,i]))
+            self.NewData.emit()
 
 
-            except Exception:
-                print(Exception.args)
-                print('Requested data has been overwritten in memory')
-                self.stopSessions()
-                self.stopTimer()
-                print('Gen and Scope Sessions Restarted')
-                self.initSessions()             
+        except Exception:
+            print(Exception.args)
+            print('Requested data has been overwritten in memory')
+            self.stopSessions()
+            print('Gen and Scope Sessions Restarted')
+            self.initSessions()        
                  
     def initSessions(self):
         self.Columns.Initiate()
         self.Rows.Initiate()
+        self.Timer.singleShot(self.ttimer, self.GenData)
         
     def stopSessions(self):
         self.Columns.Abort()
