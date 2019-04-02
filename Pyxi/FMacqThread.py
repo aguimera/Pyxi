@@ -9,6 +9,7 @@ Created on Wed Mar  6 12:25:45 2019
 from PyQt5 import Qt
 import pyqtgraph.parametertree.parameterTypes as pTypes
 import pyqtgraph.parametertree.Parameter as pParams
+
 import numpy as np
 import niscope
 import nifgen
