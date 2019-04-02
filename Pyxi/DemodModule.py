@@ -30,6 +30,8 @@ class Filter():
 
 def Demod(SigIn, Fs, Fc, DownFact):
     step = 2*np.pi*((Fc)/Fs)
+    print(step)
+    print(SigIn.size)
     vcoi = np.exp(1j*(step*range(SigIn.size)))
     rdem = np.real(vcoi*SigIn)
     idem = np.imag(vcoi*SigIn)
