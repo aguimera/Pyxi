@@ -143,10 +143,10 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         self.on_ColConf_Changed()
         
         self.CarrierConfig.sigTreeStateChanged.connect(self.on_Fsig_Changed)
-        self.FsGen.sigValueChanged.connect(self.on_Fs_Changed)
         self.on_Fs_Changed()
-#        self.GS.sigValueChanged.connect(self.on_GS_Changed)
-#
+        self.GS.sigValueChanged.connect(self.on_Fs_Changed)
+        
+        
     def on_ColConf_Changed(self):
         Cols = []
         for p in self.ColConfig.children():
@@ -169,8 +169,10 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
         Fmin = np.min(Freqs)
         
-        Fs = self.FsGen.value()
-        Samps = round(Fs/Fmin)*1000
+        Samps = self.GS.value()
+        Fs = Samps*Fmin/10
+        self.FsGen.setValue(Fs)
+        Samps = round(Fs/Fmin)*10
         self.GS.setValue(Samps)
         for p in self.CarrierConfig.children():
             Fc = p.param('Frequency').value()
@@ -282,7 +284,7 @@ NiScopeFetchingPars =  {'name': 'FetchConfig',
                                    {'name': 'tFetch',
                                     'title': 'Fetching Time',
                                     'type': 'float',
-                                    'value': 1,
+                                    'value': 0.5,
                                     'siPrefix': True,
                                     'suffix': 's'},
                                    {'name': 'NRow',
@@ -299,7 +301,7 @@ NiScopeFetchingPars =  {'name': 'FetchConfig',
                                     'suffix': 'Samples'},
                                    {'name': 'GainBoard',
                                     'titel': 'System Gain',
-                                    'value': 5e3,
+                                    'value': 10e3,
                                     'type': 'int',
                                     'siPrefix': True,
                                     'suffix': 'Ohms'},
@@ -457,8 +459,7 @@ class NiScopeParameters(pTypes.GroupParameter):
         self.NRows = self.FetchConfig.param('NRow')
         self.OffsetRows = self.FetchConfig.param('OffsetRows')
         self.tFetch = self.FetchConfig.param('tFetch')
-        t = self.BS.value()/self.FsScope.value()
-        self.tFetch.setValue(t)
+        self.on_BS_Changed()
         
         self.RowsConfig.sigTreeStateChanged.connect(self.on_RowConf_Changed)
         self.on_RowConf_Changed()
