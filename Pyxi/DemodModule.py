@@ -49,9 +49,11 @@ class DemodParameters(pTypes.GroupParameter):
     def GetParams(self):
         Demod = {}
         for Config in self.DemConfig.children():
-            if Config == 'DemEnable':
+            if Config.name() == 'DemEnable':
                 continue
             Demod[Config.name()] = Config.value()
+        
+        return Demod
         
 class Filter():
     def __init__(self, Fs, Freqs, btype, Order):

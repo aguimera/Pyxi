@@ -15,6 +15,7 @@ import niscope
 import nifgen
 import copy
 import time
+import re
 
 CarriersConfigPars={'name': 'CarriersConfig',
                     'type': 'group',
@@ -205,7 +206,10 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         
     def GetCarriers(self):
         Carriers = {}
+
         for Rows, Conf in self.Generator.items():
+            if Rows is not 'ColumnsConfig':
+                continue
             for param, val in Conf.items():
                 if param == 'Frequency':
                     Carriers[str(Rows)] = val
@@ -515,7 +519,7 @@ class NiScopeParameters(pTypes.GroupParameter):
             if Config.name() =='tFetch':
                 continue
             Scope[Config.name()] = Config.value()
-        print(Scope)
+
         return Scope
             
 
@@ -566,18 +570,20 @@ class DataAcquisitionThread(Qt.QThread):
         self.Columns = Columns(ColumnsConfig, FsGen, GS)
         self.Rows = Rows(RowsConfig, FsScope, Resource)
         self.BS = BS
-        self.channels = list(range(NRow))
         self.offset = OffsetRows
         self.GainBoard = GainBoard
         self.LSB = np.array([])
-        self.RowsList = np.arra([])
+        self.RowsList = []
+        self.Channels = []
         
         self.ttimer = ((self.BS/FsScope)-0.05)*1000
         
         for Row, pars in RowsConfig.items():
-            self.RowsList = np.append(self.RowsList, str(Row)) if self.RowsList.shape[0]==0 else str(Row)
+            self.RowsList.append(str(Row))
             self.LSB = np.append(self.LSB, RowsConfig[str(Row)]['Range']/(2**16))
             
+        for s in self.RowsList:
+            self.Channels.append(int(re.split(r'(\d+)', s)[1])-1)
         Sig = {}
         for col, pars in ColumnsConfig.items():
             PropSig = {}
@@ -595,9 +601,9 @@ class DataAcquisitionThread(Qt.QThread):
     def run(self, *args, **kwargs):
 
         print('start ')      
-        self.OutData = np.ndarray((self.BS, len(self.channels)))
-        self.BinData = np.ndarray((self.BS, len(self.channels)))
-        self.IntData = np.ndarray((self.BS, len(self.channels)))
+        self.OutData = np.ndarray((self.BS, len(self.Channels)))
+        self.BinData = np.ndarray((self.BS, len(self.Channels)))
+        self.IntData = np.ndarray((self.BS, len(self.Channels)))
         self.initSessions()
 #        self.Timer.singleShot(self.ttimer, self.GenData)
         loop = Qt.QEventLoop()
@@ -610,7 +616,7 @@ class DataAcquisitionThread(Qt.QThread):
         try:
 #            T1 = time.time()
 
-            Inputs = self.Rows.SesScope.channels[self.channels].fetch(num_samples=self.BS,
+            Inputs = self.Rows.SesScope.channels[self.Channels].fetch(num_samples=self.BS,
                                                           relative_to=niscope.FetchRelativeTo.READ_POINTER,
                                                           offset=self.offset,
                                                           record_number=0,
