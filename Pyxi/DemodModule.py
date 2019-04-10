@@ -107,10 +107,10 @@ class Demod():
         return adem
 
 class DemodThread(Qt.QThread):
-    DemodData = Qt.pyqtSignal()
+    NewData = Qt.pyqtSignal()
     def __init__(self, Fcs, RowList, Fsize, FsDemod, DSFact, FiltOrder):
        super(DemodThread, self).__init__() 
-       
+       self.ToDemData = None
        self.DemOutputs = []
        for Row in RowList:
            DemOut = []
@@ -122,23 +122,22 @@ class DemodThread(Qt.QThread):
             
     def run(self):       
         while True:
-            if self.NewData is not None:
+            if self.ToDemData is not None:
                 self.OutDemData = []
                 for rows in range(len(self.DemOutputs)):
                     DemData = []
                     for instance in range(len(self.DemOutputs[rows])):
                         DemData.append(instance.Apply(self.NewData))
                     self.OutDemData.append(DemData)
-                self.DemodData.emit()
-                self.NewData = None
+                self.NewData.emit()
+                self.ToDemData = None
             else:
                 Qt.QThread.msleep(10)
 #        #multiprocessing
-        
     def AddData(self, NewData):
-        if self.NewData is not None:
+        if self.ToDemData is not None:
             print('Error Demod !!!!')
-        self.NewData = NewData 
+        self.ToDemData = NewData 
         
     def stop (self):
         self.terminate()       

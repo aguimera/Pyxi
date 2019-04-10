@@ -148,7 +148,7 @@ class MainWindow(Qt.QWidget):
             self.GenKwargs = self.NifGenParams.GetParams()
             self.ScopeKwargs = self.NiScopeParams.GetParams()
             self.DemKwargs = self.DemodParams.GetParams()
-            print(self.DemKwargs)
+            
             self.threadAqc = FMacq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
             self.threadAqc.NewData.connect(self.on_NewSample)
             
@@ -166,7 +166,7 @@ class MainWindow(Qt.QWidget):
                                                       RowList = self.threadAqc.RowsList,
                                                       Fsize = self.threadAqc.BS, 
                                                       **self.DemKwargs)
-                self.threadDemod.DemodData.connect(self.on_NewDemodSample)
+                self.threadDemod.NewData.connect(self.on_NewDemodSample)
 
             self.threadAqc.start()
             self.btnGen.setText("Stop Gen")
@@ -233,16 +233,17 @@ class MainWindow(Qt.QWidget):
         print('Sample time', Ts)
 
     def on_NewDemodSample(self):
-        if self.DemConfig.param('DemEnable').value() == True:
-            if self.threadSave is not None:
-                self.threadSave.AddData(self.threadDemod.OutDemData)
+        print('DemodDone', self.threadDemod.OutDemData.shape)
+        if self.threadSave is not None:
+            self.threadSave.AddData(self.threadDemod.OutDemData)
+        
+        if self.threadPlotter is not None:
+            self.threadPlotter.AddData(self.threadDemod.OutDemData)
             
-            if self.threadPlotter is not None:
-                self.threadPlotter.AddData(self.threadDemod.OutDemData)
-                
-            if self.threadPSDPlotter is not None:  
-                self.threadPSDPlotter.AddData(self.threadDemod.OutDemData)
-                
+        if self.threadPSDPlotter is not None:  
+            self.threadPSDPlotter.AddData(self.threadDemod.OutDemData)
+#        self.threadDemod.NewData = None 
+        
     def SaveFiles(self):
         FileName = self.FileParameters.param('File Path').value()
         if FileName ==  '':
