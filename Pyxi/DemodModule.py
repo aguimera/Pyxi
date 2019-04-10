@@ -127,7 +127,7 @@ class DemodThread(Qt.QThread):
                 for rows in range(len(self.DemOutputs)):
                     DemData = []
                     for instance in range(len(self.DemOutputs[rows])):
-                        DemData.append(instance.Apply(self.NewData))
+                        DemData.append(instance.Apply(self.ToDemData))
                     self.OutDemData.append(DemData)
                 self.NewData.emit()
                 self.ToDemData = None
