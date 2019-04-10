@@ -108,7 +108,7 @@ class Demod():
 
 class DemodThread(Qt.QThread):
     DemodData = Qt.pyqtSignal()
-    def __init__(self, Fcs, RowList, Fsize, Fs, DownFact, Order):
+    def __init__(self, Fcs, RowList, Fsize, FsDemod, DSFact, FiltOrder):
        super(DemodThread, self).__init__() 
        
        self.DemOutputs = []
@@ -116,7 +116,7 @@ class DemodThread(Qt.QThread):
            DemOut = []
            for Cols, Freq in Fcs.items():
 #           for itera, Freq in enumerate(Fcs):
-               Dem = Demod(Freq, Fsize, Fs, DownFact, Order)
+               Dem = Demod(Freq, Fsize, FsDemod, DSFact, FiltOrder)
                DemOut.append(Dem)
            self.DemOutputs.append(DemOut) 
             

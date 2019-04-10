@@ -147,7 +147,8 @@ class MainWindow(Qt.QWidget):
         if self.threadAqc is None:
             self.GenKwargs = self.NifGenParams.GetParams()
             self.ScopeKwargs = self.NiScopeParams.GetParams()
-            
+            self.DemKwargs = self.DemodParams.GetParams()
+            print(self.DemKwargs)
             self.threadAqc = FMacq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
             self.threadAqc.NewData.connect(self.on_NewSample)
             
@@ -159,11 +160,11 @@ class MainWindow(Qt.QWidget):
                 self.GenPlotter()
                 
             if self.DemConfig.param('DemEnable').value() == True:
-                self.DemKwargs = self.DemodParams.GetParams()
+#                self.DemKwargs = self.DemodParams.GetParams()
                 self.Carr = self.NifGenParams.GetCarriers()
-                self.threadDemod = DemMod.DemodThread(self.Carr, 
-                                                      self.threadAqc.RowsList,
-                                                      self.threadAqc.BS, 
+                self.threadDemod = DemMod.DemodThread(Fcs = self.Carr, 
+                                                      RowList = self.threadAqc.RowsList,
+                                                      Fsize = self.threadAqc.BS, 
                                                       **self.DemKwargs)
                 self.threadDemod.DemodData.connect(self.on_NewDemodSample)
 
