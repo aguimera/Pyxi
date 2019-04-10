@@ -183,15 +183,15 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             p.param('Gain').setValue(Gain)
         
     def GetParams(self):
-        Generator = {'ColumnsConfig':{},
+        self.Generator = {'ColumnsConfig':{},
                      }
         for Config in self.CarrierConfig.children():
-            Generator['ColumnsConfig'][Config.name()] = {}
+            self.Generator['ColumnsConfig'][Config.name()] = {}
             for Values in Config.children():
-                Generator['ColumnsConfig'][Config.name()][Values.name()] = Values.value()
+                self.Generator['ColumnsConfig'][Config.name()][Values.name()] = Values.value()
         
         for Config in self.SamplingConfig.children():
-            Generator[Config.name()] = Config.value()
+            self.Generator[Config.name()] = Config.value()
         
         for Config in self.ColConfig.children():
             for Values in Config.children():
@@ -199,9 +199,18 @@ class NifGeneratorParameters(pTypes.GroupParameter):
                     if Values.value() == False:
                         break
                     continue
-                Generator['ColumnsConfig'][Config.name()][Values.name()] = Values.value()
+                self.Generator['ColumnsConfig'][Config.name()][Values.name()] = Values.value()
             
-        return Generator
+        return self.Generator   
+        
+    def GetCarriers(self):
+        Carriers = {}
+        for Rows, Conf in self.Generator.items():
+            for param, val in Conf.items():
+                if param == 'Frequency':
+                    Carriers[str(Rows)] = val
+                    
+        return Carriers
  
 class SigGen(nifgen.Session):    
     def SetArbSignal(self, Signal, index, gain, offset):
@@ -506,8 +515,9 @@ class NiScopeParameters(pTypes.GroupParameter):
             if Config.name() =='tFetch':
                 continue
             Scope[Config.name()] = Config.value()
-
+        print(Scope)
         return Scope
+            
 
 OptionsScope = {'simulate': False,
                 'driver_setup': {'Model': 'NI PXIe-5105',
@@ -560,11 +570,13 @@ class DataAcquisitionThread(Qt.QThread):
         self.offset = OffsetRows
         self.GainBoard = GainBoard
         self.LSB = np.array([])
+        self.RowsList = np.arra([])
         
         self.ttimer = ((self.BS/FsScope)-0.05)*1000
         
-        for i in range(NRow):
-            self.LSB = np.append(self.LSB, RowsConfig['Row'+str(i+1)]['Range']/(2**16))
+        for Row, pars in RowsConfig.items():
+            self.RowsList = np.append(self.RowsList, str(Row)) if self.RowsList.shape[0]==0 else str(Row)
+            self.LSB = np.append(self.LSB, RowsConfig[str(Row)]['Range']/(2**16))
             
         Sig = {}
         for col, pars in ColumnsConfig.items():

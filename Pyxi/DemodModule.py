@@ -5,9 +5,54 @@ Created on Tue Apr  2 12:45:22 2019
 @author: Lucia
 """
 from PyQt5 import Qt
+import pyqtgraph.parametertree.parameterTypes as pTypes
+import pyqtgraph.parametertree.Parameter as pParams
+
 from scipy import signal
 import numpy as np
 
+
+DemodulParams = ({'name': 'DemodConfig',
+                  'type': 'group',
+                  'children': ({'name': 'DemEnable',
+                                'title': 'On/Off',
+                                'type': 'bool',
+                                'value': False},
+                               {'name': 'FsDemod',
+                                'type': 'float',
+                                'value': 2e6,
+                                'readonly': True,
+                                'siPrefix': True,
+                                'suffix': 'Hz'},
+                               {'name': 'DSFact',
+                                'title': 'DownSampling Factor',
+                                'type': 'int',
+                                'value': 10},
+                               {'name': 'FiltOrder',
+                                'title':'Filter Order',
+                                'type': 'int',
+                                'value': 2}
+                              )
+                })
+                  
+class DemodParameters(pTypes.GroupParameter):
+    def __init__(self, **kwargs):
+        pTypes.GroupParameter.__init__(self, **kwargs)
+
+        self.addChild(DemodulParams)
+        self.DemConfig = self.param('DemodConfig')
+        self.DemEnable = self.DemConfig.param('DemEnable')
+        self.FsDem = self.DemConfig.param('FsDemod')
+        self.DSFact = self.DemConfig.param('DSFact')
+        self.FiltOrder = self.DemConfig.param('FiltOrder')
+    
+    def GetParams(self):
+        Demod = {}
+        for Config in self.DemConfig.children():
+            if Config == 'DemEnable':
+                continue
+            Demod[Config.name()] = Config.value()
+        
 class Filter():
     def __init__(self, Fs, Freqs, btype, Order):
         freqs = np.array(Freqs)/(0.5*Fs)
@@ -28,64 +73,89 @@ class Filter():
                                          )
         return sigout  
 
-def Demod(SigIn, Fs, Fc, DownFact):
-    step = 2*np.pi*((Fc)/Fs)
-    print(step)
-    print(SigIn.size)
-    vcoi = np.exp(1j*(step*range(SigIn.size)))
-    rdem = np.real(vcoi*SigIn)
-    idem = np.imag(vcoi*SigIn)
-    
-    FiltR = Filter(Fs, Fc, 'lp', 2)
-    FiltI = Filter(Fs, Fc, 'lp', 2)
-    
-    FilterRPart = FiltR.Apply(rdem)
-    FilterIPart = FiltI.Apply(idem)
 
-    rdem = signal.resample(FilterRPart, (FilterRPart.shape[0]//DownFact))
-    idem = signal.resample(FilterRPart, (FilterIPart.shape[0]//DownFact))
-    
-    adem = np.sqrt(rdem**2, idem**2)
+class Demod():
+    def __init__(self, Fc, FetchSize, Fs, DownFact, Order):
 
-    filt = Filter(Fs=Fs,
-                  Freqs=(Fc-1000, Fc+1000),
-                  btype='bandpass',
-                  Order=2) 
-
-    Vbp = filt.Apply(SigIn)
-    VinH = signal.hilbert(Vbp)
-    Err = np.angle(VinH*np.conj(vcoi))
-    
-    return adem, rdem, idem, Err
-class Demodul():
-    def __init__(self, Fs, Fc):
-        super(Demod, self).__init__()
         self.Fs = Fs
         self.Fc = Fc
-        self.FiltR = Filter(Fs, Fc, 'lp', 2)
-        self.FiltI = Filter(Fs, Fc, 'lp', 2)
+        self.DownFact = DownFact
+        self.FsOut = Fs/DownFact
         
-    def run(self, SigIn, DownFact):
-        step = 2*np.pi*((self.Fc)/self.Fs)
-        vcoi = np.exp(1j*(step*range(SigIn.size)))
-        rdem = np.real(vcoi*SigIn)
-        idem = np.imag(vcoi*SigIn)
+        self.FiltR = Filter(Fs, self.FsOut/2, 'lp', Order)
+        self.FiltI = Filter(Fs, self.FsOut/2, 'lp', Order)
+
+        step = 2*np.pi*(Fc/Fs)
+        self.vcoi = np.exp(1j*(step*np.arange(FetchSize)))
+        
+    def Apply(self, SigIn):    
+        rdem = np.real(self.vcoi*SigIn)
+        idem = np.imag(self.vcoi*SigIn)
         
         FilterRPart = self.FiltR.Apply(rdem)
         FilterIPart = self.FiltI.Apply(idem)
 
-        rdem = signal.resample(FilterRPart, (FilterRPart.shape[0]//DownFact))
-        idem = signal.resample(FilterRPart, (FilterIPart.shape[0]//DownFact))
+        sObject = slice(None, None, self.DownFact)
         
-        adem = np.sqrt(rdem**2, idem**2)
+        RSrdem = FilterRPart[sObject]
+        RSidem = FilterIPart[sObject]
+        
+        adem = np.sqrt(RSrdem**2, RSidem**2) 
+        
+        return adem
 
-        filt = Filter(Fs=self.Fs,
-                      Freqs=(self.Fc-1000, self.Fc+1000),
-                      btype='bandpass',
-                      Order=2) 
-    
-        Vbp = filt.Apply(SigIn)
-        VinH = signal.hilbert(Vbp)
-        Err = np.angle(VinH*np.conj(vcoi))
+class DemodThread(Qt.QThread):
+    DemodData = Qt.pyqtSignal()
+    def __init__(self, Fcs, RowList, Fsize, Fs, DownFact, Order):
+       super(DemodThread, self).__init__() 
+       
+       self.DemOutputs = []
+       for Row in RowList:
+           DemOut = []
+           for Cols, Freq in Fcs.items():
+#           for itera, Freq in enumerate(Fcs):
+               Dem = Demod(Freq, Fsize, Fs, DownFact, Order)
+               DemOut.append(Dem)
+           self.DemOutputs.append(DemOut) 
+            
+    def run(self):       
+        while True:
+            if self.NewData is not None:
+                self.OutDemData = []
+                for rows in range(len(self.DemOutputs)):
+                    DemData = []
+                    for instance in range(len(self.DemOutputs[rows])):
+                        DemData.append(instance.Apply(self.NewData))
+                    self.OutDemData.append(DemData)
+                self.DemodData.emit()
+                self.NewData = None
+            else:
+                Qt.QThread.msleep(10)
+#        #multiprocessing
         
-        return adem, rdem, idem, Err
+    def AddData(self, NewData):
+        if self.NewData is not None:
+            print('Error Demod !!!!')
+        self.NewData = NewData 
+        
+    def stop (self):
+        self.terminate()       
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        

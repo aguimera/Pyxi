@@ -176,9 +176,9 @@ class MainWindow(Qt.QWidget):
         if self.threadSave is not None:
             self.threadSave.AddData(self.threadGen.OutData)
         if self.DemodEn == True:
-            SigDem = np.zeros(self.threadGen.OutData.shape)
+            SigDem = np.zeros((self.threadGen.OutData.shape//10))
             for i in range(self.threadGen.OutData.shape[1]):
-                print(self.threadGen.OutData[:, i])
+#                print(self.threadGen.OutData[:, i])
                 SigDem[:, i], ___, ___, ___ = Demod.Demod(SigIn=self.threadGen.OutData[:, i], 
                                                           Fs=self.DataGenParams.param('Fs').value(), 
                                                           Fc=self.DataGenParams.param('Col'+str(i)).param('Freq').value(),

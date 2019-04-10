@@ -26,6 +26,7 @@ import Pyxi.FileModule as FileMod
 import Pyxi.SampleGenerator as SampGen
 import Pyxi.PlotModule as PltMod
 import Pyxi.FMacqThread as FMacq
+import Pyxi.DemodModule as DemMod
 
 class MainWindow(Qt.QWidget):
     ''' Main Window '''
@@ -49,9 +50,11 @@ class MainWindow(Qt.QWidget):
 
         
         self.NiScopeParams = FMacq.NiScopeParameters(name = 'Scope')
-        
         self.Parameters.addChild(self.NiScopeParams)
 #   
+        self.DemodParams = DemMod.DemodParameters(name = 'Demod Options')
+        self.Parameters.addChild(self.DemodParams)
+        
         self.FileParameters = FileMod.SaveFileParameters(QTparent=self,
                                                          name='Record File')
         self.Parameters.addChild(self.FileParameters)
@@ -75,7 +78,6 @@ class MainWindow(Qt.QWidget):
         self.treepar.setParameters(self.Parameters, showTop=False)
         self.treepar.setWindowTitle('pyqtgraph example: Parameter Tree')
         
-        
         layout.addWidget(self.treepar)
 
         self.setGeometry(550, 10, 300, 700)
@@ -86,6 +88,7 @@ class MainWindow(Qt.QWidget):
         self.threadSave = None
         self.threadPlotter = None
         self.threadPSDPlotter = None
+        self.threadDemod = None
 
     def on_pars_changed(self, param, changes):
         print("tree changes:")
@@ -100,12 +103,17 @@ class MainWindow(Qt.QWidget):
         print('  data:      %s'% str(data))
         print('  ----------')
 
+        if childName == 'NifGenerator.SamplingConfig.FsGen':
+            k =round(data/self.NiScopeParams.FsScope.value())
+            self.NiScopeParams.FsScope.setValue(data/k)
+            
         if childName == 'Scope.FetchConfig.FsScope':
             n =round(self.NifGenParams.FsGen.value()/data)
-            print(n)
-            self.NifGenParams.FsGen.setValue(data*n)
+            self.NiScopeParams.FsScope.setValue(self.NifGenParams.FsGen.value()/n,
+                                                blockSignal=self.on_pars_changed)
             self.PlotParams.param('Fs').setValue(data)
             self.PSDParams.param('Fs').setValue(data)
+            self.DemodParams.param('FsDem').setValue(data)
             
         if childName == 'Scope.FetchConfig.NRow':
             self.PlotParams.SetChannels(self.NiScopeParams.GetChannels())
@@ -149,6 +157,15 @@ class MainWindow(Qt.QWidget):
                 self.GenPSD()
             if self.PltEnable == True:
                 self.GenPlotter()
+                
+            if self.DemodParams.param('DemEnable') == True:
+                self.DemKwargs = self.DemodParams.GetParams()
+                self.Carr = self.NifGenParams.GetCarriers()
+                self.threadDemod = DemMod.DemodThread(self.Carr, 
+                                                      self.NiScopeParams.param('RowsList'),
+                                                      self.NifGenParams.param('BS').value(), 
+                                                      **self.DemKwargs)
+                self.threadDemod.DemodData.connect(self.on_NewDemodSample)
 
             self.threadAqc.start()
             self.btnGen.setText("Stop Gen")
@@ -156,35 +173,22 @@ class MainWindow(Qt.QWidget):
         else:
             self.threadAqc.NewData.disconnect()
             self.threadAqc.stopSessions()
-#            self.threadAqc.stopTimer()
             self.threadAqc.terminate()
-#            print(self.threadAqc.isRunning())
             self.threadAqc = None
             
             if self.threadSave is not None:
                 self.threadSave.stop()
                 self.threadSave = None
+                
+            if self.threadDemod is not None:
+                self.threadDemod.stop()
+                self.threadDemod = None
             
             self.DestroyPlotter()
             self.DestroyPSD()
                 
             self.btnGen.setText("Start Gen")
             
-    def on_NewSample(self):
-        ''' Visualization of streaming data-WorkThread. '''
-        Ts = time.time() - self.OldTime
-        self.OldTime = time.time()
-        if self.threadSave is not None:
-            self.threadSave.AddData(self.threadAqc.IntData)
-        
-        if self.threadPlotter is not None:
-            self.threadPlotter.AddData(self.threadAqc.OutData)
-            
-        if self.threadPSDPlotter is not None:  
-            self.threadPSDPlotter.AddData(self.threadAqc.OutData)
-            
-        print('Sample time', Ts)
-
     def GenPlotter(self):
         PlotterKwargs = self.PlotParams.GetParams()
         self.threadPlotter = PltMod.Plotter(**PlotterKwargs)
@@ -208,6 +212,37 @@ class MainWindow(Qt.QWidget):
             self.threadPSDPlotter.stop()
             self.threadPSDPlotter = None 
                     
+    def on_NewSample(self):
+        ''' Visualization of streaming data-WorkThread. '''
+        Ts = time.time() - self.OldTime
+        self.OldTime = time.time()
+        
+        if self.DemodParams.param('DemEnable') == False:
+            if self.threadSave is not None:
+                self.threadSave.AddData(self.threadAqc.IntData)
+            
+            if self.threadPlotter is not None:
+                self.threadPlotter.AddData(self.threadAqc.OutData)
+                
+            if self.threadPSDPlotter is not None:  
+                self.threadPSDPlotter.AddData(self.threadAqc.OutData)
+       
+        if self.DemodParams.param('DemEnable') == True:
+            if self.threadDemod is not None:
+                self.threadDemod.AddData(self.threadAqc.OutData)
+        print('Sample time', Ts)
+
+    def on_NewDemodSample(self):
+        if self.DemodParams.param('DemEnable') == True:
+            if self.threadSave is not None:
+                self.threadSave.AddData(self.threadDemod.OutDemData)
+            
+            if self.threadPlotter is not None:
+                self.threadPlotter.AddData(self.threadDemod.OutDemData)
+                
+            if self.threadPSDPlotter is not None:  
+                self.threadPSDPlotter.AddData(self.threadDemod.OutDemData)
+                
     def SaveFiles(self):
         FileName = self.FileParameters.param('File Path').value()
         if FileName ==  '':
