@@ -161,12 +161,12 @@ class MainWindow(Qt.QWidget):
                 
             if self.DemConfig.param('DemEnable').value() == True:
 #                self.DemKwargs = self.DemodParams.GetParams()
-                self.Carr = self.NifGenParams.GetCarriers()
-                self.threadDemod = DemMod.DemodThread(Fcs = self.Carr, 
-                                                      RowList = self.threadAqc.RowsList,
+                self.threadDemod = DemMod.DemodThread(Fcs=self.NifGenParams.GetCarriers(), 
+                                                      RowList=self.threadAqc.RowsList,
                                                       Fsize = self.threadAqc.BS, 
                                                       **self.DemKwargs)
                 self.threadDemod.NewData.connect(self.on_NewDemodSample)
+                self.threadDemod.start()
 
             self.threadAqc.start()
             self.btnGen.setText("Stop Gen")
@@ -233,15 +233,17 @@ class MainWindow(Qt.QWidget):
         print('Sample time', Ts)
 
     def on_NewDemodSample(self):
-        print('DemodDone', self.threadDemod.OutDemData.shape)
-        if self.threadSave is not None:
-            self.threadSave.AddData(self.threadDemod.OutDemData)
+        print('NewDemodData')
         
-        if self.threadPlotter is not None:
-            self.threadPlotter.AddData(self.threadDemod.OutDemData)
-            
-        if self.threadPSDPlotter is not None:  
-            self.threadPSDPlotter.AddData(self.threadDemod.OutDemData)
+#        print('DemodDone', self.threadDemod.OutDemData)
+#        if self.threadSave is not None:
+#            self.threadSave.AddData(self.threadDemod.OutDemData)
+        
+#        if self.threadPlotter is not None:
+#            self.threadPlotter.AddData(self.threadDemod.OutDemData)
+#            
+#        if self.threadPSDPlotter is not None:  
+#            self.threadPSDPlotter.AddData(self.threadDemod.OutDemData)
 #        self.threadDemod.NewData = None 
         
     def SaveFiles(self):

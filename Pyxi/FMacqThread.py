@@ -206,14 +206,9 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         
     def GetCarriers(self):
         Carriers = {}
+        for p in self.CarrierConfig.children():
+            Carriers[p.name()] = p.param('Frequency').value()
 
-        for Rows, Conf in self.Generator.items():
-            if Rows is not 'ColumnsConfig':
-                continue
-            for param, val in Conf.items():
-                if param == 'Frequency':
-                    Carriers[str(Rows)] = val
-                    
         return Carriers
  
 class SigGen(nifgen.Session):    

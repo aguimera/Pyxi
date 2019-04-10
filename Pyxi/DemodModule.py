@@ -111,24 +111,25 @@ class DemodThread(Qt.QThread):
     def __init__(self, Fcs, RowList, Fsize, FsDemod, DSFact, FiltOrder):
        super(DemodThread, self).__init__() 
        self.ToDemData = None
+
        self.DemOutputs = []
        for Row in RowList:
            DemOut = []
            for Cols, Freq in Fcs.items():
-#           for itera, Freq in enumerate(Fcs):
                Dem = Demod(Freq, Fsize, FsDemod, DSFact, FiltOrder)
                DemOut.append(Dem)
            self.DemOutputs.append(DemOut) 
-            
+       self.OutDemData = np.array([1000000,32])
+     
     def run(self):       
         while True:
             if self.ToDemData is not None:
-                self.OutDemData = []
-                for rows in range(len(self.DemOutputs)):
-                    DemData = []
-                    for instance in range(len(self.DemOutputs[rows])):
-                        DemData.append(instance.Apply(self.ToDemData))
-                    self.OutDemData.append(DemData)
+                ind = 0
+                for ir, rows in enumerate(self.DemOutputs):
+                    for instance in rows:
+                        data = instance.Apply(self.ToDemData[:, ir])
+                        self.OutDemData[:,ind]
+                        print('DemData', data.shape)
                 self.NewData.emit()
                 self.ToDemData = None
             else:
