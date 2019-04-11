@@ -54,6 +54,15 @@ class DemodParameters(pTypes.GroupParameter):
             Demod[Config.name()] = Config.value()
         
         return Demod
+    
+    def GetChannels(self, Rows, Fcs):
+        DemChnNames = {}
+        i=0
+        for r in Rows:
+            for col, f in Fcs.items():
+                i=i+1
+                DemChnNames[r+'_'+col]=i
+        return DemChnNames
         
 class Filter():
     def __init__(self, Fs, Freqs, btype, Order):
@@ -111,7 +120,7 @@ class DemodThread(Qt.QThread):
     def __init__(self, Fcs, RowList, Fsize, FsDemod, DSFact, FiltOrder):
        super(DemodThread, self).__init__() 
        self.ToDemData = None
-
+       
        self.DemOutputs = []
        for Row in RowList:
            DemOut = []
@@ -119,7 +128,7 @@ class DemodThread(Qt.QThread):
                Dem = Demod(Freq, Fsize, FsDemod, DSFact, FiltOrder)
                DemOut.append(Dem)
            self.DemOutputs.append(DemOut) 
-       self.OutDemData = np.array([1000000,32])
+       self.OutDemData = np.ndarray(((Fsize/DSFact),(len(RowList)*len(Fcs.keys()))))
      
     def run(self):       
         while True:
@@ -127,9 +136,10 @@ class DemodThread(Qt.QThread):
                 ind = 0
                 for ir, rows in enumerate(self.DemOutputs):
                     for instance in rows:
+                        ind = ind+1
                         data = instance.Apply(self.ToDemData[:, ir])
-                        self.OutDemData[:,ind]
-                        print('DemData', data.shape)
+                        self.OutDemData[:,ind] = data
+                print('OutDemData', self.OutDemData.shape)
                 self.NewData.emit()
                 self.ToDemData = None
             else:

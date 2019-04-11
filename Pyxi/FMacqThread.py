@@ -167,8 +167,8 @@ class NifGeneratorParameters(pTypes.GroupParameter):
                 self.on_Fs_Changed()
                 
     def on_Fs_Changed(self):
-        Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
-        Fmin = np.min(Freqs)
+        self.Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
+        Fmin = np.min(self.Freqs)
         
         Samps = self.GS.value()
         Fs = Samps*Fmin/10
