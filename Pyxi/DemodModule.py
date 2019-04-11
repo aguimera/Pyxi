@@ -60,8 +60,8 @@ class DemodParameters(pTypes.GroupParameter):
         i=0
         for r in Rows:
             for col, f in Fcs.items():
-                i=i+1
                 DemChnNames[r+'_'+col]=i
+                i=i+1
         return DemChnNames
         
 class Filter():
@@ -128,17 +128,17 @@ class DemodThread(Qt.QThread):
                Dem = Demod(Freq, Fsize, FsDemod, DSFact, FiltOrder)
                DemOut.append(Dem)
            self.DemOutputs.append(DemOut) 
-       self.OutDemData = np.ndarray(((Fsize/DSFact),(len(RowList)*len(Fcs.keys()))))
-     
+       self.OutDemData = np.ndarray((int(Fsize/DSFact),int(len(RowList)*len(Fcs.keys()))))
+       
     def run(self):       
         while True:
             if self.ToDemData is not None:
                 ind = 0
                 for ir, rows in enumerate(self.DemOutputs):
                     for instance in rows:
-                        ind = ind+1
                         data = instance.Apply(self.ToDemData[:, ir])
                         self.OutDemData[:,ind] = data
+                        ind = ind+1
                 print('OutDemData', self.OutDemData.shape)
                 self.NewData.emit()
                 self.ToDemData = None

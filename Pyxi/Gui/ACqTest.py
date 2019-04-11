@@ -73,7 +73,7 @@ class MainWindow(Qt.QWidget):
         self.Parameters.addChild(self.PlotParams)
         
         self.DemodPSD = PltMod.PSDParameters(name='Demod PSD Options')
-        self.DemodPSD.param('Fs').setValue(self.DemConfig.param('FsDemod').value())
+        self.DemodPSD.param('Fs').setValue((self.DemConfig.param('FsDemod').value())/(self.DemConfig.param('DSFact').value()))
         self.DemodPSD.param('Fmin').setValue(50)
         self.DemodPSD.param('nAvg').setValue(50)
         self.Parameters.addChild(self.DemodPSD)
@@ -82,7 +82,7 @@ class MainWindow(Qt.QWidget):
         self.DemodPlotPars.SetChannels(self.DemodParams.GetChannels(self.NiScopeParams.Rows, 
                                                                     self.NifGenParams.GetCarriers())
                                       )
-        self.DemodPlotPars.param('Fs').setValue(self.DemConfig.param('FsDemod').value())
+        self.DemodPlotPars.param('Fs').setValue((self.DemConfig.param('FsDemod').value())/(self.DemConfig.param('DSFact').value()))
 
         self.Parameters.addChild(self.DemodPlotPars)
         
@@ -139,6 +139,9 @@ class MainWindow(Qt.QWidget):
             self.DemodPlotPars.SetChannels(self.DemodParams.GetChannels(self.NiScopeParams.Rows, 
                                                                         self.NifGenParams.GetCarriers())
                                           )
+        if childName == 'Demod Options.DemodConfig.DSFact':
+            self.DemodPSD.param('Fs').setValue((self.DemConfig.param('FsDemod').value())/data)
+            self.DemodPlotPars.param('Fs').setValue((self.DemConfig.param('FsDemod').value())/data)
             
         if childName == 'Plot options.RefreshTime':
             if self.threadPlotter is not None:
@@ -234,21 +237,22 @@ class MainWindow(Qt.QWidget):
             self.btnGen.setText("Start Gen")
             
     def GenPlotter(self):
-        PlotterKwargs = self.PlotParams.GetParams()
         if self.threadPlotter is None:
             if self.PlotParams.param('PlotEnable').value() == True:
+                PlotterKwargs = self.PlotParams.GetParams()
                 self.threadPlotter = PltMod.Plotter(**PlotterKwargs)
                 self.threadPlotter.start()
                 
         if self.threadDemodPlotter is None:
             if self.DemodPlotPars.param('PlotEnable').value() == True:
+                PlotterKwargs = self.DemodPlotPars.GetParams()
                 self.threadDemodPlotter = PltMod.Plotter(**PlotterKwargs)
                 self.threadDemodPlotter.start()
         
     def GenPSD(self):
-        PlotterKwargs = self.PlotParams.GetParams()
         if self.threadPSDPlotter is None:
             if self.PSDParams.param('PSDEnable').value() == True:
+                PlotterKwargs = self.PlotParams.GetParams()
                 self.threadPSDPlotter = PltMod.PSDPlotter(ChannelConf=PlotterKwargs['ChannelConf'],
                                                           nChannels=self.ScopeKwargs['NRow'],
                                                           **self.PSDParams.GetParams())
@@ -256,9 +260,10 @@ class MainWindow(Qt.QWidget):
                 
         if self.threadDemodPSDPlotter is None:
             if self.DemodPSD.param('PSDEnable').value() == True:
+                PlotterKwargs = self.DemodPlotPars.GetParams()
                 self.threadDemodPSDPlotter = PltMod.PSDPlotter(ChannelConf=PlotterKwargs['ChannelConf'],
                                                                nChannels=self.ScopeKwargs['NRow']*len(self.NifGenParams.Freqs),
-                                                               **self.PSDParams.GetParams())
+                                                               **self.DemodPSD.GetParams())
                 self.threadDemodPSDPlotter.start() 
         
 
@@ -288,15 +293,14 @@ class MainWindow(Qt.QWidget):
         ''' Visualization of streaming data-WorkThread. '''
         Ts = time.time() - self.OldTime
         self.OldTime = time.time()
-        if self.DemConfig.param('DemEnable').value() == False:
-            if self.threadSave is not None:
-                self.threadSave.AddData(self.threadAqc.IntData)
+        if self.threadSave is not None:
+            self.threadSave.AddData(self.threadAqc.IntData)
+        
+        if self.threadPlotter is not None:
+            self.threadPlotter.AddData(self.threadAqc.OutData)
             
-            if self.threadPlotter is not None:
-                self.threadPlotter.AddData(self.threadAqc.OutData)
-                
-            if self.threadPSDPlotter is not None:  
-                self.threadPSDPlotter.AddData(self.threadAqc.OutData)
+        if self.threadPSDPlotter is not None:  
+            self.threadPSDPlotter.AddData(self.threadAqc.OutData)
        
         if self.DemConfig.param('DemEnable').value() == True:
             if self.threadDemod is not None:
@@ -308,6 +312,12 @@ class MainWindow(Qt.QWidget):
         print('NewDemodData')
         Tdemf = time.time()-self.tdemi
         print('Demod time', Tdemf)
+        
+        if self.threadDemodPlotter is not None:
+            self.threadDemodPlotter.AddData(self.threadDemod.OutDemData)
+            
+        if self.threadDemodPSDPlotter is not None:  
+            self.threadDemodPSDPlotter.AddData(self.threadDemod.OutDemData)
 #        print('DemodDone', self.threadDemod.OutDemData)
 #        if self.threadSave is not None:
 #            self.threadSave.AddData(self.threadDemod.OutDemData)
