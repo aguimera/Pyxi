@@ -309,9 +309,9 @@ class MainWindow(Qt.QWidget):
         print('Sample time', Ts)
 
     def on_NewDemodSample(self):
-        print('NewDemodData')
-        Tdemf = time.time()-self.tdemi
-        print('Demod time', Tdemf)
+#        print('NewDemodData')
+#        Tdemf = time.time()-self.tdemi
+#        print('Demod time', Tdemf)
         
         if self.threadDemodPlotter is not None:
             self.threadDemodPlotter.AddData(self.threadDemod.OutDemData)

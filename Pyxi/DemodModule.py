@@ -139,7 +139,7 @@ class DemodThread(Qt.QThread):
                         data = instance.Apply(self.ToDemData[:, ir])
                         self.OutDemData[:,ind] = data
                         ind = ind+1
-                print('OutDemData', self.OutDemData.shape)
+#                print('OutDemData', self.OutDemData.shape)
                 self.NewData.emit()
                 self.ToDemData = None
             else:

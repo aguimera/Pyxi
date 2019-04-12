@@ -216,10 +216,11 @@ class SigGen(nifgen.Session):
         Handle = self.create_waveform(Signal)
 #        if index != 0: #only needed if the CM is applied through VG0 to all the channels connected
 #            offset = 0  #if not done, the other channels will have 2*CM as offset
+
         self.channels[index].configure_arb_waveform(Handle,
                                                     gain=gain,
                                                     offset=offset)
-            
+        
 OptionsGen = 'Simulate=0,DriverSetup=Model:5413;Channels:0-1;BoardType:PXIe;MemorySize:268435456'
 
 class Columns():
@@ -232,8 +233,8 @@ class Columns():
         
 # Init resources and store sessions
         Res = [conf['Resource'] for col, conf in ColumnsConfig.items()]                
-        for re in set(Res):
-            SesGen = SigGen(resource_name=re, options=OptionsGen)
+        for res in set(Res):
+            SesGen = SigGen(resource_name=res, options=OptionsGen)
             SesGen.output_mode = nifgen.OutputMode.ARB
             SesGen.reference_clock_source = nifgen.ReferenceClockSource.PXI_CLOCK
             SesGen.ref_clock_frequency=100e6
@@ -241,7 +242,7 @@ class Columns():
             SesGen.arb_sample_rate=Fs/2
             SesGen.start_trigger_type = nifgen.StartTriggerType.DIGITAL_EDGE
             SesGen.digital_edge_start_trigger_source = 'PXI_Trig0'
-            self.Resources[re] = SesGen
+            self.Resources[res] = SesGen
 
 # Init columns indexing dictionaries
         for col, conf in ColumnsConfig.items():
@@ -264,13 +265,15 @@ class Columns():
         for Col,pars in SigsPars.items():
             if Col == 'Offset':
                 continue
-    
-            signal = pars['Amplitude']*np.sin(2*np.pi*pars['Frequency']*t)
+#            print(pars['Amplitude'])
+#            signal = pars['Amplitude']*np.sin(2*np.pi*pars['Frequency']*t)
+            signal = np.sin(2*np.pi*pars['Frequency']*t)
             if Col != 'Col1':
                 Offset = 0
             self.Columns[Col]['session'].SetArbSignal(index=self.Columns[Col]['index'],
-                                                       Signal=signal, gain=pars['Gain'], 
+                                                       Signal=signal, gain=pars['Amplitude'], 
                                                        offset=Offset)
+            
 ##############################SCOPE##########################################
 
 
@@ -309,7 +312,7 @@ NiScopeFetchingPars =  {'name': 'FetchConfig',
                                     'suffix': 'Samples'},
                                    {'name': 'GainBoard',
                                     'titel': 'System Gain',
-                                    'value': 10e3,
+                                    'value': (10e3),
                                     'type': 'int',
                                     'siPrefix': True,
                                     'suffix': 'Ohms'},
