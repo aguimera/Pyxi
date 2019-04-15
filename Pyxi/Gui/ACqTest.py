@@ -29,6 +29,7 @@ import Pyxi.FMacqThread as FMacq
 import Pyxi.DemodModule as DemMod
 
 class MainWindow(Qt.QWidget):
+    debbug = True
     ''' Main Window '''
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -106,17 +107,18 @@ class MainWindow(Qt.QWidget):
         self.threadDemodPSDPlotter = None
 
     def on_pars_changed(self, param, changes):
-        print("tree changes:")
-        for param, change, data in changes:
-            path = self.Parameters.childPath(param)
-            if path is not None:
-                childName = '.'.join(path)
-            else:
-                childName = param.name()
-        print('  parameter: %s'% childName)
-        print('  change:    %s'% change)
-        print('  data:      %s'% str(data))
-        print('  ----------')
+        if self.debbug:
+            print("tree changes:")
+            for param, change, data in changes:
+                path = self.Parameters.childPath(param)
+                if path is not None:
+                    childName = '.'.join(path)
+                else:
+                    childName = param.name()
+            print('  parameter: %s'% childName)
+            print('  change:    %s'% change)
+            print('  data:      %s'% str(data))
+            print('  ----------')
 
         if childName == 'NifGenerator.SamplingConfig.FsGen':
             k =round(data/self.NiScopeParams.FsScope.value())
@@ -149,7 +151,15 @@ class MainWindow(Qt.QWidget):
 
         if childName == 'Plot options.ViewTime':
             if self.threadPlotter is not None:
-                self.threadPlotter.SetViewTime(data)   
+                self.threadPlotter.SetViewTime(data)  
+                
+        if childName == 'Demod Plot options.RefreshTime':
+            if self.threadPlotter is not None:
+                self.threadPlotter.SetRefreshTime(data)    
+
+        if childName == 'Demod Plot options.ViewTime':
+            if self.threadPlotter is not None:
+                self.threadPlotter.SetViewTime(data) 
                 
         if childName == 'Plot options.PlotEnable':
             if self.threadAqc is not None:
