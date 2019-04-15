@@ -569,7 +569,7 @@ class DataAcquisitionThread(Qt.QThread):
         self.Rows = Rows(RowsConfig, FsScope, Resource)
         self.BS = BS
         self.offset = OffsetRows
-        self.GainBoard = (GainBoard/2e3)
+        self.GainBoard = (GainBoard)
         self.LSB = np.array([])
         self.RowsList = []
         self.Channels = []
@@ -623,7 +623,7 @@ class DataAcquisitionThread(Qt.QThread):
 #            print('ftech', time.time()-T1)
             self.Timer.singleShot(self.ttimer, self.GenData)
             for i, In in enumerate(Inputs):
-                self.OutData[:, i] = np.array(In.samples)#/self.GainBoard 
+                self.OutData[:, i] = np.array(In.samples)/self.GainBoard 
                 self.BinData[:,i] = self.OutData[:,i]/self.LSB[i]
                 self.IntData[:,i] = np.int16(np.round(self.BinData[:,i]))
             self.NewData.emit()

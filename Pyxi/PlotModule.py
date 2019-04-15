@@ -136,7 +136,7 @@ class PgPlotWindow(Qt.QWidget):
         self.pgLayout = pg.GraphicsLayoutWidget()
         self.pgLayout.setFocusPolicy(Qt.Qt.WheelFocus)
         layout.addWidget(self.pgLayout)
-        layout.setFocusPolicy(Qt.Qt.WheelFocus)
+#        layout.setFocusPolicy(Qt.Qt.WheelFocus)
         self.setLayout(layout) #to install the QVBoxLayout onto the widget
         self.setFocusPolicy(Qt.Qt.WheelFocus)
         self.show()
