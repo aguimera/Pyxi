@@ -132,11 +132,12 @@ class PlotterParameters(pTypes.GroupParameter):
 class PgPlotWindow(Qt.QWidget):
     def __init__(self):
         super(PgPlotWindow, self).__init__()
-        self.setFocusPolicy(Qt.Qt.WheelFocus)
-        layout = Qt.QVBoxLayout(self)
+        layout = Qt.QVBoxLayout(self) #crea el layout
         self.pgLayout = pg.GraphicsLayoutWidget()
-        self.pgLayout.setFocusPolicy(Qt.Qt.WheelFocus)
+#        self.pgLayout.setFocusPolicy(Qt.Qt.WheelFocus)
         layout.addWidget(self.pgLayout)
+        self.setLayout(layout) #to install the QVBoxLayout onto the widget
+        self.setFocusPolicy(Qt.Qt.WheelFocus)
         self.show()
 
 ##############################################################################
