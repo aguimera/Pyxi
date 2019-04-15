@@ -139,9 +139,9 @@ class MainWindow(Qt.QWidget):
             self.DemodPlotPars.SetChannels(self.DemodParams.GetChannels(self.NiScopeParams.Rows, 
                                                                         self.NifGenParams.GetCarriers())
                                           )
-        if childName == 'Demod Options.DemodConfig.DSFact':
-            self.DemodPSD.param('Fs').setValue((self.DemConfig.param('FsDemod').value())/data)
-            self.DemodPlotPars.param('Fs').setValue((self.DemConfig.param('FsDemod').value())/data)
+        if childName == 'Demod Options.DemodConfig.DSFs':
+            self.DemodPSD.param('Fs').setValue(data)
+            self.DemodPlotPars.param('Fs').setValue(data)
             
         if childName == 'Plot options.RefreshTime':
             if self.threadPlotter is not None:

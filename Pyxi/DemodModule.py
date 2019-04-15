@@ -24,9 +24,16 @@ DemodulParams = ({'name': 'DemodConfig',
                                 'readonly': True,
                                 'siPrefix': True,
                                 'suffix': 'Hz'},
+                               {'name': 'DSFs',
+                                'title': 'DownSampling Fs',
+                                'type': 'float',
+                                'value': 10e3,
+                                'siPrefix': True,
+                                'suffix': 'Hz'},
                                {'name': 'DSFact',
                                 'title': 'DownSampling Factor',
                                 'type': 'int',
+                                'readonly': True,
                                 'value': 10},
                                {'name': 'FiltOrder',
                                 'title':'Filter Order',
@@ -43,13 +50,22 @@ class DemodParameters(pTypes.GroupParameter):
         self.DemConfig = self.param('DemodConfig')
         self.DemEnable = self.DemConfig.param('DemEnable')
         self.FsDem = self.DemConfig.param('FsDemod')
+        self.DSFs = self.DemConfig.param('DSFs')
         self.DSFact = self.DemConfig.param('DSFact')
+        self.on_DSFs_changed()
+        self.DSFs.sigValueChanged.connect(self.on_DSFs_changed)
         self.FiltOrder = self.DemConfig.param('FiltOrder')
     
+    def on_DSFs_changed(self):
+        DSFact = int(self.FsDem.value()/self.DSFs.value())
+        self.DSFact.setValue(DSFact)
+        
     def GetParams(self):
         Demod = {}
         for Config in self.DemConfig.children():
             if Config.name() == 'DemEnable':
+                continue
+            if Config.name() == 'DSFs':
                 continue
             Demod[Config.name()] = Config.value()
         
