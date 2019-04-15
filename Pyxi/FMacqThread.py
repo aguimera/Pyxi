@@ -490,7 +490,7 @@ class NiScopeParameters(pTypes.GroupParameter):
     def on_BS_Changed(self):
         Fs = self.FsScope.value()
         tF = self.tFetch.value()
-        Samples = int(tF*Fs)
+        Samples = round(tF*Fs)
         tF = Samples/Fs
         self.tFetch.setValue(tF)
         self.BS.setValue(Samples)
