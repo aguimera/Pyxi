@@ -27,13 +27,13 @@ DemodulParams = ({'name': 'DemodConfig',
                                {'name': 'DSFs',
                                 'title': 'DownSampling Fs',
                                 'type': 'float',
+                                'readonly': True,
                                 'value': 10e3,
                                 'siPrefix': True,
                                 'suffix': 'Hz'},
                                {'name': 'DSFact',
                                 'title': 'DownSampling Factor',
                                 'type': 'int',
-                                'readonly': True,
                                 'value': 10},
                                {'name': 'FiltOrder',
                                 'title':'Filter Order',
@@ -52,13 +52,17 @@ class DemodParameters(pTypes.GroupParameter):
         self.FsDem = self.DemConfig.param('FsDemod')
         self.DSFs = self.DemConfig.param('DSFs')
         self.DSFact = self.DemConfig.param('DSFact')
-        self.on_DSFs_changed()
-        self.DSFs.sigValueChanged.connect(self.on_DSFs_changed)
+        self.on_DSFact_changed()
+        self.DSFact.sigValueChanged.connect(self.on_DSFact_changed)
+        self.FsDem.sigValueChanged.connect(self.on_FsDem_changed)
         self.FiltOrder = self.DemConfig.param('FiltOrder')
     
-    def on_DSFs_changed(self):
-        DSFact = int(self.FsDem.value()/self.DSFs.value())
-        self.DSFact.setValue(DSFact)
+    def on_FsDem_changed(self):
+        self.on_DSFact_changed()
+        
+    def on_DSFact_changed(self):
+        DSFs = self.FsDem.value()/self.DSFact.value()
+        self.DSFs.setValue(DSFs)
         
     def GetParams(self):
         Demod = {}

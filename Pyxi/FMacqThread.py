@@ -47,8 +47,8 @@ NifGenSamplingPars =  {'name': 'SamplingConfig',
                        'children':({'name': 'FsGen',
                                     'title': 'Sampling Rate',
                                     'type': 'float',
-                                    'value': 20e6,
                                     'readonly': True,
+                                    'value': 20e6,
                                     'siPrefix': True,
                                     'suffix': 'Hz'},
                                    {'name': 'GS',
@@ -144,8 +144,8 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         self.on_ColConf_Changed()
         
         self.CarrierConfig.sigTreeStateChanged.connect(self.on_Fsig_Changed)
-        self.on_Fs_Changed()
-        self.GS.sigValueChanged.connect(self.on_Fs_Changed)
+        self.on_GS_Changed()
+#        self.GS.sigValueChanged.connect(self.on_GS_Changed)
         
         
     def on_ColConf_Changed(self):
@@ -164,16 +164,16 @@ class NifGeneratorParameters(pTypes.GroupParameter):
     def on_Fsig_Changed(self):
         for p in self.CarrierConfig.children():
             if p.param('Frequency').sigValueChanged:
-                self.on_Fs_Changed()
+#                self.on_Fs_Changed()
+                self.on_GS_Changed()
                 
-    def on_Fs_Changed(self):
+    def on_GS_Changed(self):
         self.Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
         Fmin = np.min(self.Freqs)
         
-        Samps = self.GS.value()
-        Fs = Samps*Fmin/10
-        self.FsGen.setValue(Fs)
-        Samps = round(Fs/Fmin)*10
+        Fs = self.FsGen.value()
+        Samps = round(Fs/Fmin)*100
+        Fmin = Fs/Samps
         self.GS.setValue(Samps)
         for p in self.CarrierConfig.children():
             Fc = p.param('Frequency').value()
@@ -182,6 +182,23 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             p.param('Frequency').setValue(Fnew)
             Gain = 2*p.param('Amplitude').value()
             p.param('Gain').setValue(Gain)
+                
+#    def on_Fs_Changed(self):
+#        self.Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
+#        Fmin = np.min(self.Freqs)
+#        
+#        Samps = self.GS.value()
+#        Fs = Samps*Fmin/10
+#        self.FsGen.setValue(Fs)
+#        Samps = round(Fs/Fmin)*10
+#        self.GS.setValue(Samps)
+#        for p in self.CarrierConfig.children():
+#            Fc = p.param('Frequency').value()
+#            nc = round((Samps*Fc)/Fs)
+#            Fnew =  (nc*Fs)/Samps
+#            p.param('Frequency').setValue(Fnew)
+#            Gain = 2*p.param('Amplitude').value()
+#            p.param('Gain').setValue(Gain)
         
     def GetParams(self):
         self.Generator = {'ColumnsConfig':{},

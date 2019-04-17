@@ -120,9 +120,9 @@ class MainWindow(Qt.QWidget):
             print('  data:      %s'% str(data))
             print('  ----------')
 
-        if childName == 'NifGenerator.SamplingConfig.FsGen':
-            k =round(data/self.NiScopeParams.FsScope.value())
-            self.NiScopeParams.FsScope.setValue(data/k)
+#        if childName == 'NifGenerator.SamplingConfig.FsGen':
+#            k =round(data/self.NiScopeParams.FsScope.value())
+#            self.NiScopeParams.FsScope.setValue(data/k)
          
         if childName == 'NifGenerator.CarriersConfig':
             self.DemodPlotPars.SetChannels(self.DemodParams.GetChannels(self.NiScopeParams.Rows, 
@@ -130,11 +130,11 @@ class MainWindow(Qt.QWidget):
                                           )
             
         if childName == 'Scope.FetchConfig.FsScope':
-            self.PlotParams.param('Fs').setValue(data)
-            self.PSDParams.param('Fs').setValue(data)
-            self.DemConfig.param('FsDemod').setValue(data)
             n =round(self.NifGenParams.FsGen.value()/data)
             self.NiScopeParams.FsScope.setValue(self.NifGenParams.FsGen.value()/n)
+            self.PlotParams.param('Fs').setValue(self.NiScopeParams.FsScope.value())
+            self.PSDParams.param('Fs').setValue(self.NiScopeParams.FsScope.value())
+            self.DemConfig.param('FsDemod').setValue(self.NiScopeParams.FsScope.value())
             
         if childName == 'Scope.FetchConfig.NRow':
             self.PlotParams.SetChannels(self.NiScopeParams.GetChannels())
