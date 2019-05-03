@@ -54,9 +54,10 @@ NifGenSamplingPars =  {'name': 'SamplingConfig',
                                    {'name': 'GS',
                                     'title': 'Generation Size',
                                     'type': 'int',
-                                    'value': int(2e3),
-                                    'limits': (int(0), int(5e6)),
-                                    'step': 100,
+                                    'readonly': True,
+                                    'value': int(20e3),
+#                                    'limits': (int(0), int(5e6)),
+#                                    'step': 100,
                                     'siPrefix': True,
                                     'suffix': 'Samples'},
                                    {'name': 'Offset',
@@ -143,8 +144,12 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         self.ColConfig.sigTreeStateChanged.connect(self.on_ColConf_Changed)
         self.on_ColConf_Changed()
         
-        self.CarrierConfig.sigTreeStateChanged.connect(self.on_Fsig_Changed)
-        self.on_GS_Changed()
+        self.on_Fsig_Changed()
+#        self.CarrierConfig.sigTreeStateChanged.connect(self.on_CarrierConfig_Changed)   
+
+        for p in self.CarrierConfig.children():
+            p.param('Frequency').sigValueChanged.connect(self.on_Fsig_Changed)
+#        self.on_GS_Changed()
 #        self.GS.sigValueChanged.connect(self.on_GS_Changed)
         
         
@@ -160,29 +165,42 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             cc['name'] = col
             cc['children'][2]['value'] = 2*cc['children'][1]['value']
             self.CarrierConfig.addChild(cc)
-
-    def on_Fsig_Changed(self):
-        for p in self.CarrierConfig.children():
-            if p.param('Frequency').sigValueChanged:
-#                self.on_Fs_Changed()
-                self.on_GS_Changed()
                 
-    def on_GS_Changed(self):
-        self.Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
-        Fmin = np.min(self.Freqs)
-        
+    def on_Fsig_Changed(self):
+        print('inFsigChanged')
         Fs = self.FsGen.value()
-        Samps = round(Fs/Fmin)*100
-        Fmin = Fs/Samps
-        self.GS.setValue(Samps)
+        Samps = self.GS.value()
         for p in self.CarrierConfig.children():
             Fc = p.param('Frequency').value()
             nc = round((Samps*Fc)/Fs)
             Fnew =  (nc*Fs)/Samps
             p.param('Frequency').setValue(Fnew)
+            print(p.param('Frequency').value())
             Gain = 2*p.param('Amplitude').value()
             p.param('Gain').setValue(Gain)
-                
+            
+#    def on_Fsig_Changed(self):
+#        for p in self.CarrierConfig.children():
+#            if p.param('Frequency').sigValueChanged:
+##                self.on_Fs_Changed()
+#                self.on_GS_Changed()
+#                
+#    def on_GS_Changed(self):
+#        self.Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
+#        Fmin = np.min(self.Freqs)
+#        
+#        Fs = self.FsGen.value()
+#        Samps = round(Fs/Fmin)*100
+#        Fmin = Fs/Samps
+#        self.GS.setValue(Samps)
+#        for p in self.CarrierConfig.children():
+#            Fc = p.param('Frequency').value()
+#            nc = round((Samps*Fc)/Fs)
+#            Fnew =  (nc*Fs)/Samps
+#            p.param('Frequency').setValue(Fnew)
+#            Gain = 2*p.param('Amplitude').value()
+#            p.param('Gain').setValue(Gain)
+#                
 #    def on_Fs_Changed(self):
 #        self.Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
 #        Fmin = np.min(self.Freqs)
@@ -608,7 +626,7 @@ class DataAcquisitionThread(Qt.QThread):
                 PropSig[str(p)] = val
                 
             Sig[str(col)]= PropSig
-
+#        print('PropSig', Sig)
         self.Columns.SetSignal(Sig, Offset)
         self.Timer = Qt.QTimer()
         self.Timer.moveToThread(self)
