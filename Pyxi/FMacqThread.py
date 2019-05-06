@@ -165,9 +165,8 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             cc['name'] = col
             cc['children'][2]['value'] = 2*cc['children'][1]['value']
             self.CarrierConfig.addChild(cc)
-                
+      
     def on_Fsig_Changed(self):
-        print('inFsigChanged')
         Fs = self.FsGen.value()
         Samps = self.GS.value()
         for p in self.CarrierConfig.children():
@@ -175,7 +174,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             nc = round((Samps*Fc)/Fs)
             Fnew =  (nc*Fs)/Samps
             p.param('Frequency').setValue(Fnew)
-            print(p.param('Frequency').value())
+#            print(p.param('Frequency').value())
             Gain = 2*p.param('Amplitude').value()
             p.param('Gain').setValue(Gain)
             

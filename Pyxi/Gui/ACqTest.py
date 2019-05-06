@@ -119,7 +119,7 @@ class MainWindow(Qt.QWidget):
             print('  change:    %s'% change)
             print('  data:      %s'% str(data))
             print('  ----------')
-
+               
 #        if childName == 'NifGenerator.SamplingConfig.FsGen':
 #            k =round(data/self.NiScopeParams.FsScope.value())
 #            self.NiScopeParams.FsScope.setValue(data/k)
@@ -192,6 +192,7 @@ class MainWindow(Qt.QWidget):
     def on_btnGen(self):
         print('h')
         if self.threadAqc is None:
+            self.treepar.setParameters(self.Parameters, showTop=False)
             self.GenKwargs = self.NifGenParams.GetParams()
             self.ScopeKwargs = self.NiScopeParams.GetParams()
             self.DemKwargs = self.DemodParams.GetParams()
@@ -210,6 +211,7 @@ class MainWindow(Qt.QWidget):
                                                       **self.DemKwargs)
                 self.threadDemod.NewData.connect(self.on_NewDemodSample)
                 self.threadDemod.start()
+            
             
             self.threadAqc.start()
             self.btnGen.setText("Stop Gen")
