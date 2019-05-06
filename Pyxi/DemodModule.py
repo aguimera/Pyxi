@@ -131,8 +131,8 @@ class Demod():
         RSrdem = FilterRPart[sObject]
         RSidem = FilterIPart[sObject]
         
-        adem = np.sqrt(RSrdem**2+RSidem**2) 
-        
+        adem = np.sqrt((RSrdem**2)+(RSidem**2)) 
+#        print('adem',adem.shape)
         return adem
 
 class DemodThread(Qt.QThread):

@@ -145,14 +145,17 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         self.on_ColConf_Changed()
         
         self.on_Fsig_Changed()
+        self.on_Amp_Changed
 #        self.CarrierConfig.sigTreeStateChanged.connect(self.on_CarrierConfig_Changed)   
-
+        
+        self.Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
         for p in self.CarrierConfig.children():
             p.param('Frequency').sigValueChanged.connect(self.on_Fsig_Changed)
+            p.param('Amplitude').sigValueChanged.connect(self.on_Amp_Changed)
+            
 #        self.on_GS_Changed()
 #        self.GS.sigValueChanged.connect(self.on_GS_Changed)
-        
-        
+               
     def on_ColConf_Changed(self):
         Cols = []
         for p in self.ColConfig.children():
@@ -166,6 +169,11 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             cc['children'][2]['value'] = 2*cc['children'][1]['value']
             self.CarrierConfig.addChild(cc)
       
+    def on_Amp_Changed(self):
+        for p in self.CarrierConfig.children():
+            Gain = 2*p.param('Amplitude').value()
+            p.param('Gain').setValue(Gain)
+            
     def on_Fsig_Changed(self):
         Fs = self.FsGen.value()
         Samps = self.GS.value()
