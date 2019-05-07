@@ -144,7 +144,7 @@ class MainWindow(Qt.QWidget):
         if childName == 'Demod Options.DemodConfig.DSFs':
             self.DemodPSD.param('Fs').setValue(data)
             self.DemodPlotPars.param('Fs').setValue(data)
-            if data >= np.min(self.NifGenParams.GetCarriers()):
+            if data >= np.min(self.NifGenParams.Freqs):
                 print('WARNING: FsDemod is higher than FsMin')
             
         if childName == 'Plot options.RefreshTime':
@@ -156,12 +156,12 @@ class MainWindow(Qt.QWidget):
                 self.threadPlotter.SetViewTime(data)  
                 
         if childName == 'Demod Plot options.RefreshTime':
-            if self.threadPlotter is not None:
-                self.threadPlotter.SetRefreshTime(data)    
+            if self.threadDemodPlotter is not None:
+                self.threadDemodPlotter.SetRefreshTime(data)    
 
         if childName == 'Demod Plot options.ViewTime':
-            if self.threadPlotter is not None:
-                self.threadPlotter.SetViewTime(data) 
+            if self.threadDemodPlotter is not None:
+                self.threadDemodPlotter.SetViewTime(data) 
                 
         if childName == 'Plot options.PlotEnable':
             if self.threadAqc is not None:
