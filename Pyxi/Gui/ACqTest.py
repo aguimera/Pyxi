@@ -144,6 +144,8 @@ class MainWindow(Qt.QWidget):
         if childName == 'Demod Options.DemodConfig.DSFs':
             self.DemodPSD.param('Fs').setValue(data)
             self.DemodPlotPars.param('Fs').setValue(data)
+            if data >= np.min(self.NifGenParams.GetCarriers()):
+                print('WARNING: FsDemod is higher than FsMin')
             
         if childName == 'Plot options.RefreshTime':
             if self.threadPlotter is not None:
@@ -321,26 +323,24 @@ class MainWindow(Qt.QWidget):
         print('Sample time', Ts)
 
     def on_NewDemodSample(self):
-#        print('NewDemodData')
-#        Tdemf = time.time()-self.tdemi
-#        print('Demod time', Tdemf)
-        
+
+        if self.DemConfig.param('OutType').value() == 'Abs':
+            OutDemData = np.abs(self.threadDemod.OutDemData)
+        elif self.DemConfig.param('OutType').value() == 'Real':
+            OutDemData = np.real(self.threadDemod.OutDemData)
+        elif self.DemConfig.param('OutType').value() == 'Imag':
+            OutDemData = np.imag(self.threadDemod.OutDemData)
+        elif self.DemConfig.param('OutType').value() == 'Angle':
+            OutDemData = np.angle(self.threadDemod.OutDemData, deg=True)   
+         
+        if self.threadSave is not None:
+            self.threadSave.AddData(OutDemData)
         if self.threadDemodPlotter is not None:
-            self.threadDemodPlotter.AddData(self.threadDemod.OutDemData)
+            self.threadDemodPlotter.AddData(OutDemData)
             
         if self.threadDemodPSDPlotter is not None:  
-            self.threadDemodPSDPlotter.AddData(self.threadDemod.OutDemData)
-#        print('DemodDone', self.threadDemod.OutDemData)
-#        if self.threadSave is not None:
-#            self.threadSave.AddData(self.threadDemod.OutDemData)
-        
-#        if self.threadPlotter is not None:
-#            self.threadPlotter.AddData(self.threadDemod.OutDemData)
-#            
-#        if self.threadPSDPlotter is not None:  
-#            self.threadPSDPlotter.AddData(self.threadDemod.OutDemData)
-#        self.threadDemod.NewData = None 
-        
+            self.threadDemodPSDPlotter.AddData(OutDemData)
+
     def SaveFiles(self):
         FileName = self.FileParameters.param('File Path').value()
         if FileName ==  '':

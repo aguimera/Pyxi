@@ -38,7 +38,12 @@ DemodulParams = ({'name': 'DemodConfig',
                                {'name': 'FiltOrder',
                                 'title':'Filter Order',
                                 'type': 'int',
-                                'value': 2}
+                                'value': 2},
+                               {'name': 'OutType',
+                                'title': 'Output Var Type',
+                                'type': 'list',
+                                'values': ['Real', 'Imag', 'Angle', 'Abs'],
+                                'value': 'Abs'}
                               )
                 })
                   
@@ -56,7 +61,8 @@ class DemodParameters(pTypes.GroupParameter):
         self.DSFact.sigValueChanged.connect(self.on_DSFact_changed)
         self.FsDem.sigValueChanged.connect(self.on_FsDem_changed)
         self.FiltOrder = self.DemConfig.param('FiltOrder')
-    
+        self.OutType = self.DemConfig.param('OutType')
+        
     def on_FsDem_changed(self):
         self.on_DSFact_changed()
         
@@ -131,13 +137,17 @@ class Demod():
         RSrdem = FilterRPart[sObject]
         RSidem = FilterIPart[sObject]
         
-        adem = np.sqrt((RSrdem**2)+(RSidem**2)) 
+        complexDem =[]
+        for Real, Imag in zip(RSrdem, RSidem):
+            complexDem.append(complex(Real,Imag))
+#        adem = np.sqrt((RSrdem**2)+(RSidem**2)) 
 #        print('adem',adem.shape)
-        return adem
+#        print(complexDem)
+        return complexDem
 
 class DemodThread(Qt.QThread):
     NewData = Qt.pyqtSignal()
-    def __init__(self, Fcs, RowList, Fsize, FsDemod, DSFact, FiltOrder):
+    def __init__(self, Fcs, RowList, Fsize, FsDemod, DSFact, FiltOrder,**Keywards):
        super(DemodThread, self).__init__() 
        self.ToDemData = None
        
@@ -148,7 +158,7 @@ class DemodThread(Qt.QThread):
                Dem = Demod(Freq, Fsize, FsDemod, DSFact, FiltOrder)
                DemOut.append(Dem)
            self.DemOutputs.append(DemOut) 
-       self.OutDemData = np.ndarray((int(Fsize/DSFact),int(len(RowList)*len(Fcs.keys()))))
+       self.OutDemData = np.ndarray((int(Fsize/DSFact),int(len(RowList)*len(Fcs.keys()))), dtype=complex)
        
     def run(self):       
         while True:
