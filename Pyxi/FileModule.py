@@ -90,6 +90,7 @@ class FileBuffer():
         nSamples = Sample.shape[0]
         FileInd = self.Dset.shape[0]
         self.Dset.resize((FileInd + nSamples, self.nChannels))
+
         self.Dset[FileInd:, :] = Sample
 #        self.h5File.flush()
 

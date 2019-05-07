@@ -103,6 +103,7 @@ class MainWindow(Qt.QWidget):
         self.threadPlotter = None
         self.threadPSDPlotter = None
         self.threadDemod = None
+        self.threadDemodSave = None
         self.threadDemodPlotter = None
         self.threadDemodPSDPlotter = None
 
@@ -201,11 +202,11 @@ class MainWindow(Qt.QWidget):
             
             self.threadAqc = FMacq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
             self.threadAqc.NewData.connect(self.on_NewSample)
-            
-            self.SaveFiles()            
+                       
             self.GenPSD()
             self.GenPlotter()
-                
+            self.SaveFiles()     
+            
             if self.DemConfig.param('DemEnable').value() == True:
                 self.threadDemod = DemMod.DemodThread(Fcs=self.NifGenParams.GetCarriers(), 
                                                       RowList=self.threadAqc.RowsList,
@@ -239,7 +240,11 @@ class MainWindow(Qt.QWidget):
             if self.threadPSDPlotter is not None:
                 self.threadPSDPlotter.stop()
                 self.threadPSDPlotter = None
-            
+                
+            if self.threadDemodSave is not None:
+                self.threadDemodSave.stop()
+                self.threadDemodSave = None
+                
             if self.threadDemodPlotter is not None:
                 self.threadDemodPlotter.stop()
                 self.threadDemodPlotter = None
@@ -333,8 +338,8 @@ class MainWindow(Qt.QWidget):
         elif self.DemConfig.param('OutType').value() == 'Angle':
             OutDemData = np.angle(self.threadDemod.OutDemData, deg=True)   
          
-        if self.threadSave is not None:
-            self.threadSave.AddData(OutDemData)
+        if self.threadDemodSave is not None:
+            self.threadDemodSave.AddData(OutDemData)
         if self.threadDemodPlotter is not None:
             self.threadDemodPlotter.AddData(OutDemData)
             
@@ -350,11 +355,19 @@ class MainWindow(Qt.QWidget):
                 print('Remove File')
                 os.remove(FileName)  
             MaxSize = self.FileParameters.param('MaxSize').value()
-            self.threadSave = FileMod.DataSavingThread(FileName=FileName,
-                                                       nChannels=self.ScopeKwargs['NRow'],
-                                                       MaxSize=MaxSize)
-            self.threadSave.start()
-         
+            if self.DemConfig.param('DemEnable').value() == False:
+                self.threadSave = FileMod.DataSavingThread(FileName=FileName,
+                                                           nChannels=self.ScopeKwargs['NRow'],
+                                                           MaxSize=MaxSize)
+                self.threadSave.start()
+            
+            if self.DemConfig.param('DemEnable').value() == True:
+                self.threadDemodSave = FileMod.DataSavingThread(FileName=FileName,
+                                                           nChannels=self.ScopeKwargs['NRow']*len(self.NifGenParams.Freqs),
+                                                           MaxSize=MaxSize)
+                
+                self.threadDemodSave.start()
+
             GenName = FileName+'_GenConfig.dat'
             ScopeName = FileName+'_ScopeConfig.dat'
             if os.path.isfile(GenName):
