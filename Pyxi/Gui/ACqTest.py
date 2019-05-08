@@ -364,12 +364,14 @@ class MainWindow(Qt.QWidget):
             if self.DemConfig.param('DemEnable').value() == True:
                 self.threadDemodSave = FileMod.DataSavingThread(FileName=FileName,
                                                            nChannels=self.ScopeKwargs['NRow']*len(self.NifGenParams.Freqs),
-                                                           MaxSize=MaxSize)
+                                                           MaxSize=MaxSize,
+                                                           dtype='float')
                 
                 self.threadDemodSave.start()
 
             GenName = FileName+'_GenConfig.dat'
             ScopeName = FileName+'_ScopeConfig.dat'
+            DemName = FileName+'_DemodConfig.dat'
             if os.path.isfile(GenName):
                 print('Overwriting  file')
                 OutGen = input('y/n + press(Enter)')
@@ -384,6 +386,13 @@ class MainWindow(Qt.QWidget):
                     self.GenArchivo(ScopeName, self.ScopeKwargs)
             else:
                 self.GenArchivo(ScopeName, self.ScopeKwargs)
+            if os.path.isfile(ScopeName):
+                print('Overwriting  file')
+                OutScope = input('y/n + press(Enter)')
+                if OutScope =='y':
+                    self.GenArchivo(DemName, self.DemKwargs)
+            else:
+                self.GenArchivo(DemName, self.DemKwargs)
                 
     def GenArchivo(self, name, dic2Save):
         with open(name, "wb") as f:

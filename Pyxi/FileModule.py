@@ -51,13 +51,14 @@ class SaveFileParameters(pTypes.GroupParameter):
 
 
 class FileBuffer():
-    def __init__(self, FileName, MaxSize, nChannels):
+    def __init__(self, FileName, MaxSize, nChannels, dtype):
         self.FileBase = FileName.split('.h5')[0]
         self.PartCount = 0
         self.nChannels = nChannels
         self.MaxSize = MaxSize
+        self.dtype = dtype
         self._initFile()
-
+        
     def _initFile(self):
         if self.MaxSize is not None:
             FileName = '{}_{}.h5'.format(self.FileBase, self.PartCount)
@@ -68,7 +69,7 @@ class FileBuffer():
         self.h5File = h5py.File(FileName, 'w')
         self.Dset = self.h5File.create_dataset('data',
                                                shape=(0, self.nChannels),
-                                               dtype='int16',
+                                               dtype=self.dtype,
                                                maxshape=(None, self.nChannels),
 #                                               compression="gzip"
                                                )
@@ -82,7 +83,7 @@ class FileBuffer():
 #        print (self.nChannels)
         self.Dset = self.h5File.create_dataset(DSname,
                                                shape=(0, self.nChannels),
-                                               dtype='int16',
+                                               dtype=self.dtype,
                                                maxshape=(None, self.nChannels),
 #                                               compression="gzip"
                                                 )
@@ -103,12 +104,13 @@ class FileBuffer():
         self.h5File.close()
 
 class DataSavingThread(Qt.QThread):
-    def __init__(self, FileName, nChannels, MaxSize=None):
+    def __init__(self, FileName, nChannels, MaxSize=None, dtype='int16'):
         super(DataSavingThread, self).__init__()
         self.NewData = None
         self.FileBuff = FileBuffer(FileName=FileName,
                                    nChannels=nChannels,
-                                   MaxSize=MaxSize)
+                                   MaxSize=MaxSize,
+                                   dtype=dtype)
 
     def run(self, *args, **kwargs):
         while True:
