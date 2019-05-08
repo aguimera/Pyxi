@@ -137,9 +137,10 @@ class Demod():
         RSrdem = FilterRPart[sObject]
         RSidem = FilterIPart[sObject]
         
-        complexDem =[]
-        for Real, Imag in zip(RSrdem, RSidem):
-            complexDem.append(complex(Real,Imag))
+        complexDem = RSrdem + (RSidem*1j)
+#        complexDem =[]
+#        for Real, Imag in zip(RSrdem, RSidem):
+#            complexDem.append(complex(Real,Imag))
 #        adem = np.sqrt((RSrdem**2)+(RSidem**2)) 
 #        print('adem',adem.shape)
 #        print(complexDem)
