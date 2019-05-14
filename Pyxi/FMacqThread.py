@@ -308,12 +308,14 @@ class Columns():
             if Col == 'Offset':
                 continue
 #            print(pars['Amplitude'])
-#            signal = pars['Amplitude']*np.sin(2*np.pi*pars['Frequency']*t)
-            signal = np.sin(2*np.pi*pars['Frequency']*t)
+            signal = pars['Amplitude']*np.sin(2*np.pi*pars['Frequency']*t)
+#            signal = np.sin(2*np.pi*pars['Frequency']*t)
             if Col != 'Col1':
                 Offset = 0
             self.Columns[Col]['session'].SetArbSignal(index=self.Columns[Col]['index'],
-                                                       Signal=signal, gain=pars['Amplitude'], 
+                                                       Signal=signal, 
+#                                                       gain=pars['Amplitude'], 
+                                                       gain = 1,
                                                        offset=Offset)
             
 ##############################SCOPE##########################################

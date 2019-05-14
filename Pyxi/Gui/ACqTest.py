@@ -323,12 +323,14 @@ class MainWindow(Qt.QWidget):
        
         if self.DemConfig.param('DemEnable').value() == True:
             if self.threadDemod is not None:
+#                self.tdemi = time.time()
                 self.threadDemod.AddData(self.threadAqc.OutData)
-                self.tdemi = time.time()
+                
         print('Sample time', Ts)
 
     def on_NewDemodSample(self):
-
+#        Tdemod = time.time()-self.tdemi
+#        print('DemodTime',Tdemod)
         if self.DemConfig.param('OutType').value() == 'Abs':
             OutDemData = np.abs(self.threadDemod.OutDemData)
         elif self.DemConfig.param('OutType').value() == 'Real':
