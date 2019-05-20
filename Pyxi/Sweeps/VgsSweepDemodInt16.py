@@ -13,7 +13,7 @@ from scipy import signal
 import h5py
 import multiprocessing as mp
 
-import DemodMod as Dem
+import Pyxi.DemodModule as Dem
 import Pyxi.FileModule as FileMod
 
 import gc
@@ -29,8 +29,8 @@ if __name__ == '__main__':
     hfile = h5py.File(FileName, 'r')
     RGain = 10e3
     FsOut = 5e3
-    
-    ProcsDict = FB.ReadArchivo(Dictname)
+
+    ProcsDict = FileMod.ReadArchivo(Dictname)
     #lectura de parametres
 
     #Calcul de Parametres per a Demodulcio
@@ -72,8 +72,7 @@ if __name__ == '__main__':
 #        if DemArgs['col'] != 'Col1':
 #            continue
 
-#        Iin = hfile[DemArgs['dset']][:, DemArgs['dInd']]/RGain
-        Iin = (data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB']/RGain
+        Iin = (data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']]/RGain
 
         Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['dInd'])
         print(Lab)     
@@ -93,6 +92,15 @@ if __name__ == '__main__':
             Procs = []
             print('Collect', gc.collect())
             
+        if len(Procs) > 0:        
+            print(len(Procs))
+            po = mp.Pool(len(Procs))
+            res = po.starmap(Dem.DemodProc, Procs)
+            for r in res:
+                results.append(r)
+            po.close()
+            Procs = []
+            print('Collect', gc.collect())   
         
 
 #%%
@@ -112,31 +120,11 @@ if __name__ == '__main__':
         axres.plot(acqargs[xAxispar], ACarr, '*')
     axres.set_xlabel(xAxispar)
     
-#    
-#    fig, axt = plt.subplots()  
-#    fig, axPsd = plt.subplots()  
-#    axt.set_title('Demod(s)')
-#    axPsd.set_title('Demod(V**2)')
-#    for ind, (dem, lab, acqargs) in enumerate(zip(results, Labs, AcqArgs)):
-#        adems = np.abs(dem[DelaySamps:])
-#        trend = 0
-#        
-#        axt.plot(adems-trend)        
-#        ff, psdadem = signal.welch(adems-trend, fs=FsOut, nperseg=nFFT, scaling='spectrum')
-#        axPsd.loglog(ff, psdadem, label=lab)
-
-#    fig, axt = plt.subplots()  
-#    axt.set_title('Demod(Angle)')
-#    for ind, (dem, lab, acqargs) in enumerate(zip(results, Labs, AcqArgs)):        
-#        axt.plot(np.angle(dem[DelaySamps:], deg=True))
-
-    
 #%%
 
     fig, axres = plt.subplots()  
     axres.set_title('Vgs')
     xAxispar = 'Vgs' #modificar segun el AcqArgs para el que se quiera graficar
-#    OutVar = np.ones((8,4))
     OutDict = {}
 
     Trts = set([('R'+str(a['dInd'])+a['col']) for a in AcqArgs])

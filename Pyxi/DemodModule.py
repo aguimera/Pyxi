@@ -138,13 +138,26 @@ class Demod():
         RSidem = FilterIPart[sObject]
         
         complexDem = RSrdem + (RSidem*1j)
-#        complexDem =[]
-#        for Real, Imag in zip(RSrdem, RSidem):
-#            complexDem.append(complex(Real,Imag))
-#        adem = np.sqrt((RSrdem**2)+(RSidem**2)) 
-#        print('adem',adem.shape)
-#        print(complexDem)
+
         return complexDem
+
+def DemodProc(Iin, Fs, Fc, Samps, DownFact, Order=2):
+    dem = Demod(Fs=Fs, 
+                Fc=Fc, 
+                FetchSize=Samps, 
+                DownFact=DownFact, 
+                Order=Order)
+    DemOut = np.array([])
+    for IndDemod in np.arange(0, Iin.size, Samps):  
+        SigIn = Iin[IndDemod:(IndDemod+Samps)]
+        if not SigIn.size == Samps:
+            continue
+
+        Complexdem = dem.Apply(SigIn)
+        DemOut = np.append(DemOut, Complexdem)
+        
+    print(Fc, 'end')
+    return DemOut
 
 class DemodThread(Qt.QThread):
     NewData = Qt.pyqtSignal()
