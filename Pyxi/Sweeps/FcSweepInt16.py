@@ -10,9 +10,9 @@ import time
 
 import os
 
-import Gen_Scope_Classes as Gen_Scope
+#import Gen_Scope_Classes as Gen_Scope
 import Pyxi.FileModule as FileMod
-import FMacqThread as FMmod
+import Pyxi.FMacqThread as FMmod
 
 if __name__ == '__main__':
     
@@ -23,16 +23,7 @@ if __name__ == '__main__':
     if os.path.isfile(FileName):
         print('Remove File')
         os.remove(FileName)
-    
-    #Inicialització Scope    
-    PXIScope = 'PXI1Slot4'
-    OptionsScope = {'simulate': False,
-                    'driver_setup': {'Model': '5105',
-                                     'BoardType': 'PXIe',
-                                     },
-                   }
-    ScopeSig = Gen_Scope.SigScope(resource_name=PXIScope,
-                                  options=OptionsScope)
+
     #Calculas per al Scope
     GenFs = 20e6 #La Fs de generació es necessita aqui per asegurar que sigui multiple de FsScope
     ScopeFs = 1e6
@@ -43,7 +34,10 @@ if __name__ == '__main__':
     BufferSize = round(tFetch*ScopeFs)
     tFetch = BufferSize/ScopeFs
     ScopeOffset = 50000
-    Rows = [0, 1, 2, 3, 4, 5, 6, 7]
+     #    Rows d'exemple a continuació: no borrar
+#    Rows = [('Row1', 0), ('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4), ('Row6', 5), ('Row7', 6), ('Row8', 7)]
+    Rows = [('Row1', 0),('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4), ('Row6', 5), ('Row7', 6), ('Row8', 7)]
+    RowsArray = []
     rangeScope = 6  #options 0.05, 0.2, 1, 6, 30
     LSB = rangeScope/(2**16)
     PCBGain = 10e3
@@ -55,6 +49,13 @@ if __name__ == '__main__':
                                  nChannels=len(Rows),
                                  dtype=dtype)  
     
+    RowsConfig = {}
+    for row in Rows:
+        RowsConfig[row[0]] = {}
+        RowsArray.append(row[1])
+        RowsConfig[row[0]]['Enable'] = True
+        RowsConfig[row[0]]['Index'] = row[1]
+        RowsConfig[row[0]]['Range'] = rangeScope
     #Dades per crear ColsConfig i cridar a "Columns()"    
     #Modifica Cols segons els generadores que es vulguin utilitzar
 #    #Cols = (('Col1', 'PXI1Slot2', 0, 0), 
@@ -118,28 +119,24 @@ if __name__ == '__main__':
         for Col in Cols:
             ColsConfig[Col[0]]['Frequency']=f[Col[3]]
             
-        GenSig = FMmod.Columns(ColumnsConfig=ColsConfig, Fs=GenFs, GenSize=GenSize)
+        ACqSet = FMmod.Acquisition(ColumnsConfig=ColsConfig, 
+                                   FsGen=GenFs, 
+                                   GS=GenSize,
+                                   RowsConfig=RowsConfig,
+                                   NRow=len(RowsArray),
+                                   FsScope=ScopeFs,
+                                   ResourceScope='PXI1Slot4')
         
-        GenSig.Abort()
-        ScopeSig.abort()
-        Sig = {}
-        for col, pars in ColsConfig.items():
-            PropSig = {}
-            for p, val in pars.items():
-                if p == 'Resource' or p == 'Index':
-                    continue
-                PropSig[str(p)] = val
-                
-            Sig[str(col)]= PropSig
-            
-        GenSig.SetSignal(Sig, CMVoltage)
-        GenSig.Initiate()
-        ScopeSig.GetSignal(ScopeFs, Rows, Range=rangeScope)
+        ACqSet.stopSessions()            
+        ACqSet.setSignals(ColumnsConfig=ColsConfig,
+                          Vgs=CMVoltage)    
+        ACqSet.initSessions()
+        
         FileBuf.InitDset(dsetname)
-        Inputs = ScopeSig.Capturar(Rows, BufferSize, offset = ScopeOffset)
-        for i, In in enumerate(Inputs):
-#                InFetch[:,i] = In.samples
-                InFetch[:,i] = np.int16(np.round(np.array(In.samples)/LSB))
+        IInFetch, LSB = ACqSet.GetData(FetchSize=BufferSize,
+                                      channels=RowsArray,
+                                      ScopeOffset=ScopeOffset)
+        
         FileBuf.AddSample(InFetch)
         for nr in range(len(Rows)):
             for col in Cols:
@@ -163,8 +160,7 @@ if __name__ == '__main__':
     
         
     FileBuf.close()
-    GenSig.Abort()
-    ScopeSig.abort()    
+    ACqSet.stopSessions()     
       
     FileMod.GenArchivo(name=Dictname, dic2Save=Procs)
         

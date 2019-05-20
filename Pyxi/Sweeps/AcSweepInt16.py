@@ -23,14 +23,7 @@ if __name__ == '__main__':
     if os.path.isfile(FileName):
         print('Remove File')
         os.remove(FileName)
-    
-    #Inicialització Scope    
-    PXIScope = 'PXI1Slot4'
-    OptionsScope = {'simulate': False,
-                    'driver_setup': {'Model': '5105',
-                                     'BoardType': 'PXIe',
-                                     },
-                   }
+
 
     #Calculas per al Scope
     GenFs = 20e6 #La Fs de generació es necessita aqui per asegurar que sigui multiple de FsScope
