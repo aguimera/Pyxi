@@ -29,7 +29,7 @@ if __name__ == '__main__':
     ScopeFs = 500e3
     nFs = round(GenFs/ScopeFs)
     ScopeFs = GenFs/nFs
-    tFetch = 10
+    tFetch = 2
     NumFetch = 1
     BufferSize = round(tFetch*ScopeFs)
     tFetch = BufferSize/ScopeFs
@@ -37,7 +37,7 @@ if __name__ == '__main__':
 #    Rows d'exemple a continuació: no borrar
 #    Rows = [('Row1', 0), ('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4), ('Row6', 5), ('Row7', 6), ('Row8', 7)]
     Rows = [('Row1', 0),('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4), ('Row6', 5), ('Row7', 6), ('Row8', 7)]
-    RowsArray = np.ndarray((len(Rows), ), dtype='int16')
+    RowsArray = []
     rangeScope = 6  #options 0.05, 0.2, 1, 6, 30
     PCBGain = 10e3
     MaxFileSize = 500e6
@@ -49,9 +49,9 @@ if __name__ == '__main__':
                                  dtype=dtype)  
     
     RowsConfig = {}
-    for r, row in enumerate(Rows):
+    for row in Rows:
         RowsConfig[row[0]] = {}
-        RowsArray[r] = row[1]
+        RowsArray.append(row[1])
         RowsConfig[row[0]]['Enable'] = True
         RowsConfig[row[0]]['Index'] = row[1]
         RowsConfig[row[0]]['Range'] = rangeScope
@@ -128,8 +128,8 @@ if __name__ == '__main__':
         
         FileBuf.InitDset(dsetname)
         InFetch, LSB = ACqSet.GetData(FetchSize=BufferSize,
-                                channels=RowsArray,
-                                ScopeOffset=ScopeOffset)
+                                      channels=RowsArray,
+                                      ScopeOffset=ScopeOffset)
         
         FileBuf.AddSample(InFetch)
         for nr in range(len(Rows)):
