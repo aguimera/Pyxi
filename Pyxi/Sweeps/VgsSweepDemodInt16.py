@@ -14,7 +14,7 @@ import h5py
 import multiprocessing as mp
 
 import DemodMod as Dem
-import FileBuffer as FB
+import Pyxi.FileModule as FileMod
 
 import gc
 
