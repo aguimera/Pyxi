@@ -27,7 +27,14 @@ SaveFilePars = [{'name': 'Save File',
                  'value': 50e6}
                 ]
 
-
+def GenArchivo(name, dic2Save):
+        with open(name, "wb") as f:
+            pickle.dump(dic2Save, f)
+            
+def ReadArchivo(name):
+        with open(name, "rb") as f:
+            return pickle.load(f ,encoding = 'latin1')
+        
 class SaveFileParameters(pTypes.GroupParameter):
     def __init__(self, QTparent, **kwargs):
         pTypes.GroupParameter.__init__(self, **kwargs)

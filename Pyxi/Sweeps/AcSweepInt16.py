@@ -11,7 +11,8 @@ import time
 import os
 
 import Gen_Scope_Classes as Gen_Scope
-import FileBuffer as FB
+#import FileBuffer as FB
+import Pyxi.FileModule as FileMod
 import FMacqThread as FMmod
 
 if __name__ == '__main__':
@@ -47,9 +48,13 @@ if __name__ == '__main__':
     rangeScope = 6  #options 0.05, 0.2, 1, 6, 30
     LSB = rangeScope/(2**16)
     PCBGain = 10e3
+    MaxFileSize = 500e6
+    dtype = 'int16'
     
-    FileBuf = FB.FileBuffer(FileName=FileName,
-                            nChannels=len(Rows))  
+    FileBuf = FileMod.FileBuffer(FileName=FileName,
+                                 MaxSize=MaxFileSize,
+                                 nChannels=len(Rows),
+                                 dtype=dtype)  
     
     #Dades per crear ColsConfig i cridar a "Columns()"    
     #Modifica Cols segons els generadores que es vulguin utilitzar
@@ -162,7 +167,7 @@ if __name__ == '__main__':
     GenSig.Abort()
     ScopeSig.abort()    
       
-    FB.GenArchivo(name=Dictname, dic2Save=Procs)
+    FileMod.GenArchivo(name=Dictname, dic2Save=Procs)
         
         
         
