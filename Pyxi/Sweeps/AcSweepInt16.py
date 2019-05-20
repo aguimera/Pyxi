@@ -24,7 +24,6 @@ if __name__ == '__main__':
         print('Remove File')
         os.remove(FileName)
 
-
     #Calculas per al Scope
     GenFs = 20e6 #La Fs de generació es necessita aqui per asegurar que sigui multiple de FsScope
     ScopeFs = 1e6
