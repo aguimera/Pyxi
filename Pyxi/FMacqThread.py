@@ -603,7 +603,7 @@ class SigScope(niscope.Session):
 class DataAcquisitionThread(Qt.QThread):
     NewData = Qt.pyqtSignal()
 
-    def __init__(self, ColumnsConfig, FsGen, GS, Offset, RowsConfig, FsScope, BS, NRow, OffsetRows, GainBoard, Resource):
+    def __init__(self, ColumnsConfig, FsGen, GS, Offset, RowsConfig, FsScope, BufferSize, NRow, OffsetRows, GainBoard, Resource):
         print ('TMacqThread, DataAcqThread')
         super(DataAcquisitionThread, self).__init__()
         
@@ -612,7 +612,7 @@ class DataAcquisitionThread(Qt.QThread):
         print(Resource)
         self.Columns = Columns(ColumnsConfig, FsGen, GS)
         self.Rows = Rows(RowsConfig, FsScope, Resource)
-        self.BS = BS
+        self.BufferSize = BufferSize
         self.offset = OffsetRows
         self.GainBoard = (GainBoard)
         self.LSB = np.array([])
