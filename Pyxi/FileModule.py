@@ -78,7 +78,7 @@ class FileBuffer():
                                                shape=(0, self.nChannels),
                                                dtype=self.dtype,
                                                maxshape=(None, self.nChannels),
-#                                               compression="gzip"
+                                               compression="gzip"
                                                )
         
     def AddDset(self, DSname, Data):
@@ -92,7 +92,7 @@ class FileBuffer():
                                                shape=(0, self.nChannels),
                                                dtype=self.dtype,
                                                maxshape=(None, self.nChannels),
-#                                               compression="gzip"
+                                               compression="gzip"
                                                 )
     def AddSample(self, Sample):
         nSamples = Sample.shape[0]

@@ -21,6 +21,8 @@ if __name__ == '__main__':
     
     plt.close('all')
     
+    debug = False
+    
     #llegir fitxer
 
     Dictname = 'AcSweep_LRB__4Carr_Row1_Fs1e6_NoStabilization'
@@ -37,21 +39,22 @@ if __name__ == '__main__':
     DownFact = 100
 
 #%%
-#    fig, axTemp = plt.subplots()
-#    fig, axPsd = plt.subplots() 
-#    for dem, DemArgs in ProcsDict.items():
-#        Iin = hfile[DemArgs['dset']][:, DemArgs['dInd']]/RGain
-#        Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['dInd'])
-#        print(Lab)
-#        
-#        ff, psdadem = signal.welch(Iin, fs=DemArgs['Fs'], nperseg=nFFT, scaling='spectrum')            
-#        axPsd.loglog(ff, psdadem, label=Lab)
-#        Peaks = signal.find_peaks(psdadem, threshold=1e-17)
-#
-#        for pi in Peaks[0]:
-#            print(ff[pi], '-->>', np.sqrt(psdadem[pi]))
-#            axPsd.plot(ff[pi], psdadem[pi], 'k*')
-#        axTemp.plot(Iin[:int(DemArgs['Samps']*2)], label=Lab)   
+    if debug == True:    
+        fig, axTemp = plt.subplots()
+        fig, axPsd = plt.subplots() 
+        for dem, DemArgs in ProcsDict.items():
+            Iin = hfile[DemArgs['dset']][:, DemArgs['dInd']]/RGain
+            Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['dInd'])
+            print(Lab)
+            
+            ff, psdadem = signal.welch(Iin, fs=DemArgs['Fs'], nperseg=nFFT, scaling='spectrum')            
+            axPsd.loglog(ff, psdadem, label=Lab)
+            Peaks = signal.find_peaks(psdadem, threshold=1e-17)
+    
+            for pi in Peaks[0]:
+                print(ff[pi], '-->>', np.sqrt(psdadem[pi]))
+                axPsd.plot(ff[pi], psdadem[pi], 'k*')
+            axTemp.plot(Iin[:int(DemArgs['Samps']*2)], label=Lab)   
 
     data = {}
     for k in hfile.keys():
