@@ -51,7 +51,7 @@ NifGenSamplingPars =  {'name': 'SamplingConfig',
                                     'value': 20e6,
                                     'siPrefix': True,
                                     'suffix': 'Hz'},
-                                   {'name': 'GS',
+                                   {'name': 'GenSize',
                                     'title': 'Generation Size',
                                     'type': 'int',
                                     'readonly': True,
@@ -136,7 +136,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         self.addChild(NifGenSamplingPars)
         self.SamplingConfig = self.param('SamplingConfig')
         self.FsGen = self.SamplingConfig.param('FsGen')
-        self.GS = self.SamplingConfig.param('GS')
+        self.GenSize = self.SamplingConfig.param('GenSize')
         
         self.addChild(CarriersConfigPars)
         self.CarrierConfig = self.param('CarriersConfig')
@@ -153,9 +153,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             p.param('Frequency').sigValueChanged.connect(self.on_Fsig_Changed)
             p.param('Amplitude').sigValueChanged.connect(self.on_Amp_Changed)
             
-#        self.on_GS_Changed()
-#        self.GS.sigValueChanged.connect(self.on_GS_Changed)
-               
+
     def on_ColConf_Changed(self):
         Cols = []
         for p in self.ColConfig.children():
@@ -176,7 +174,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             
     def on_Fsig_Changed(self):
         Fs = self.FsGen.value()
-        Samps = self.GS.value()
+        Samps = self.GenSize.value()
         for p in self.CarrierConfig.children():
             Fc = p.param('Frequency').value()
             nc = round((Samps*Fc)/Fs)
@@ -329,7 +327,7 @@ NiScopeFetchingPars =  {'name': 'FetchConfig',
                                     'value': 2e6,
                                     'siPrefix': True,
                                     'suffix': 'Hz'},
-                                   {'name': 'BS',
+                                   {'name': 'BufferSize',
                                     'title': 'Buffer Size',
                                     'type': 'int',
                                     'value': int(20e3),
@@ -510,16 +508,16 @@ class NiScopeParameters(pTypes.GroupParameter):
         self.addChild(NiScopeFetchingPars)
         self.FetchConfig = self.param('FetchConfig')
         self.FsScope = self.FetchConfig.param('FsScope')
-        self.BS = self.FetchConfig.param('BS')
+        self.BufferSize = self.FetchConfig.param('BufferSize')
         self.NRows = self.FetchConfig.param('NRow')
         self.OffsetRows = self.FetchConfig.param('OffsetRows')
         self.tFetch = self.FetchConfig.param('tFetch')
-        self.on_BS_Changed()
+        self.on_BufferSize_Changed()
         
         self.RowsConfig.sigTreeStateChanged.connect(self.on_RowConf_Changed)
         self.on_RowConf_Changed()
         self.FsScope.sigValueChanged.connect(self.on_Fs_Changed)
-        self.tFetch.sigValueChanged.connect(self.on_BS_Changed)
+        self.tFetch.sigValueChanged.connect(self.on_BufferSize_Changed)
 
     def on_RowConf_Changed(self):
         self.Rows = []
@@ -529,15 +527,15 @@ class NiScopeParameters(pTypes.GroupParameter):
         self.NRows.setValue(len(self.Rows))
        
     def on_Fs_Changed(self):
-        self.on_BS_Changed()
+        self.on_BufferSize_Changed()
         
-    def on_BS_Changed(self):
+    def on_BufferSize_Changed(self):
         Fs = self.FsScope.value()
         tF = self.tFetch.value()
         Samples = round(tF*Fs)
         tF = Samples/Fs
         self.tFetch.setValue(tF)
-        self.BS.setValue(Samples)
+        self.BufferSize.setValue(Samples)
         
     def GetChannels(self):
         RowNames = {}
@@ -603,14 +601,14 @@ class SigScope(niscope.Session):
 class DataAcquisitionThread(Qt.QThread):
     NewData = Qt.pyqtSignal()
 
-    def __init__(self, ColumnsConfig, FsGen, GS, Offset, RowsConfig, FsScope, BufferSize, NRow, OffsetRows, GainBoard, Resource):
+    def __init__(self, ColumnsConfig, FsGen, GenSize, Offset, RowsConfig, FsScope, BufferSize, NRow, OffsetRows, GainBoard, Resource):
         print ('TMacqThread, DataAcqThread')
         super(DataAcquisitionThread, self).__init__()
         
         print(ColumnsConfig)
         print(RowsConfig)
         print(Resource)
-        self.Columns = Columns(ColumnsConfig, FsGen, GS)
+        self.Columns = Columns(ColumnsConfig, FsGen, GenSize)
         self.Rows = Rows(RowsConfig, FsScope, Resource)
         self.BufferSize = BufferSize
         self.offset = OffsetRows
@@ -619,7 +617,7 @@ class DataAcquisitionThread(Qt.QThread):
         self.RowsList = []
         self.Channels = []
         
-        self.ttimer = ((self.BS/FsScope)-0.05)*1000
+        self.ttimer = ((self.BufferSize/FsScope)-0.05)*1000
         
         for Row, pars in RowsConfig.items():
             self.RowsList.append(str(Row))
@@ -644,9 +642,9 @@ class DataAcquisitionThread(Qt.QThread):
     def run(self, *args, **kwargs):
 
         print('start ')      
-        self.OutData = np.ndarray((self.BS, len(self.Channels)))
-        self.BinData = np.ndarray((self.BS, len(self.Channels)))
-        self.IntData = np.ndarray((self.BS, len(self.Channels)))
+        self.OutData = np.ndarray((self.BufferSize, len(self.Channels)))
+        self.BinData = np.ndarray((self.BufferSize, len(self.Channels)))
+        self.IntData = np.ndarray((self.BufferSize, len(self.Channels)))
         self.initSessions()
 #        self.Timer.singleShot(self.ttimer, self.GenData)
         loop = Qt.QEventLoop()
@@ -659,7 +657,7 @@ class DataAcquisitionThread(Qt.QThread):
         try:
 #            T1 = time.time()
 
-            Inputs = self.Rows.SesScope.channels[self.Channels].fetch(num_samples=self.BS,
+            Inputs = self.Rows.SesScope.channels[self.Channels].fetch(num_samples=self.BufferSize,
                                                           relative_to=niscope.FetchRelativeTo.READ_POINTER,
                                                           offset=self.offset,
                                                           record_number=0,
@@ -695,8 +693,8 @@ class DataAcquisitionThread(Qt.QThread):
         self.Timer.killTimer(self.Id)
         
 class Acquisition():    
-    def __init__(self, ColumnsConfig, FsGen, GS, RowsConfig, NRow, FsScope, ResourceScope):
-        self.Columns = Columns(ColumnsConfig, FsGen, GS)
+    def __init__(self, ColumnsConfig, FsGen, GenSize, RowsConfig, NRow, FsScope, ResourceScope):
+        self.Columns = Columns(ColumnsConfig, FsGen, GenSize)
         self.Rows = Rows(RowsConfig, FsScope, ResourceScope)
         self.LSB = np.array([])
         self.RowsList = []

@@ -161,7 +161,7 @@ def DemodProc(Iin, Fs, Fc, Samps, DownFact, Order=2):
 
 class DemodThread(Qt.QThread):
     NewData = Qt.pyqtSignal()
-    def __init__(self, Fcs, RowList, Fsize, FsDemod, DSFact, FiltOrder,**Keywards):
+    def __init__(self, Fcs, RowList, FetchSize, FsDemod, DSFact, FiltOrder,**Keywards):
        super(DemodThread, self).__init__() 
        self.ToDemData = None
        
@@ -169,10 +169,10 @@ class DemodThread(Qt.QThread):
        for Row in RowList:
            DemOut = []
            for Cols, Freq in Fcs.items():
-               Dem = Demod(Freq, Fsize, FsDemod, DSFact, FiltOrder)
+               Dem = Demod(Freq, FetchSize, FsDemod, DSFact, FiltOrder)
                DemOut.append(Dem)
            self.DemOutputs.append(DemOut) 
-       self.OutDemData = np.ndarray((round(Fsize/DSFact),round(len(RowList)*len(Fcs.keys()))), dtype=complex)
+       self.OutDemData = np.ndarray((round(FetchSize/DSFact),round(len(RowList)*len(Fcs.keys()))), dtype=complex)
        
     def run(self):       
         while True:
