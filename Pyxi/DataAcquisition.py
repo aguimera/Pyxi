@@ -113,7 +113,7 @@ class DataAcquisitionThread(Qt.QThread):
         
 ##############################NoThread##########################################         
 class DataAcquisition():    
-    def __init__(self, ColsConfig, FsGen, GenSize, RowsConfig, FsScope, BufferSize, GainBoard, ResourceScope):
+    def __init__(self, ColsConfig, FsGen, GenSize, RowsConfig, FsScope, GainBoard, ResourceScope):
         self.Columns = NifGen.Columns(ColsConfig, FsGen, GenSize)
         self.Rows = NiScope.Rows(RowsConfig, FsScope, ResourceScope)
         self.GainBoard = GainBoard

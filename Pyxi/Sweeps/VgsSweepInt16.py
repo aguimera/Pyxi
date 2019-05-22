@@ -12,7 +12,7 @@ import os
 
 #import Gen_Scope_Classes as Gen_Scope
 import Pyxi.FileModule as FileMod
-import Pyxi.FMacqThread as FMmod
+import Pyxi.DataAcquisition as DataAcq
 
 if __name__ == '__main__':
     
@@ -104,13 +104,13 @@ if __name__ == '__main__':
                          'Resource':Col[1],
                          'Index': Col[2]}
 
-    ACqSet = FMmod.Acquisition(ColumnsConfig=ColsConfig, 
-                               FsGen=GenFs, 
-                               GS=GenSize,
-                               RowsConfig=RowsConfig,
-                               NRow=len(RowsArray),
-                               FsScope=ScopeFs,
-                               ResourceScope='PXI1Slot4')
+    ACqSet = DataAcq.DataAcquisition(ColsConfig=ColsConfig, 
+                                         FsGen=GenFs, 
+                                         GenSize=GenSize,
+                                         RowsConfig=RowsConfig,
+                                         FsScope=ScopeFs,
+                                         GainBoard=PCBGain,
+                                         ResourceScope='PXI1Slot4')
     #Fetching    
     InFetch = np.ndarray((BufferSize, len(Rows)), dtype='int16')
     
@@ -119,17 +119,16 @@ if __name__ == '__main__':
     
     for SweepInd, vgs in enumerate(CMVoltage):
         dsetname = 'Sw{0:03d}'.format(SweepInd)
-            
-        
+                
         ACqSet.stopSessions()            
-        ACqSet.setSignals(ColumnsConfig=ColsConfig,
-                          Vgs=vgs)    
+        ACqSet.setSignals(ColsConfig=ColsConfig,
+                          Vgs=vgs)   
         ACqSet.initSessions()
         
         FileBuf.InitDset(dsetname)
-        InFetch, LSB = ACqSet.GetData(FetchSize=BufferSize,
+        InFetch, LSB = ACqSet.GetData(BufferSize=BufferSize,
                                       channels=RowsArray,
-                                      ScopeOffset=ScopeOffset)
+                                      OffsetRows=ScopeOffset)
         
         FileBuf.AddSample(InFetch)
         for nr in range(len(Rows)):
