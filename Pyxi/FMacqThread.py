@@ -609,6 +609,7 @@ class DataAcquisitionThread(Qt.QThread):
         
         print(ColumnsConfig)
         print(RowsConfig)
+        print(Resource)
         self.Columns = Columns(ColumnsConfig, FsGen, GS)
         self.Rows = Rows(RowsConfig, FsScope, Resource)
         self.BS = BS
@@ -698,8 +699,14 @@ class Acquisition():
         self.Columns = Columns(ColumnsConfig, FsGen, GS)
         self.Rows = Rows(RowsConfig, FsScope, ResourceScope)
         self.LSB = np.array([])
-        for i in range(NRow):
-            self.LSB = np.append(self.LSB, RowsConfig['Row'+str(i+1)]['Range']/(2**16))
+        self.RowsList = []
+        for Row, pars in RowsConfig.items():
+            self.RowsList.append(str(Row))
+            self.LSB = np.append(self.LSB, RowsConfig[str(Row)]['Range']/(2**16))
+        
+        for s in self.RowsList:
+            self.Channels.append(int(re.split(r'(\d+)', s)[1])-1)
+       
         
     def setSignals(self, ColumnsConfig, Vgs):
         Sig = {}
@@ -710,11 +717,10 @@ class Acquisition():
                     continue
                 PropSig[str(p)] = val
                 
-            Sig[str(col)]= PropSig    
-            
-        self.Columns.SetSignal(Sig, Vgs)
+            Sig[str(col)]= PropSig
+        self.Columns.SetSignal(Sig, Vgs)  
         
-    def GetData(self, FetchSize, channels, ScopeOffset):
+    def GetData(self, FetchSize, channels, ScopeOffset):                
         Inputs = self.Rows.SesScope.channels[channels].fetch(num_samples=FetchSize,
                                                               relative_to=niscope.FetchRelativeTo.READ_POINTER,
                                                               offset=ScopeOffset,
@@ -725,7 +731,7 @@ class Acquisition():
         BinData = np.ndarray((FetchSize, len(channels)))
         IntData = np.ndarray((FetchSize, len(channels)))
         for i, In in enumerate(Inputs):
-            OutData[:, i] = np.array(In.samples)#/self.GainBoard 
+            OutData[:, i] = np.array(In.samples)/self.GainBoard 
             BinData[:,i] = OutData[:,i]/self.LSB[i]
             IntData[:,i] = np.int16(np.round(BinData[:,i]))
             

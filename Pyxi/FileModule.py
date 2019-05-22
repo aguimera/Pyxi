@@ -34,6 +34,7 @@ def GenArchivo(name, dic2Save):
 def ReadArchivo(name):
         with open(name, "rb") as f:
             return pickle.load(f ,encoding = 'latin1')
+
 class SaveFileParameters(pTypes.GroupParameter):
     def __init__(self, QTparent, **kwargs):
         pTypes.GroupParameter.__init__(self, **kwargs)
