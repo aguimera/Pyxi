@@ -24,7 +24,9 @@ from itertools import  cycle
 import Pyxi.FileModule as FileMod
 import Pyxi.SampleGenerator as SampGen
 import Pyxi.PlotModule as PltMod
-import Pyxi.FMacqThread as FMacq
+import Pyxi.DataAcquisition as DataAcq
+import Pyxi.NifGenerator as NifGen
+import Pyxi.NiScope as NiScope
 import Pyxi.DemodModule as DemMod
 
 class MainWindow(Qt.QWidget):
@@ -48,10 +50,10 @@ class MainWindow(Qt.QWidget):
                                                          name='Record File')
         self.Parameters.addChild(self.FileParams)
         
-        self.NifGenParams = FMacq.NifGeneratorParameters(name='Pxi Generator')        
+        self.NifGenParams = NifGen.NifGeneratorParameters(name='Pxi Generator')        
         self.Parameters.addChild(self.NifGenParams)
         
-        self.NiScopeParams = FMacq.NiScopeParameters(name='Pxi Scope')
+        self.NiScopeParams = NiScope.NiScopeParameters(name='Pxi Scope')
         self.Parameters.addChild(self.NiScopeParams)
         
         self.PsdPlotParams = PltMod.PSDParameters(name='PSD Plot Options')
@@ -61,7 +63,7 @@ class MainWindow(Qt.QWidget):
         self.Parameters.addChild(self.PsdPlotParams)
         
         self.PlotParams = PltMod.PlotterParameters(name='Plot options')
-        self.PlotParams.SetChannels(self.NiScopeParams.GetChannels())
+        self.PlotParams.SetChannels(self.NiScopeParams.GetRows())
         self.PlotParams.param('Fs').setValue(self.NiScopeParams.FsScope.value())
 
         self.Parameters.addChild(self.PlotParams)
@@ -123,22 +125,22 @@ class MainWindow(Qt.QWidget):
             print('  data:      %s'% str(data))
             print('  ----------')
   
-            if childName == 'NifGenerator.CarriersConfig':
+            if childName == 'Pxi Generator.CarriersConfig':
                 self.DemodPlotParams.SetChannels(self.DemodParams.GetChannels(self.NiScopeParams.Rows, 
                                                                               self.NifGenParams.GetCarriers())
                                                                               )
             
-            if childName == 'Scope.FetchConfig.FsScope':
+            if childName == 'Pxi Scope.AcqConfig.FsScope':
                 n =round(self.NifGenParams.FsGen.value()/data)
                 self.NiScopeParams.FsScope.setValue(self.NifGenParams.FsGen.value()/n)
                 self.PlotParams.param('Fs').setValue(self.NiScopeParams.FsScope.value())
-                self.PsdParams.param('Fs').setValue(self.NiScopeParams.FsScope.value())
+                self.PsdPlotParams.param('Fs').setValue(self.NiScopeParams.FsScope.value())
                 self.DemodConfig.param('FsDemod').setValue(self.NiScopeParams.FsScope.value())
                 
-            if childName == 'Scope.FetchConfig.NRow':
-                self.PlotParams.SetChannels(self.NiScopeParams.GetChannels())
+            if childName == 'Pxi Scope.AcqConfig.NRow':
+                self.PlotParams.SetChannels(self.NiScopeParams.GetRows())
                 self.DemodPlotParams.SetChannels(self.DemodParams.GetChannels(self.NiScopeParams.Rows, 
-                                                                            self.NifGenParams.GetCarriers())
+                                                                              self.NifGenParams.GetCarriers())
                                                  )
             
             if childName == 'Demod Options.DemodConfig.DSFs':
@@ -211,11 +213,11 @@ class MainWindow(Qt.QWidget):
         print('started')
         if self.threadAqc is None:
             self.treepar.setParameters(self.Parameters, showTop=False)
-            self.GenKwargs = self.NifGenParams.GetParams()
-            self.ScopeKwargs = self.NiScopeParams.GetParams()
+            self.GenKwargs = self.NifGenParams.GetGenParams()
+            self.ScopeKwargs = self.NiScopeParams.GetRowParams()
             self.DemodKwargs = self.DemodParams.GetParams()
             
-            self.threadAqc = FMacq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
+            self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
             self.threadAqc.NewData.connect(self.on_NewSample)
                        
             self.GenPsdPlotter()
