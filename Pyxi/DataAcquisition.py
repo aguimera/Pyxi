@@ -121,8 +121,9 @@ class DataAcquisition():
         self.RowsList = []
         for Row, pars in RowsConfig.items():
             self.RowsList.append(str(Row))
-            self.LSB = np.append(self.LSB, RowsConfig[str(Row)]['Range']/(2**16))
+            self.LSB = np.append(self.LSB, RowsConfig[str(Row)]['AcqVRange']/(2**16))
         
+        self.Channels=[]
         for s in self.RowsList:
             self.Channels.append(int(re.split(r'(\d+)', s)[1])-1)
        
@@ -157,10 +158,9 @@ class DataAcquisition():
         return IntData, self.LSB
         
     def initSessions(self):
-        self.Cols.Session_Gen_Initiate()
+        self.Columns.Session_Gen_Initiate()
         self.Rows.Session_Scope_Initiate()
-        self.Timer.singleShot(self.ttimer, self.GenData)
         
     def stopSessions(self):
-        self.Cols.Session_Gen_Abort()
+        self.Columns.Session_Gen_Abort()
         self.Rows.Session_Scope_Abort()

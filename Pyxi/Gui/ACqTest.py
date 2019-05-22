@@ -68,7 +68,7 @@ class MainWindow(Qt.QWidget):
 
         self.Parameters.addChild(self.PlotParams)
         
-        self.DemodParams = DemMod.DemodParameters(name = 'Demod Options')     
+        self.DemodParams = DemMod.DemodParameters(name='Demod Options')     
         self.Parameters.addChild(self.DemodParams)
         self.DemodConfig = self.DemodParams.param('DemodConfig')
         
@@ -164,7 +164,7 @@ class MainWindow(Qt.QWidget):
             if self.threadAqc is not None:  
                 if childName == 'Plot options.PlotEnable' or childName == 'Demod Plot options.PlotEnable' :
                     self.Gen_Destroy_Plotters()
-                if childName == 'PSD Options.PSDEnable' or childName == 'Demod PSD Options.PSDEnable':
+                if childName == 'PSD Plot Options.PSDEnable' or childName == 'Demod PSD Options.PSDEnable':
                     self.Gen_Destroy_PsdPlotter() 
 
     def Gen_Destroy_Plotters(self):
@@ -173,6 +173,7 @@ class MainWindow(Qt.QWidget):
                 PlotterKwargs = self.PlotParams.GetParams()
                 self.threadPlotter = PltMod.Plotter(**PlotterKwargs)
                 self.threadPlotter.start()
+        if self.threadPlotter is not None:
             if self.PlotParams.param('PlotEnable').value() == False:
                 self.threadPlotter.stop()
                 self.threadPlotter = None
@@ -182,6 +183,7 @@ class MainWindow(Qt.QWidget):
                 PlotterDemodKwargs = self.DemodPlotParams.GetParams()
                 self.threadDemodPlotter = PltMod.Plotter(**PlotterDemodKwargs)
                 self.threadDemodPlotter.start()
+        if self.threadDemodPlotter is not None:
             if self.DemodPlotParams.param('PlotEnable').value() == False:
                 self.threadDemodPlotter.stop()
                 self.threadDemodPlotter = None
@@ -192,11 +194,12 @@ class MainWindow(Qt.QWidget):
                 PlotterKwargs = self.PlotParams.GetParams()
                 self.threadPsdPlotter = PltMod.PSDPlotter(ChannelConf=PlotterKwargs['ChannelConf'],
                                                           nChannels=self.ScopeKwargs['NRow'],
-                                                          **self.PSDParams.GetParams())
+                                                          **self.PsdPlotParams.GetParams())
                 self.threadPsdPlotter.start() 
+        if self.threadPsdPlotter is not None:
             if self.PsdPlotParams.param('PSDEnable').value() == False:
-                self.threadPSDPlotter.stop()
-                self.threadPSDPlotter = None 
+                self.threadPsdPlotter.stop()
+                self.threadPsdPlotter = None 
                 
         if self.threadDemodPsdPlotter is None:
             if self.DemodPsdPlotParams.param('PSDEnable').value() == True:
@@ -205,6 +208,7 @@ class MainWindow(Qt.QWidget):
                                                                nChannels=self.ScopeKwargs['NRow']*len(self.NifGenParams.Freqs),
                                                                **self.DemodPsdPlotParams.GetParams())
                 self.threadDemodPsdPlotter.start() 
+        if self.threadDemodPsdPlotter is not None:
             if self.DemodPsdPlotParams.param('PSDEnable').value() == False:
                 self.threadDemodPsdPlotter.stop()
                 self.threadDemodPsdPlotter = None   
@@ -220,8 +224,8 @@ class MainWindow(Qt.QWidget):
             self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
             self.threadAqc.NewData.connect(self.on_NewSample)
                        
-            self.GenPsdPlotter()
-            self.GenPlotter()
+            self.Gen_Destroy_PsdPlotter()
+            self.Gen_Destroy_Plotters()
             self.SaveFiles()     
             
             if self.DemodConfig.param('DemEnable').value() == True:
@@ -234,7 +238,7 @@ class MainWindow(Qt.QWidget):
             
             
             self.threadAqc.start()
-            self.btnGen.setText("Stop Gen")
+            self.btnStart.setText("Stop Gen")
             self.OldTime = time.time()
         else:
             self.threadAqc.NewData.disconnect()
@@ -244,7 +248,7 @@ class MainWindow(Qt.QWidget):
             
             self.StopThreads()
             
-            self.btnGen.setText("Start Gen")           
+            self.btnStart.setText("Start Gen and Adq!")           
 
     def StopThreads(self):
         if self.threadSave is not None:
@@ -285,7 +289,7 @@ class MainWindow(Qt.QWidget):
         if self.threadPlotter is not None:
             self.threadPlotter.AddData(self.threadAqc.OutData)
             
-        if self.threadPSDPlotter is not None:  
+        if self.threadPsdPlotter is not None:  
             self.threadPsdPlotter.AddData(self.threadAqc.OutData)
        
         if self.DemodConfig.param('DemEnable').value() == True:
@@ -316,14 +320,14 @@ class MainWindow(Qt.QWidget):
             self.threadDemodPsdPlotter.AddData(OutDemodData)
 
     def SaveFiles(self):
-        FileName = self.FileParameters.param('File Path').value()
+        FileName = self.FileParams.param('File Path').value()
         if FileName ==  '':
             print('No file')
         else:
             if os.path.isfile(FileName):
                 print('Remove File')
                 os.remove(FileName)  
-            MaxSize = self.FileParameters.param('MaxSize').value()
+            MaxSize = self.FileParams.param('MaxSize').value()
             if self.DemodConfig.param('DemEnable').value() == False:
                 self.threadSave = FileMod.DataSavingThread(FileName=FileName,
                                                            nChannels=self.ScopeKwargs['NRow'],

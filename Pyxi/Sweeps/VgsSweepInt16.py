@@ -54,7 +54,7 @@ if __name__ == '__main__':
         RowsArray.append(row[1])
         RowsConfig[row[0]]['Enable'] = True
         RowsConfig[row[0]]['Index'] = row[1]
-        RowsConfig[row[0]]['Range'] = rangeScope
+        RowsConfig[row[0]]['AcqVRange'] = rangeScope
     
     #Dades per crear ColsConfig i cridar a "Columns()"    
     #Modifica Cols segons els generadores que es vulguin utilitzar
@@ -112,7 +112,7 @@ if __name__ == '__main__':
                                          GainBoard=PCBGain,
                                          ResourceScope='PXI1Slot4')
     #Fetching    
-    InFetch = np.ndarray((BufferSize, len(Rows)), dtype='int16')
+    InFetch = np.ndarray((BufferSize, len(Rows)), dtype=dtype)
     
     Procs = {}
     demind = 0
@@ -122,7 +122,7 @@ if __name__ == '__main__':
                 
         ACqSet.stopSessions()            
         ACqSet.setSignals(ColsConfig=ColsConfig,
-                          Vgs=vgs)   
+                          Vcm=vgs)   
         ACqSet.initSessions()
         
         FileBuf.InitDset(dsetname)

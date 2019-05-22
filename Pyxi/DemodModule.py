@@ -172,7 +172,7 @@ class DemodThread(Qt.QThread):
                Dem = Demod(Freq, FetchSize, FsDemod, DSFact, FiltOrder)
                DemOut.append(Dem)
            self.DemOutputs.append(DemOut) 
-       self.OutDemData = np.ndarray((round(FetchSize/DSFact),round(len(RowList)*len(Fcs.keys()))), dtype=complex)
+       self.OutDemodData = np.ndarray((round(FetchSize/DSFact),round(len(RowList)*len(Fcs.keys()))), dtype=complex)
        
     def run(self):       
         while True:
@@ -181,9 +181,9 @@ class DemodThread(Qt.QThread):
                 for ir, rows in enumerate(self.DemOutputs):
                     for instance in rows:
                         data = instance.Apply(self.ToDemData[:, ir])
-                        self.OutDemData[:,ind] = data
+                        self.OutDemodData[:,ind] = data
                         ind = ind+1
-#                print('OutDemData', self.OutDemData.shape)
+                        
                 self.NewData.emit()
                 self.ToDemData = None
             else:

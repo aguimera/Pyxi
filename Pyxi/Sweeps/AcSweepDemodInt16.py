@@ -25,8 +25,8 @@ if __name__ == '__main__':
     
     #llegir fitxer
 
-    Dictname = 'AcSweep_LRB__4Carr_Row1_Fs1e6_NoStabilization'
-    FileName = Dictname +'.h5'
+    Dictname = 'AcSweep_LRB__4Carr_Row1_Fs1e6_Test'
+    FileName = Dictname +'_0'+'.h5'
     hfile = h5py.File(FileName, 'r')
     RGain = 10e3
     FsOut = 5e3
@@ -43,7 +43,7 @@ if __name__ == '__main__':
         fig, axTemp = plt.subplots()
         fig, axPsd = plt.subplots() 
         for dem, DemArgs in ProcsDict.items():
-            Iin = hfile[DemArgs['dset']][:, DemArgs['dInd']]/RGain
+            Iin = hfile[DemArgs['dset']][:, DemArgs['dInd']]*DemArgs['LSB'][DemArgs['dInd']]/RGain
             Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['dInd'])
             print(Lab)
             
@@ -72,7 +72,7 @@ if __name__ == '__main__':
 #            continue
 #        if DemArgs['col'] != 'Col1':
 #            continue
-        Iin = (data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']]/RGain
+        Iin = (data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']]#/RGain
         Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['dInd'])
         print(Lab)     
         DownFact = int(DemArgs['Fs']/FsOut)
@@ -91,15 +91,15 @@ if __name__ == '__main__':
             Procs = []
             print('Collect', gc.collect())
             
-        if len(Procs) > 0:        
-            print(len(Procs))
-            po = mp.Pool(len(Procs))
-            res = po.starmap(Dem.DemodProc, Procs)
-            for r in res:
-                results.append(r)
-            po.close()
-            Procs = []
-            print('Collect', gc.collect())   
+    if len(Procs) > 0:        
+        print(len(Procs))
+        po = mp.Pool(len(Procs))
+        res = po.starmap(Dem.DemodProc, Procs)
+        for r in res:
+            results.append(r)
+        po.close()
+        Procs = []
+        print('Collect', gc.collect())   
         
                   
 

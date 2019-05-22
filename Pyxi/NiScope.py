@@ -286,7 +286,7 @@ class Rows():
         self.SesScope.exported_start_trigger_output_terminal = 'PXI_Trig0'
         self.SesScope.input_clock_source='PXI_Clk'
         self.SesScope.configure_trigger_software()
-        self.SesScope.GetSignal(RowsConfig)
+        self.SesScope.Scope_GetSignal(RowsConfig)
 
     #Init Acquisition
     def Session_Scope_Initiate(self):

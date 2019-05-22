@@ -74,7 +74,7 @@ if __name__ == '__main__':
 #        if DemArgs['col'] != 'Col1':
 #            continue
 
-        Iin = (data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']]/RGain
+        Iin = (data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']]#/RGain
 
         Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['dInd'])
         print(Lab)     

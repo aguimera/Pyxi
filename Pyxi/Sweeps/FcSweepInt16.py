@@ -17,7 +17,7 @@ import Pyxi.DataAcquisition as DataAcq
 if __name__ == '__main__':
     
     #File To Save
-    Dictname ='FcSweep_LRB__Carr1_Row1_Fs1e6_Stabilization'
+    Dictname ='FcSweep_LRB__Carr1_Row1_Fs1e6_Test'
     FileName = Dictname +'.h5'
     
     if os.path.isfile(FileName):
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     ScopeFs = 1e6
     nFs = round(GenFs/ScopeFs)
     ScopeFs = GenFs/nFs
-    tFetch = 300e-3
+    tFetch = 1
     NumFetch = 1
     BufferSize = round(tFetch*ScopeFs)
     tFetch = BufferSize/ScopeFs
@@ -38,7 +38,7 @@ if __name__ == '__main__':
 #    Rows = [('Row1', 0), ('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4), ('Row6', 5), ('Row7', 6), ('Row8', 7)]
     Rows = [('Row1', 0),('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4), ('Row6', 5), ('Row7', 6), ('Row8', 7)]
     RowsArray = []
-    rangeScope = 6  #options 0.05, 0.2, 1, 6, 30
+    rangeScope = 1  #options 0.05, 0.2, 1, 6, 30
     LSB = rangeScope/(2**16)
     PCBGain = 10e3
     MaxFileSize = 500e6
@@ -55,7 +55,7 @@ if __name__ == '__main__':
         RowsArray.append(row[1])
         RowsConfig[row[0]]['Enable'] = True
         RowsConfig[row[0]]['Index'] = row[1]
-        RowsConfig[row[0]]['Range'] = rangeScope
+        RowsConfig[row[0]]['AcqVRange'] = rangeScope
     #Dades per crear ColsConfig i cridar a "Columns()"    
     #Modifica Cols segons els generadores que es vulguin utilitzar
 #    #Cols = (('Col1', 'PXI1Slot2', 0, 0), 
@@ -108,7 +108,7 @@ if __name__ == '__main__':
                             'Index': Col[2]}
 
     #Fetching    
-    InFetch = np.ndarray((BufferSize, len(Rows)))
+    InFetch = np.ndarray((BufferSize, len(Rows)), dtype=dtype)
     
     Procs = {}
     demind = 0
@@ -129,7 +129,7 @@ if __name__ == '__main__':
         
         ACqSet.stopSessions()            
         ACqSet.setSignals(ColsConfig=ColsConfig,
-                          Vgs=CMVoltage)  
+                          Vcm=CMVoltage)  
         ACqSet.initSessions()
         
         FileBuf.InitDset(dsetname)
@@ -152,7 +152,8 @@ if __name__ == '__main__':
                              'GenSize': GenSize,  
                              'Samps': GenSize/(GenFs/ScopeFs), # DemOscSize
                              'Vgs' : CMVoltage,
-                             'Gain': PCBGain}
+                             'Gain': PCBGain,
+                             'LSB':LSB}
             
                 Demkey = 'Dem{0:03d}'.format(demind)
                 demind += 1 
