@@ -729,7 +729,7 @@ class Acquisition():
             BinData[:,i] = OutData[:,i]/self.LSB[i]
             IntData[:,i] = np.int16(np.round(BinData[:,i]))
             
-        return IntData
+        return IntData, self.LSB
         
         
     def initSessions(self):
