@@ -87,7 +87,7 @@ class DataAcquisitionThread(Qt.QThread):
             self.Timer.singleShot(self.ttimer, self.GenData)
             for i, In in enumerate(Inputs):
                 self.OutData[:, i] = np.array(In.samples)/self.GainBoard 
-                self.BinData[:,i] = self.OutData[:,i]/self.LSB[i]
+                self.BinData[:,i] = np.array(In.samples)[:,i]/self.LSB[i]
                 self.IntData[:,i] = np.int16(np.round(self.BinData[:,i]))
             self.NewData.emit()
 
@@ -140,7 +140,7 @@ class DataAcquisition():
             Sig[str(col)]= PropSig
         self.Columns.Gen_SetSignal(Sig, Vcm)  
         
-    def GetData(self, BufferSize, channels, OffsetRows):                
+    def GetData(self, BufferSize, channels, OffsetRows, dtype):                
         Inputs = self.Rows.SesScope.channels[channels].fetch(num_samples=BufferSize,
                                                               relative_to=niscope.FetchRelativeTo.READ_POINTER,
                                                               offset=OffsetRows,
@@ -149,13 +149,16 @@ class DataAcquisition():
                                                               timeout=20)
         OutData = np.ndarray((BufferSize, len(channels))) 
         BinData = np.ndarray((BufferSize, len(channels)))
-        IntData = np.ndarray((BufferSize, len(channels)))
+        IntData = np.ndarray((BufferSize, len(channels)), dtype='int16')
         for i, In in enumerate(Inputs):
-            OutData[:, i] = np.array(In.samples)/self.GainBoard 
+            OutData[:, i] = np.array(In.samples)#/self.GainBoard 
             BinData[:,i] = OutData[:,i]/self.LSB[i]
             IntData[:,i] = np.int16(np.round(BinData[:,i]))
-            
-        return IntData, self.LSB
+        if dtype == 'int16':
+            Output = IntData
+        else:
+            Output = OutData
+        return Output, self.LSB
         
     def initSessions(self):
         self.Columns.Session_Gen_Initiate()

@@ -17,7 +17,7 @@ import Pyxi.DataAcquisition as DataAcq
 if __name__ == '__main__':
     
     #File To Save
-    Dictname ='VgSweep_LRB__Carr1_Row1_Fs1e6_Integer_compressed'
+    Dictname ="F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\VgsSweep_LRB__4Carr_Row1_Fs1e6_Test_NoSat_float"
     FileName = Dictname +'.h5'
     
     if os.path.isfile(FileName):
@@ -41,7 +41,8 @@ if __name__ == '__main__':
     rangeScope = 6  #options 0.05, 0.2, 1, 6, 30
     PCBGain = 10e3
     MaxFileSize = 500e6
-    dtype = 'int16'
+#    dtype = 'int16'
+    dtype = 'float'
     
     FileBuf = FileMod.FileBuffer(FileName=FileName,
                                  MaxSize=MaxFileSize,
@@ -128,7 +129,9 @@ if __name__ == '__main__':
         FileBuf.InitDset(dsetname)
         InFetch, LSB = ACqSet.GetData(BufferSize=BufferSize,
                                       channels=RowsArray,
-                                      OffsetRows=ScopeOffset)
+                                      OffsetRows=ScopeOffset,
+                                      dtype=dtype
+                                      )
         
         FileBuf.AddSample(InFetch)
         for nr in range(len(Rows)):

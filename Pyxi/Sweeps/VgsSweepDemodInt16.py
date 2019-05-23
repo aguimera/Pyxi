@@ -25,8 +25,8 @@ if __name__ == '__main__':
     debug = False
     #llegir fitxer
 
-    Dictname = 'VgSweep_LRB__Carr1_Row1_Fs1e6_Integer_compressed'
-    FileName = Dictname +'.h5'
+    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\VgsSweep_LRB__4Carr_Row1_Fs1e6_Test_NoSat_int16"
+    FileName = Dictname +'_0'+'.h5'
     hfile = h5py.File(FileName, 'r')
     RGain = 10e3
     FsOut = 5e3
@@ -38,12 +38,16 @@ if __name__ == '__main__':
     nFFT = 2**17
     DownFact = 100
 
+    data = {}
+    for k in hfile.keys():
+        data[k] = hfile[k].value
+    hfile.close()
 #%%
     if debug == True:
         fig, axTemp = plt.subplots()
         fig, axPsd = plt.subplots() 
         for dem, DemArgs in ProcsDict.items():
-            Iin = hfile[DemArgs['dset']][:, DemArgs['dInd']]/RGain
+            Iin = ((data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']])/DemArgs['Gain']
             Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['dInd'])
             print(Lab)
             
@@ -55,12 +59,6 @@ if __name__ == '__main__':
                 print(ff[pi], '-->>', np.sqrt(psdadem[pi]))
                 axPsd.plot(ff[pi], psdadem[pi], 'k*')
             axTemp.plot(Iin[:int(DemArgs['Samps'])*2], label=Lab)   
-
-
-    data = {}
-    for k in hfile.keys():
-        data[k] = hfile[k].value
-    hfile.close()
         
 #%%      
     Procs = []
@@ -74,7 +72,7 @@ if __name__ == '__main__':
 #        if DemArgs['col'] != 'Col1':
 #            continue
 
-        Iin = (data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']]#/RGain
+        Iin = ((data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']])/DemArgs['Gain']
 
         Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['dInd'])
         print(Lab)     
@@ -94,15 +92,15 @@ if __name__ == '__main__':
             Procs = []
             print('Collect', gc.collect())
             
-        if len(Procs) > 0:        
-            print(len(Procs))
-            po = mp.Pool(len(Procs))
-            res = po.starmap(Dem.DemodProc, Procs)
-            for r in res:
-                results.append(r)
-            po.close()
-            Procs = []
-            print('Collect', gc.collect())   
+    if len(Procs) > 0:        
+        print(len(Procs))
+        po = mp.Pool(len(Procs))
+        res = po.starmap(Dem.DemodProc, Procs)
+        for r in res:
+            results.append(r)
+        po.close()
+        Procs = []
+        print('Collect', gc.collect())   
         
 
 #%%

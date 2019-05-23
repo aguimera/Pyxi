@@ -25,10 +25,9 @@ if __name__ == '__main__':
     
     #llegir fitxer
 
-    Dictname = 'AcSweep_LRB__4Carr_Row1_Fs1e6_Test'
+    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\AcSweep_LRB__4Carr_Row1_Fs1e6_Test_NoSat_int16"
     FileName = Dictname +'_0'+'.h5'
     hfile = h5py.File(FileName, 'r')
-    RGain = 10e3
     FsOut = 5e3
     
     ProcsDict = FileMod.ReadArchivo(Dictname)
@@ -38,12 +37,18 @@ if __name__ == '__main__':
     nFFT = 2**17
     DownFact = 100
 
+
+    data = {}
+    for k in hfile.keys():
+        data[k] = hfile[k].value
+    hfile.close()
 #%%
     if debug == True:    
         fig, axTemp = plt.subplots()
         fig, axPsd = plt.subplots() 
         for dem, DemArgs in ProcsDict.items():
-            Iin = hfile[DemArgs['dset']][:, DemArgs['dInd']]*DemArgs['LSB'][DemArgs['dInd']]/RGain
+            Iin = ((data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']])/DemArgs['Gain']
+            
             Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['dInd'])
             print(Lab)
             
@@ -56,10 +61,6 @@ if __name__ == '__main__':
                 axPsd.plot(ff[pi], psdadem[pi], 'k*')
             axTemp.plot(Iin[:int(DemArgs['Samps']*2)], label=Lab)   
 
-    data = {}
-    for k in hfile.keys():
-        data[k] = hfile[k].value
-    hfile.close()
 #%%      
     Procs = []
     Labs = []
@@ -72,7 +73,7 @@ if __name__ == '__main__':
 #            continue
 #        if DemArgs['col'] != 'Col1':
 #            continue
-        Iin = (data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']]#/RGain
+        Iin = ((data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']])/DemArgs['Gain']
         Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['dInd'])
         print(Lab)     
         DownFact = int(DemArgs['Fs']/FsOut)
@@ -102,7 +103,7 @@ if __name__ == '__main__':
         print('Collect', gc.collect())   
         
                   
-
+    
 #%%
 #    plt.close('all')
     DelaySamps = 200

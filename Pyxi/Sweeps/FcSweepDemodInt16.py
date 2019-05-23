@@ -25,7 +25,7 @@ if __name__ == '__main__':
     
     #llegir fitxer
 
-    Dictname = 'FcSweep_LRB__Carr1_Row1_Fs1e6_Test'
+    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\FcSweep_LRB__4Carr_Row1_Fs1e6_Test_NoSat_int16"
     FileName = Dictname +'_0'+'.h5'
     hfile = h5py.File(FileName, 'r')
     RGain = 10e3
@@ -48,7 +48,7 @@ if __name__ == '__main__':
         fig, axTemp = plt.subplots()
         fig, axPsd = plt.subplots() 
         for dem, DemArgs in ProcsDict.items():
-            Iin = (data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']]
+            Iin = ((data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']])/DemArgs['Gain']
             Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['dInd'])
             print(Lab)
             
@@ -73,7 +73,7 @@ if __name__ == '__main__':
 #            continue
 #        if DemArgs['col'] != 'Col1':
 #            continue
-        Iin = (data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']]#/RGain
+        Iin = ((data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']])/DemArgs['Gain']
         Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['dInd'])
         print(Lab)     
         DownFact = int(DemArgs['Fs']/FsOut)

@@ -17,7 +17,7 @@ import Pyxi.DataAcquisition as DataAcq
 if __name__ == '__main__':
     
     #File To Save
-    Dictname ='AcSweep_LRB__4Carr_Row1_Fs1e6_Test'
+    Dictname ="F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\AcSweep_LRB__4Carr_Row1_Fs1e6_Test_NoSat_int16"
     FileName = Dictname +'.h5'
     
     if os.path.isfile(FileName):
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     ScopeFs = 1e6
     nFs = round(GenFs/ScopeFs)
     ScopeFs = GenFs/nFs
-    tFetch = 1
+    tFetch = 2
     NumFetch = 1
     BufferSize = round(tFetch*ScopeFs)
     tFetch = BufferSize/ScopeFs
@@ -38,11 +38,12 @@ if __name__ == '__main__':
 #    Rows = [('Row1', 0), ('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4), ('Row6', 5), ('Row7', 6), ('Row8', 7)]
     Rows = [('Row1', 0),('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4), ('Row6', 5), ('Row7', 6), ('Row8', 7)]
     RowsArray = []
-    rangeScope = 1  #options 0.05, 0.2, 1, 6, 30
+    rangeScope = 6  #options 0.05, 0.2, 1, 6, 30
     LSB = rangeScope/(2**16)
     PCBGain = 10e3
     MaxFileSize = 500e6
-    dtype = 'int16'
+#    dtype = 'int16'
+    dtype = 'float'
     
     FileBuf = FileMod.FileBuffer(FileName=FileName,
                                  MaxSize=MaxFileSize,
@@ -104,12 +105,13 @@ if __name__ == '__main__':
     for Col in Cols:
         ColsConfig[Col[0]]={'Frequency': Fc[Col[3]],
                             'Amplitude': 0,
-                            'Gain': 0.5,
+                            'Gain': 0, #2*Amplitude
                             'Resource':Col[1],
                             'Index': Col[2]}
 
     #Fetching    
     InFetch = np.ndarray((BufferSize, len(Rows)), dtype=dtype)
+#    InFetchInt = np.ndarray((BufferSize, len(Rows)), dtype=dtype)
     
     Procs = {}
     demind = 0
@@ -119,6 +121,7 @@ if __name__ == '__main__':
         
         for Col in Cols:
             ColsConfig[Col[0]]['Amplitude']=Ac[Col[3]]
+            ColsConfig[Col[0]]['Gain']=2*Ac[Col[3]]
         ACqSet = DataAcq.DataAcquisition(ColsConfig=ColsConfig, 
                                          FsGen=GenFs, 
                                          GenSize=GenSize,
@@ -135,8 +138,9 @@ if __name__ == '__main__':
         FileBuf.InitDset(dsetname)
         InFetch, LSB = ACqSet.GetData(BufferSize=BufferSize,
                                       channels=RowsArray,
-                                      OffsetRows=ScopeOffset)
-        
+                                      OffsetRows=ScopeOffset,
+                                      dtype=dtype)
+
         FileBuf.AddSample(InFetch)
         for nr in range(len(Rows)):
             for col in Cols:
@@ -153,7 +157,8 @@ if __name__ == '__main__':
                              'Samps': GenSize/(GenFs/ScopeFs), # DemOscSize
                              'Vgs' : CMVoltage,
                              'Gain': PCBGain,
-                             'LSB': LSB}
+                             'LSB': LSB
+                             }
             
                 Demkey = 'Dem{0:03d}'.format(demind)
                 demind += 1 
