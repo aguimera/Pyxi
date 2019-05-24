@@ -11,7 +11,6 @@ import pyqtgraph.parametertree.Parameter as pParams
 from scipy import signal
 import numpy as np
 
-
 DemodulParams = ({'name': 'DemodConfig',
                   'type': 'group',
                   'children': ({'name': 'DemEnable',
@@ -48,6 +47,8 @@ DemodulParams = ({'name': 'DemodConfig',
                 })
                   
 class DemodParameters(pTypes.GroupParameter):
+#    FsChanged = None
+    
     def __init__(self, **kwargs):
         pTypes.GroupParameter.__init__(self, **kwargs)
 
@@ -58,13 +59,22 @@ class DemodParameters(pTypes.GroupParameter):
         self.DSFs = self.DemConfig.param('DSFs')
         self.DSFact = self.DemConfig.param('DSFact')
         self.on_DSFact_changed()
-        self.DSFact.sigValueChanged.connect(self.on_DSFact_changed)
+#        self.DSFact.sigValueChanged.connect(self.on_DSFact_changed)
         self.FsDem.sigValueChanged.connect(self.on_FsDem_changed)
         self.FiltOrder = self.DemConfig.param('FiltOrder')
         self.OutType = self.DemConfig.param('OutType')
         
-    def on_FsDem_changed(self):
+#    def on_FsDem_changed(self):
+#        if FsChanged is not None:
+#            FsChanged(Fs)
+#        self.on_DSFact_changed()
+    def ReCalc_DSFact(self, BufferSize):
+        while BufferSize%self.DSFact.value() != 0:
+            self.DSFact.setValue(self.DSFact.value()+1)
         self.on_DSFact_changed()
+        print('DSFactChangedTo'+str(self.DSFact.value()))
+    def on_FsDem_changed(self):
+        self.on_DSFact_changed() 
         
     def on_DSFact_changed(self):
         DSFs = self.FsDem.value()/self.DSFact.value()

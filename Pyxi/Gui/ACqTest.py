@@ -111,6 +111,9 @@ class MainWindow(Qt.QWidget):
         self.threadDemodSave = None
         self.threadDemodPlotter = None
         self.threadDemodPsdPlotter = None
+
+    def MysigFs(self):
+        pass
         
     def on_Params_changed(self, param, changes):
             print("tree changes:")
@@ -143,6 +146,9 @@ class MainWindow(Qt.QWidget):
                                                                               self.NifGenParams.GetCarriers())
                                                  )
             
+            if childName == 'Demod Options.DemodConfig.DSFact':
+                self.DemodParams.ReCalc_DSFact(self.NiScopeParams.BufferSize.value())
+#                    
             if childName == 'Demod Options.DemodConfig.DSFs':
                 self.DemodPsdPlotParams.param('Fs').setValue(data)
                 self.DemodPlotParams.param('Fs').setValue(data)
