@@ -60,7 +60,7 @@ class DataAcquisitionThread(Qt.QThread):
             Sig[str(col)]= PropSig
             
         self.Cols.Gen_SetSignal(SigsPars=Sig, 
-                                   Vcm=CMVoltage)
+                                Vcm=CMVoltage)
         self.Timer = Qt.QTimer()
         self.Timer.moveToThread(self)
         

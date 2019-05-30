@@ -73,6 +73,7 @@ class DemodParameters(pTypes.GroupParameter):
             self.DSFact.setValue(self.DSFact.value()+1)
         self.on_DSFact_changed()
         print('DSFactChangedTo'+str(self.DSFact.value()))
+        
     def on_FsDem_changed(self):
         self.on_DSFact_changed() 
         
