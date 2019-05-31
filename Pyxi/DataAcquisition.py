@@ -87,7 +87,8 @@ class DataAcquisitionThread(Qt.QThread):
             self.Timer.singleShot(self.ttimer, self.GenData)
             for i, In in enumerate(Inputs):
                 self.OutData[:, i] = np.array(In.samples)/self.GainBoard 
-                self.BinData[:,i] = np.array(In.samples)[:,i]/self.LSB[i]
+#                self.BinData[:,i] = np.array(In.samples)[:,i]/self.LSB[i]
+                self.BinData[:,i] = np.array(In.samples)/self.LSB[i]
                 self.IntData[:,i] = np.int16(np.round(self.BinData[:,i]))
             self.NewData.emit()
 
