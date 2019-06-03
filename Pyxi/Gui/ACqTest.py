@@ -219,9 +219,9 @@ class MainWindow(Qt.QWidget):
                 self.threadDemodPsdPlotter.stop()
                 self.threadDemodPsdPlotter = None   
                 
-    def on_btnStart(self):
-        print('started')
+    def on_btnStart(self):       
         if self.threadAqc is None:
+            print('started')
             self.treepar.setParameters(self.Parameters, showTop=False)
             self.GenKwargs = self.NifGenParams.GetGenParams()
             self.ScopeKwargs = self.NiScopeParams.GetRowParams()
@@ -247,6 +247,7 @@ class MainWindow(Qt.QWidget):
             self.btnStart.setText("Stop Gen")
             self.OldTime = time.time()
         else:
+            print('stopped')
             self.threadAqc.NewData.disconnect()
             self.threadAqc.stopSessions()
             self.threadAqc.terminate()

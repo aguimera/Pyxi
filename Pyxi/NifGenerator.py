@@ -28,10 +28,10 @@ CarrierParam = {'name':'ColX',
                              'siPrefix': True,
                              'suffix': 'Hz'},
                             {'name': 'Phase',
-                             'value': 0.25,
+                             'value': 0,
                              'type': 'float',
                              'siPrefix': True,
-                             'suffix': 'º'},
+                             'suffix': 'degree'},
                             {'name': 'Amplitude',
                              'value': 0.25,
                              'type': 'float',
@@ -259,7 +259,7 @@ class Columns():
         for Col,pars in SigsPars.items():
             if Col == 'Offset':
                 continue
-            signal = pars['Amplitude']*np.sin(2*np.pi*pars['Frequency']*self.t+pars['Phase'])
+            signal = pars['Amplitude']*np.sin(2*np.pi*pars['Frequency']*self.t+((np.pi/180)*pars['Phase']))
             if Col != 'Col1':
                 Vcm = 0
             self.Columns[Col]['session'].SetArbSignal(index=self.Columns[Col]['index'],
