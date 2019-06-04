@@ -25,7 +25,7 @@ if __name__ == '__main__':
     debug = False
     #llegir fitxer
 
-    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\VgsSweep_LRB__4Carr_Row1_Fs1e6_Test_NoSat_int16"
+    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\VgsSweep_Test4x4"
     FileName = Dictname +'_0'+'.h5'
     hfile = h5py.File(FileName, 'r')
     RGain = 10e3
@@ -161,4 +161,4 @@ if __name__ == '__main__':
     plt.figure()
     for k in set(GoodTrt):
         plt.plot(Vgs,OutDict[k][:-1], label=k)
-    plt.legend()
+#    plt.legend()

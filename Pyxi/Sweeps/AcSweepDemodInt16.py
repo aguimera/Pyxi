@@ -19,16 +19,18 @@ import gc
 
 if __name__ == '__main__':
     
-    plt.close('all')
+#    plt.close('all')
     
     debug = False
     
     #llegir fitxer
 
-    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\AcSweep_LRB__4Carr_Row1_Fs1e6_Test_NoSat_int16"
+    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\Test_4x4_NoPhaseOpt"
     FileName = Dictname +'_0'+'.h5'
     hfile = h5py.File(FileName, 'r')
     FsOut = 5e3
+    
+    FloatType=True
     
     ProcsDict = FileMod.ReadArchivo(Dictname)
     #lectura de parametres
@@ -47,7 +49,11 @@ if __name__ == '__main__':
         fig, axTemp = plt.subplots()
         fig, axPsd = plt.subplots() 
         for dem, DemArgs in ProcsDict.items():
-            Iin = ((data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']])/DemArgs['Gain']
+            if FloatType:
+                LSB = 1
+            else:
+                LSB = DemArgs['LSB'][DemArgs['dInd']]
+            Iin = ((data[DemArgs['dset']][:, DemArgs['dInd']])*LSB)/DemArgs['Gain']
             
             Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['dInd'])
             print(Lab)
@@ -73,9 +79,20 @@ if __name__ == '__main__':
 #            continue
 #        if DemArgs['col'] != 'Col1':
 #            continue
-        Iin = ((data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']])/DemArgs['Gain']
+        if FloatType:
+                LSB = 1
+        else:
+                LSB = DemArgs['LSB'][DemArgs['dInd']]
+        Iin = ((data[DemArgs['dset']][:, DemArgs['dInd']])*LSB)/DemArgs['Gain']
+#        Iin = ((data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']])/DemArgs['Gain']
         Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['dInd'])
-        print(Lab)     
+        print(Lab)            
+        if ((DemArgs['dInd'] == 0) and (DemArgs['col']=='Col1')):
+            plt.figure()
+            ff, psdadem = signal.welch(Iin, fs=DemArgs['Fs'], nperseg=nFFT, scaling='spectrum')            
+            plt.loglog(ff, psdadem, label=Lab)
+            plt.figure()
+            plt.plot(Iin)
         DownFact = int(DemArgs['Fs']/FsOut)
         args=(Iin, DemArgs['Fs'], DemArgs['Fc'], int(DemArgs['Samps']), DownFact)
         Labs.append(Lab)

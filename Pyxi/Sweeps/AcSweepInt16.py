@@ -17,7 +17,7 @@ import Pyxi.DataAcquisition as DataAcq
 if __name__ == '__main__':
     
     #File To Save
-    Dictname ="F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\AcSweep_LRB__4Carr_Row1_Fs1e6_Test_Sat_int16"
+    Dictname ="F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DataSaved\\test_4x4_NoPhaseOpt"
     FileName = Dictname +'.h5'
     
     if os.path.isfile(FileName):
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     ScopeFs = 1e6
     nFs = round(GenFs/ScopeFs)
     ScopeFs = GenFs/nFs
-    tFetch = 2
+    tFetch = 0.3
     NumFetch = 1
     BufferSize = round(tFetch*ScopeFs)
     tFetch = BufferSize/ScopeFs
@@ -42,8 +42,8 @@ if __name__ == '__main__':
     LSB = rangeScope/(2**16)
     PCBGain = 10e3
     MaxFileSize = 500e6
-    dtype = 'int16'
-#    dtype = 'float'
+#    dtype = 'int16'
+    dtype = 'float'
     
     FileBuf = FileMod.FileBuffer(FileName=FileName,
                                  MaxSize=MaxFileSize,
@@ -78,16 +78,17 @@ if __name__ == '__main__':
     #Calculs per al Generador    
     #definir les Fc que es volen utilitzar
     Fc=np.array([70e3, 85e3, 100e3, 115e3])
-
+    Ph = np.array([0, 0, 0, 0])
+#    Ph = np.array([144.596, -45.1778, -125.836, -110.565])
     for ind, f in enumerate(Fc):
         nc = round((GenSize*f)/GenFs)
         Fc[ind] =  (nc*GenFs)/GenSize
     
     A=np.ndarray((numSweeps, 4))
-    A[:,0] = np.linspace(0.01,0.04, num=numSweeps) #Sweep per Col1
-    A[:,1] = np.linspace(0.01,0.04, num=numSweeps)   #Sweep per Col2
-    A[:,2] = np.linspace(0.01,0.04, num=numSweeps)   #Sweep per Col3
-    A[:,3] = np.linspace(0.01,0.04, num=numSweeps)   #Sweep per Col4
+    A[:,0] = np.linspace(0.01,0.07, num=numSweeps) #Sweep per Col1
+    A[:,1] = np.linspace(0.01,0.07, num=numSweeps)   #Sweep per Col2
+    A[:,2] = np.linspace(0.01,0.07, num=numSweeps)   #Sweep per Col3
+    A[:,3] = np.linspace(0.01,0.07, num=numSweeps)   #Sweep per Col4
     
     #Es crea una Cols Config que es configurará per cada Sweep amb la freq correcta
 #    ColsConfig={'Col1':{'Frequency': Fc0,
@@ -104,6 +105,7 @@ if __name__ == '__main__':
     ColsConfig={}
     for Col in Cols:
         ColsConfig[Col[0]]={'Frequency': Fc[Col[3]],
+                            'Phase': Ph[Col[3]],
                             'Amplitude': 0,
                             'Gain': 0, #2*Amplitude
                             'Resource':Col[1],

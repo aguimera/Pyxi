@@ -17,7 +17,7 @@ import Pyxi.DataAcquisition as DataAcq
 if __name__ == '__main__':
     
     #File To Save
-    Dictname ="F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\VgsSweep_LRB__4Carr_Row1_Fs1e6_Test_NoSat_float"
+    Dictname ="F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\VgsSweep_Test4x4"
     FileName = Dictname +'.h5'
     
     if os.path.isfile(FileName):
@@ -38,7 +38,7 @@ if __name__ == '__main__':
 #    Rows = [('Row1', 0), ('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4), ('Row6', 5), ('Row7', 6), ('Row8', 7)]
     Rows = [('Row1', 0),('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4), ('Row6', 5), ('Row7', 6), ('Row8', 7)]
     RowsArray = []
-    rangeScope = 6  #options 0.05, 0.2, 1, 6, 30
+    rangeScope = 1  #options 0.05, 0.2, 1, 6, 30
     PCBGain = 10e3
     MaxFileSize = 500e6
 #    dtype = 'int16'
@@ -73,11 +73,12 @@ if __name__ == '__main__':
     GenSize = 20e3
     Ts = 1/GenFs
     t = np.arange(0, Ts*GenSize, Ts)        
-    A = [0.0125, 0.0125, 0.0125, 0.0125]  
+    A = [0.01, 0.01, 0.01, 0.01]  
     
     #definir les Fc que es volen utilitzar
     Fc=np.array([70e3, 85e3, 100e3, 115e3])
-
+#    Ph = np.array([144.596, -45.1778, -125.836, -110.565])
+    Ph = np.array([0,0,0,0])
     for ind, f in enumerate(Fc):
         nc = round((GenSize*f)/GenFs)
         Fc[ind] =  (nc*GenFs)/GenSize
@@ -100,6 +101,7 @@ if __name__ == '__main__':
     ColsConfig={}
     for Col in Cols:
         ColsConfig[Col[0]]={'Frequency': Fc[Col[3]],
+                         'Phase': Ph[Col[3]],
                          'Amplitude': A[Col[3]],
                          'Gain': 0.5,
                          'Resource':Col[1],
