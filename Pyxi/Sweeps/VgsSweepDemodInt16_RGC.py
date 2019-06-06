@@ -38,7 +38,7 @@ if __name__ == '__main__':
     debug = False
     #llegir fitxer
 
-    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\VgsSweep_Test4x4_PhaseOpt_PostEth"
+    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\TestVgsS_cript"
     FileName = Dictname +'_0'+'.h5'
     hfile = h5py.File(FileName, 'r')
     RGain = 10e3

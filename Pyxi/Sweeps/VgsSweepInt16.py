@@ -17,7 +17,7 @@ import Pyxi.DataAcquisition as DataAcq
 if __name__ == '__main__':
     
     #File To Save
-    Dictname ="F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\VgsSweep_Test4x4_PhaseOpt_PostEth"
+    Dictname ="F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\TestVgsS_cript"
     FileName = Dictname +'.h5'
     
     if os.path.isfile(FileName):
