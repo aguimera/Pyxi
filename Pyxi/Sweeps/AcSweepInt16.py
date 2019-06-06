@@ -159,7 +159,8 @@ if __name__ == '__main__':
                              'Samps': GenSize/(GenFs/ScopeFs), # DemOscSize
                              'Vgs' : CMVoltage,
                              'Gain': PCBGain,
-                             'LSB': LSB
+                             'LSB': LSB,
+                             'PhaseFc': Ph
                              }
             
                 Demkey = 'Dem{0:03d}'.format(demind)
