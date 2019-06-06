@@ -17,7 +17,7 @@ import Pyxi.DataAcquisition as DataAcq
 if __name__ == '__main__':
     
     #File To Save
-    Dictname ="F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DataSaved\\test_4x4_NoPhaseOpt"
+    Dictname ="F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DataSaved\\Test_4x4_NoPhaseOpt_0"
     FileName = Dictname +'.h5'
     
     if os.path.isfile(FileName):
@@ -74,12 +74,12 @@ if __name__ == '__main__':
     GenSize = 20e3
     Ts = 1/GenFs
     t = np.arange(0, Ts*GenSize, Ts)        
-    CMVoltage = 0
+    CMVoltage = -0.4
     #Calculs per al Generador    
     #definir les Fc que es volen utilitzar
     Fc=np.array([70e3, 85e3, 100e3, 115e3])
-    Ph = np.array([0, 0, 0, 0])
-#    Ph = np.array([144.596, -45.1778, -125.836, -110.565])
+#    Ph = np.array([0, 0, 0, 0])
+    Ph = np.array([144.596, -45.1778, -125.836, -110.565])
     for ind, f in enumerate(Fc):
         nc = round((GenSize*f)/GenFs)
         Fc[ind] =  (nc*GenFs)/GenSize

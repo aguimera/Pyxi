@@ -17,7 +17,7 @@ import Pyxi.DataAcquisition as DataAcq
 if __name__ == '__main__':
     
     #File To Save
-    Dictname ="F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\VgsSweep_Test4x4"
+    Dictname ="F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\VgsSweep_Test4x4_PhaseOpt_PostEth"
     FileName = Dictname +'.h5'
     
     if os.path.isfile(FileName):
@@ -73,12 +73,12 @@ if __name__ == '__main__':
     GenSize = 20e3
     Ts = 1/GenFs
     t = np.arange(0, Ts*GenSize, Ts)        
-    A = [0.01, 0.01, 0.01, 0.01]  
+    A = [0.015, 0.015, 0.015, 0.015]  
     
     #definir les Fc que es volen utilitzar
     Fc=np.array([70e3, 85e3, 100e3, 115e3])
-#    Ph = np.array([144.596, -45.1778, -125.836, -110.565])
-    Ph = np.array([0,0,0,0])
+    Ph = np.array([144.596, -45.1778, -125.836, -110.565])
+#    Ph = np.array([0,0,0,0])
     for ind, f in enumerate(Fc):
         nc = round((GenSize*f)/GenFs)
         Fc[ind] =  (nc*GenFs)/GenSize

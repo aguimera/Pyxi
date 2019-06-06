@@ -25,12 +25,14 @@ if __name__ == '__main__':
     debug = False
     #llegir fitxer
 
-    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\VgsSweep_Test4x4"
+    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\VgsSweep_Test4x4_PhaseOpt_PostEth"
     FileName = Dictname +'_0'+'.h5'
     hfile = h5py.File(FileName, 'r')
     RGain = 10e3
     FsOut = 5e3
 
+    FloatType=True
+    
     ProcsDict = FileMod.ReadArchivo(Dictname)
     #lectura de parametres
 
@@ -47,7 +49,12 @@ if __name__ == '__main__':
         fig, axTemp = plt.subplots()
         fig, axPsd = plt.subplots() 
         for dem, DemArgs in ProcsDict.items():
-            Iin = ((data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']])/DemArgs['Gain']
+            if FloatType:
+                LSB = 1
+            else:
+                LSB = DemArgs['LSB'][DemArgs['dInd']]
+            Iin = ((data[DemArgs['dset']][:, DemArgs['dInd']])*LSB)/DemArgs['Gain']
+            
             Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['dInd'])
             print(Lab)
             
@@ -71,8 +78,13 @@ if __name__ == '__main__':
 #            continue
 #        if DemArgs['col'] != 'Col1':
 #            continue
+        if FloatType:
+                LSB = 1
+        else:
+                LSB = DemArgs['LSB'][DemArgs['dInd']]
+        Iin = ((data[DemArgs['dset']][:, DemArgs['dInd']])*LSB)/DemArgs['Gain']
 
-        Iin = ((data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']])/DemArgs['Gain']
+#        Iin = ((data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']])/DemArgs['Gain']
 
         Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['dInd'])
         print(Lab)     
@@ -128,7 +140,7 @@ if __name__ == '__main__':
     OutDict = {}
 
     Trts = set([('R'+str(a['dInd'])+a['col']) for a in AcqArgs])
-    Vgs = np.sort(np.unique(([a['Vgs'] for a in AcqArgs])))
+    Vgs = np.sort(np.unique(([-a['Vgs'] for a in AcqArgs])))
     
     for t in Trts:
         OutDict[t] = np.array([])

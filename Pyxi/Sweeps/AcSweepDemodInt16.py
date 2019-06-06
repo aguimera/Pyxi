@@ -25,7 +25,7 @@ if __name__ == '__main__':
     
     #llegir fitxer
 
-    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\Test_4x4_NoPhaseOpt"
+    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\Test_4x4_PhaseOpt"
     FileName = Dictname +'_0'+'.h5'
     hfile = h5py.File(FileName, 'r')
     FsOut = 5e3
