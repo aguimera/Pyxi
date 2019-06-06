@@ -28,12 +28,30 @@ SaveFilePars = [{'name': 'Save File',
                 ]
 
 def GenArchivo(name, dic2Save):
-        with open(name, "wb") as f:
-            pickle.dump(dic2Save, f)
+    """
+    Generate a file of type .dat that saves a dictionary
+    
+    name: the name the saved file will have
+        'name.dat'
+    dic2Save: the dictionary is wanted to be saved
+
+    No Outputs
+    """
+    with open(name, "wb") as f:
+        pickle.dump(dic2Save, f)
             
 def ReadArchivo(name):
-        with open(name, "rb") as f:
-            return pickle.load(f ,encoding = 'latin1')
+    """
+    Generate a file of type .dat that saves a dictionary
+    
+    name: the name of the file to open. it is need:
+        ·All the directory path if it is on a diferent folder from the script.
+        ·The extention of the file
+
+    pickle.load(): returns the read dictionary from file
+    """
+    with open(name, "rb") as f:
+        return pickle.load(f ,encoding = 'latin1')
         
 class SaveFileParameters(pTypes.GroupParameter):
     def __init__(self, QTparent, **kwargs):
@@ -58,6 +76,17 @@ class SaveFileParameters(pTypes.GroupParameter):
 
 
 class FileBuffer():
+    """
+    Generates a file with extention .h5 where data is saved
+    
+    FileName: Name of the file to save
+    MaxSize: MAximum size is wanted for the files
+    nChannels: Number of Channels that are being recorded
+    dtype:type of data to be saved in the file
+        ·int16
+        ·float
+        
+    """
     def __init__(self, FileName, MaxSize, nChannels, dtype):
         self.FileBase = FileName.split('.h5')[0]
         self.PartCount = 0

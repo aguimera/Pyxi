@@ -31,7 +31,7 @@ CarrierParam = {'name':'ColX',
                              'value': 0,
                              'type': 'float',
                              'siPrefix': True,
-                             'suffix': 'degree'},
+                             'suffix': 'º'},
                             {'name': 'Amplitude',
                              'value': 0.25,
                              'type': 'float',
@@ -214,7 +214,16 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         return Carriers
 
 class SigGen(nifgen.Session):    
-    def SetArbSignal(self, Signal, index, gain, Vcm):       
+    def SetArbSignal(self, Signal, index, gain, Vcm):   
+        """
+        Function of NifGen Module that creates and configures the desired
+        waveform
+        
+        Signal: numpy array with the values of the signal to be created
+        index: index of the generation channel (0 or 1)
+        gain: gain applied to Signal values, set to 1 to don't have gain
+        Vcm: Common Mode Voltage to apply to all the generators
+        """
         Handle = self.create_waveform(Signal)
         self.channels[index].configure_arb_waveform(waveform_handle=Handle,
                                                     gain=gain,
@@ -225,6 +234,31 @@ class Columns():
 #                             'index': int}}
     Resources = {} # 'PXI1Slot2': sessionnifgen
     def __init__(self, ColsConfig, FsGen, GenSize):
+        """
+        Class used to control all the channels of the generator of PXI
+        
+        ColsConfig: Dictionary that has all the information of the generators 
+                    and the waveforms to be generated:
+            {Col1: {Frequency: (float in Hz),
+                    Phase: (in degrees),
+                    Amplitude: (float in V),
+                    Gain: (value Fixed at 2*Amplitude),
+                    Resource: (fixed at PXI1Slot2 or PXI1Slot3),
+                    Index: (between 0 and 1 depending on the generator output),
+                    }
+            ...
+             Col4: {Frequency: ,
+                    Phase: ,
+                    Amplitude: ,
+                    Gain: ,
+                    Resource: ,
+                    Index: ,
+                    }
+            }
+            
+        FsGen:Sampling Frequency of the Generator (Fixed at 20MHz)
+        GenSize: Number of Samples of the generated waveforms (fixed at 20k)
+        """
         self.FsGen = FsGen
         self.Ts = 1/self.FsGen
         self.GenSize = GenSize
@@ -256,6 +290,28 @@ class Columns():
             ses.abort()
             
     def Gen_SetSignal(self, SigsPars, Vcm):
+        """
+        Function used to generate the configurated signals
+        
+        SigsPars: Dictionary that has all the information of the generators 
+                    and the waveforms to be generated:
+            {Col1: {Frequency: ,
+                    Phase: ,
+                    Amplitude: ,
+                    Gain: ,
+                    Resource: ,
+                    }
+            ...
+             Col4: {Frequency: ,
+                    Phase: ,
+                    Amplitude: ,
+                    Gain: ,
+                    Resource: ,
+                    }
+            }
+            
+        Vcm: Common Mode Voltage to apply to all the generators
+        """
         for Col,pars in SigsPars.items():
             if Col == 'Offset':
                 continue

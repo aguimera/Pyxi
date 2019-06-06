@@ -276,6 +276,28 @@ class Rows():
 #Init Scope Channels
     Rows = {} #{'Row1': Range, Index}
     def __init__(self, RowsConfig, FsScope, ResourceScope):
+        """
+        Class used to configure the Scope channels and adcquisition
+        
+        RowsConfig: Dictionary that has all the information of the generators 
+                    and the waveforms to be generated:
+                    (Solo deben aparecer las Rows que se van a utilizar)
+            {Row1: {Enable: (True or False) ,
+                    Index: (0 to 7 depending on the Row),
+                    AcqVRange: (Voltage Range of the ADC)
+                    }
+            ...
+             Row8: {Enable: ,
+                    Index: ,
+                    AcqVRange: ,
+                    Gain: ,
+                    Resource: ,
+                    }
+            }
+            
+        FsScope: Sampling Frequency for the adquisition
+        ResourceScope: fixed to PXI1Slot4
+        """
         self.SesScope = SigScope(resource_name=ResourceScope, options=OptionsScope)
         self.SesScope.acquisition_type=niscope.AcquisitionType.NORMAL
         self.SesScope.configure_horizontal_timing(min_sample_rate=FsScope,
@@ -298,6 +320,26 @@ class Rows():
 # Init Session of Scope        
 class SigScope(niscope.Session):
     def Scope_GetSignal(self, RowsConfig):#RowsConfig = {'Row1': Range, Index}
+        """
+        Configure the vertical range and characteristics of the scope for the
+        adcquisition
+        
+        RowsConfig: Dictionary that has all the information of the generators 
+                    and the waveforms to be generated:
+                    (Solo deben aparecer las Rows que se van a utilizar)
+            {Row1: {Enable: (True or False) ,
+                    Index: (0 to 7 depending on the Row),
+                    AcqVRange: (Voltage Range of the ADC)
+                    }
+            ...
+             Row8: {Enable: ,
+                    Index: ,
+                    AcqVRange: ,
+                    Gain: ,
+                    Resource: ,
+                    }
+            }
+        """
         for Rows, params in RowsConfig.items():
             self.channels[params['Index']].configure_vertical(range=params['AcqVRange'], 
                                                               coupling=niscope.VerticalCoupling.AC)

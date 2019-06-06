@@ -58,7 +58,7 @@ class DataAcquisitionThread(Qt.QThread):
                 PropSig[str(p)] = val
                 
             Sig[str(col)]= PropSig
-            
+        print(Sig)   
         self.Cols.Gen_SetSignal(SigsPars=Sig, 
                                 Vcm=CMVoltage)
         self.Timer = Qt.QTimer()
@@ -139,6 +139,7 @@ class DataAcquisition():
                 PropSig[str(p)] = val
                 
             Sig[str(col)]= PropSig
+
         self.Columns.Gen_SetSignal(Sig, Vcm)  
         
     def GetData(self, BufferSize, channels, OffsetRows, dtype):                
