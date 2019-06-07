@@ -226,7 +226,7 @@ class MainWindow(Qt.QWidget):
             self.GenKwargs = self.NifGenParams.GetGenParams()
             self.ScopeKwargs = self.NiScopeParams.GetRowParams()
             self.DemodKwargs = self.DemodParams.GetParams()
-            
+
             self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
             self.threadAqc.NewData.connect(self.on_NewSample)
                        

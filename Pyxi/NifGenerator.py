@@ -185,7 +185,40 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             Gain = 2*p.param('Amplitude').value()
             p.param('Gain').setValue(Gain)
             
-    def GetGenParams(self):
+    def GetGenParams(self):       
+        """
+        Makes a dictionary which contains all te configuration for the
+        Generator, the Columns and the waves to generate
+        
+        Generator: {'ColsConfig': {'Col1': {'Frequency': 100000.0, 
+                                            'Phase': 0, 
+                                            'Amplitude': 0, 
+                                            'Gain': 0, 
+                                            'Resource': 'PXI1Slot2', 
+                                            'Index': 0}, 
+                                   'Col2': {'Frequency': 100000.0, 
+                                            'Phase': 0, 
+                                            'Amplitude': 0, 
+                                            'Gain': 0, 
+                                            'Resource': 'PXI1Slot2', 
+                                            'Index': 1}, 
+                                   'Col3': {'Frequency': 100000.0, 
+                                            'Phase': 0, 
+                                            'Amplitude': 0, 
+                                            'Gain': 0, 
+                                            'Resource': 'PXI1Slot3', 
+                                            'Index': 0}, 
+                                   'Col4': {'Frequency': 100000.0, 
+                                            'Phase': 0, 
+                                            'Amplitude': 0, 
+                                            'Gain': 0, 
+                                            'Resource': 'PXI1Slot3', 
+                                            'Index': 1}}, 
+                    'FsGen': 20000000.0, 
+                    'GenSize': 20000, 
+                    'CMVoltage': 0.0}
+            
+        """
         self.Generator = {'ColsConfig':{},
                           }
         for Config in self.CarrierConfig.children():
@@ -207,6 +240,16 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         return self.Generator   
         
     def GetCarriers(self):
+        """
+        Makes a dictionary which contains the Column and the Carrier Frequency
+        applied.
+        
+        Carriers: {'Col1': 100000.0, 
+                   'Col2': 100000.0, 
+                   'Col3': 100000.0, 
+                   'Col4': 100000.0}
+            
+        """
         Carriers = {}
         for p in self.CarrierConfig.children():
             Carriers[p.name()] = p.param('Frequency').value()
