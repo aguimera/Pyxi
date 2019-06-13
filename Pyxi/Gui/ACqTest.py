@@ -293,7 +293,10 @@ class MainWindow(Qt.QWidget):
         Ts = time.time() - self.OldTime
         self.OldTime = time.time()
         if self.threadSave is not None:
-            self.threadSave.AddData(self.threadAqc.IntData)
+#            No usar Int hasta que se haya arreglado problema
+#            Problema: Range scope no es exacto con lo cual hay valores que no deberian saturar y saturan
+#            self.threadSave.AddData(self.threadAqc.IntData)
+            self.threadSave.AddData(self.threadAqc.OutData)
         
         if self.threadPlotter is not None:
             self.threadPlotter.AddData(self.threadAqc.OutData)
