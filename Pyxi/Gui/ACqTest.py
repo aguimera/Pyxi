@@ -343,7 +343,9 @@ class MainWindow(Qt.QWidget):
             if self.DemodConfig.param('DemEnable').value() == False:
                 self.threadSave = FileMod.DataSavingThread(FileName=FileName,
                                                            nChannels=self.ScopeKwargs['NRow'],
-                                                           MaxSize=MaxSize)
+                                                           MaxSize=MaxSize,
+                                                           dtype='float' #comment when int save problem solved
+                                                           )
                 self.threadSave.start()
             
             if self.DemodConfig.param('DemEnable').value() == True:
