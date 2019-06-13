@@ -250,6 +250,42 @@ class NiScopeParameters(pTypes.GroupParameter):
         self.BufferSize.setValue(Samples)
      
     def GetRowParams(self):
+        '''
+        Generates a dictionary with Active Rows properties and Adq properties
+        
+        Scope={'RowsConfig': {'Row1': {'Enable': True, 
+                                          'Index': 0, 
+                                          'AcqVRange': 1}, 
+                                 'Row2': {'Enable': True, 
+                                          'Index': 1, 
+                                          'AcqVRange': 1}, 
+                                 'Row3': {'Enable': True, 
+                                          'Index': 2, 
+                                          'AcqVRange': 1}, 
+                                 'Row4': {'Enable': True, 
+                                          'Index': 3, 
+                                          'AcqVRange': 1}, 
+                                 'Row5': {'Enable': True, 
+                                          'Index': 4, 
+                                          'AcqVRange': 1}, 
+                                 'Row6': {'Enable': True, 
+                                          'Index': 5, 
+                                          'AcqVRange': 1}, 
+                                 'Row7': {'Enable': True, '
+                                          Index': 6, 
+                                          'AcqVRange': 1}, 
+                                 'Row8': {'Enable': True, 
+                                          'Index': 7, 
+                                          'AcqVRange': 1}
+                                 }, 
+                  'FsScope': 2000000.0, 
+                  'BufferSize': 1000000, 
+                  'NRow': 8, 
+                  'OffsetRows': 0, 
+                  'GainBoard': 10000.0, 
+                  'ResourceScope': 'PXI1Slot4'
+                  }
+        '''
         Scope = {'RowsConfig':{},
                 }
         for Config in self.RowsConfig.children():
@@ -267,6 +303,18 @@ class NiScopeParameters(pTypes.GroupParameter):
         return Scope
     
     def GetRows(self):
+        '''
+        Generates a dictionary with Rows Actives and their index
+        
+        RowNames={'Row1': 0, 
+                  'Row2': 1, 
+                  'Row3': 2, 
+                  'Row4': 3, 
+                  'Row5': 4, 
+                  'Row6': 5, 
+                  'Row7': 6, 
+                  'Row8': 7}
+        '''
         RowNames = {}
         for i,r in enumerate(self.Rows):
             RowNames[r]=i

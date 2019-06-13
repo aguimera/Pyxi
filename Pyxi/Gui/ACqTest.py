@@ -222,6 +222,8 @@ class MainWindow(Qt.QWidget):
     def on_btnStart(self):       
         if self.threadAqc is None:
             print('started')
+#            print('getrows', self.NiScopeParams.GetRows())
+#            print('getrowsparams', self.NiScopeParams.GetRowParams())
             self.treepar.setParameters(self.Parameters, showTop=False)
             self.GenKwargs = self.NifGenParams.GetGenParams()
             self.ScopeKwargs = self.NiScopeParams.GetRowParams()
