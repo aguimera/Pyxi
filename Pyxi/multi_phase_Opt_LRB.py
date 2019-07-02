@@ -30,7 +30,7 @@ def multi_phase_sim(fiq, phiq, fs, nsteps):
 
     for n in np.arange(fiq.size):
         xout = xout + np.sin(2*np.pi*(fiq[n]*t+phiq[n]/360.0))
-        xout = xout + np.cos(2*np.pi*(fiq[n]*t+phiq[n]/360.0))
+#        xout = xout + np.cos(2*np.pi*(fiq[n]*t+phiq[n]/360.0))
     
     return t, xout
 
@@ -76,16 +76,23 @@ for l in range(10):
     phiqloop = res.x
                    
 phiq = phiqloop
-
+#%%
+plt.close("all")
 to, xo = multi_phase_sim(fiq, np.zeros(4), fs, nsteps)
-topt, xoopt = multi_phase_sim(fiq, phiqopt, fs, nsteps)
+#topt, xoopt = multi_phase_sim(fiq, phiqopt, fs, nsteps)
 t, xout = multi_phase_sim(fiq, phiq, fs, nsteps)
 
 plt.figure()
-plt.plot(to, xo, 'r')
-plt.plot(topt, xoopt, 'y.')
-plt.plot(t, xout, 'g-.')
+plt.plot(to, xo, color='r', label='NoCompensated')
+#plt.plot(topt, xoopt, 'y.')
+plt.plot(t, xout, color='g', label='Compensated')
+plt.xlabel('Time(s)', fontsize=1)
+plt.ylabel('Vds(V)', fontsize=12)
+plt.legend()
 
 plt.figure()
-plt.hist(xo, bins=100)
-plt.hist(xout, bins=100)
+plt.hist(xo, bins=100,label='NoCompensated', alpha=0.9, color='r')
+plt.hist(xout, bins=100, label='Compensated', alpha=0.75, color='g')
+plt.xlabel('Vds(V)', fontsize=12)
+plt.ylabel('Counts', fontsize=12)
+plt.legend()
