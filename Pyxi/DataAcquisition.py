@@ -148,7 +148,7 @@ class DataAcquisition():
                                                               offset=OffsetRows,
                                                               record_number=0,
                                                               num_records=1,
-                                                              timeout=20)
+                                                              timeout=60)
         OutData = np.ndarray((BufferSize, len(channels))) 
         BinData = np.ndarray((BufferSize, len(channels)))
         IntData = np.ndarray((BufferSize, len(channels)), dtype='int16')

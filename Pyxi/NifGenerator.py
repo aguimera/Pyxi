@@ -152,6 +152,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         self.on_AmpCol_Changed() 
         
         self.Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
+#        self.Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
         for p in self.CarrierConfig.children():
             p.param('Frequency').sigValueChanged.connect(self.on_FreqCol_Changed)
             p.param('Amplitude').sigValueChanged.connect(self.on_AmpCol_Changed)
@@ -168,6 +169,9 @@ class NifGeneratorParameters(pTypes.GroupParameter):
             cc['name'] = col
             cc['children'][2]['value'] = 2*cc['children'][1]['value']
             self.CarrierConfig.addChild(cc)
+        for p in self.CarrierConfig.children():
+            p.param('Frequency').sigValueChanged.connect(self.on_FreqCol_Changed)
+            p.param('Amplitude').sigValueChanged.connect(self.on_AmpCol_Changed)
       
     def on_FreqCol_Changed(self):
         Fs = self.FsGen.value()
@@ -359,8 +363,9 @@ class Columns():
             if Col == 'Offset':
                 continue
             signal = pars['Amplitude']*np.sin(2*np.pi*pars['Frequency']*self.t+((np.pi/180)*pars['Phase']))
-            if Col != 'Col1':
-                Vcm = 0
+            #solo si Vcm no esta conectado a GND
+#            if Col != 'Col1':
+#                Vcm = 0
             self.Columns[Col]['session'].SetArbSignal(index=self.Columns[Col]['index'],
                                                       Signal=signal, 
                                                       gain = 1,

@@ -38,7 +38,7 @@ if __name__ == '__main__':
     debug = False
     #llegir fitxer
 
-    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\TestVgsS_cript"
+    Dictname = r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\TransistorTest_DC_VgsSweep_1Row_1Col_VcmToVcm"
     FileName = Dictname +'_0'+'.h5'
     hfile = h5py.File(FileName, 'r')
     RGain = 10e3
@@ -189,7 +189,10 @@ if __name__ == '__main__':
         ACarr = (2*ptrend[1])/np.sqrt(2)
         
         if NoiseAnalysis == True:
-            ff, psdadem = signal.welch(adems-trend, fs=FsOut, nperseg=nFFT, scaling='spectrum')
+            ff, psdadem = signal.welch(adems-trend, fs=FsOut,
+#                                       nperseg=nFFT,
+#                                       noverlap=nFFT/8,
+                                       scaling='spectrum')
 #            print(acqargs['Vgs'])
             if indVgs > len(Vgs):
                 indVgs = len(Vgs)-1

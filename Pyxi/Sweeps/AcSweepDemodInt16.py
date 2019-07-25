@@ -25,7 +25,8 @@ if __name__ == '__main__':
     
     #llegir fitxer
 
-    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\Test_4x4_PhaseOpt"
+    Dictname = "F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DCTests\\RTest_Normal_AcSweep"
+    
     FileName = Dictname +'_0'+'.h5'
     hfile = h5py.File(FileName, 'r')
     FsOut = 5e3
@@ -88,11 +89,11 @@ if __name__ == '__main__':
         Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['dInd'])
         print(Lab)            
         if ((DemArgs['dInd'] == 0) and (DemArgs['col']=='Col1')):
-            plt.figure()
             ff, psdadem = signal.welch(Iin, fs=DemArgs['Fs'], nperseg=nFFT, scaling='spectrum')            
-            plt.loglog(ff, psdadem, label=Lab)
-            plt.figure()
-            plt.plot(Iin)
+#            plt.figure()
+#            plt.loglog(ff, psdadem, label=Lab)
+#            plt.figure()
+#            plt.plot(Iin)
         DownFact = int(DemArgs['Fs']/FsOut)
         args=(Iin, DemArgs['Fs'], DemArgs['Fc'], int(DemArgs['Samps']), DownFact)
         Labs.append(Lab)

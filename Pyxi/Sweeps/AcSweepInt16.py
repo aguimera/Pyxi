@@ -17,7 +17,7 @@ import Pyxi.DataAcquisition as DataAcq
 if __name__ == '__main__':
     
     #File To Save
-    Dictname ="F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DataSaved\\Test_4x4_NoPhaseOpt_0"
+    Dictname ="F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DCTests\\RTest_Normal"
     FileName = Dictname +'.h5'
     
     if os.path.isfile(FileName):
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     rangeScope = 1  #options 0.05, 0.2, 1, 6, 30
     LSB = rangeScope/(2**16)
     PCBGain = 10e3
-    MaxFileSize = 500e6
+    MaxFileSize = 10000e6
 #    dtype = 'int16'
     dtype = 'float'
     
@@ -74,7 +74,7 @@ if __name__ == '__main__':
     GenSize = 20e3
     Ts = 1/GenFs
     t = np.arange(0, Ts*GenSize, Ts)        
-    CMVoltage = -0.4
+    CMVoltage = -0.15
     #Calculs per al Generador    
     #definir les Fc que es volen utilitzar
     Fc=np.array([70e3, 85e3, 100e3, 115e3])
@@ -85,10 +85,10 @@ if __name__ == '__main__':
         Fc[ind] =  (nc*GenFs)/GenSize
     
     A=np.ndarray((numSweeps, 4))
-    A[:,0] = np.linspace(0.01,0.07, num=numSweeps) #Sweep per Col1
-    A[:,1] = np.linspace(0.01,0.07, num=numSweeps)   #Sweep per Col2
-    A[:,2] = np.linspace(0.01,0.07, num=numSweeps)   #Sweep per Col3
-    A[:,3] = np.linspace(0.01,0.07, num=numSweeps)   #Sweep per Col4
+    A[:,0] = np.linspace(0.01,0.1, num=numSweeps) #Sweep per Col1
+    A[:,1] = np.linspace(0.01,0.1, num=numSweeps)   #Sweep per Col2
+    A[:,2] = np.linspace(0.01,0.1, num=numSweeps)   #Sweep per Col3
+    A[:,3] = np.linspace(0.01,0.1, num=numSweeps)   #Sweep per Col4
     
     #Es crea una Cols Config que es configurará per cada Sweep amb la freq correcta
 #    ColsConfig={'Col1':{'Frequency': Fc0,
