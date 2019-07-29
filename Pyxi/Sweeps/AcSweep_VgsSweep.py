@@ -19,7 +19,7 @@ if __name__ == '__main__':
     #File To Save
 #    Dictname ="F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DCTests\\RTest_DC_VgsSweep_1Row_1Col_VcmToGnd".
 #    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\29_07_2019\Test"
-    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\29_07_2019\TransistorTest_ACDCSweep_8Row_1Col_VcmToGnd_20_100mV_35kHz_15sec_10sec_100K"
+    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\29_07_2019\ResistorTest_ACDCSweep_8Row_1Col_VcmToGnd_20_100mV_35kHz_5sec_2sec_100K"
     FileName = Dictname +'.h5'
     
     if os.path.isfile(FileName):
@@ -31,11 +31,11 @@ if __name__ == '__main__':
     ScopeFs = 500e3
     nFs = round(GenFs/ScopeFs)
     ScopeFs = GenFs/nFs
-    tFetch = 15
+    tFetch = 5
     NumFetch = 1
     BufferSize = round(tFetch*ScopeFs)
     tFetch = BufferSize/ScopeFs
-    t_wait_stab = 10 #tiempo estabilización en segundos
+    t_wait_stab = 2 #tiempo estabilización en segundos
     ScopeOffset = int(ScopeFs*t_wait_stab) #Muestras de estabilización
 #    Rows d'exemple a continuació: no borrar
 #    Rows = [('Row1', 0), ('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4), ('Row6', 5), ('Row7', 6), ('Row8', 7)]
@@ -71,8 +71,9 @@ if __name__ == '__main__':
     Cols = (('Col1', 'PXI1Slot2', 0, 0), 
             ('Col2', 'PXI1Slot2', 1, 1), 
             )   
-    numSweeps = 20
-    nAcSweep = 4
+#    numSweeps = 20
+    numSweeps = 5
+    nAcSweep = 3
     GenSize = 20e3
     Ts = 1/GenFs
     t = np.arange(0, Ts*GenSize, Ts)        
@@ -113,6 +114,9 @@ if __name__ == '__main__':
                              'Gain': 0.5,
                              'Resource':Col[1],
                              'Index': Col[2]}
+        
+    Procs = {}
+    demind = 0
     for SweepAcInd, Ac in enumerate(SwAc):
         A = [Ac, 0.0]
         for Col in Cols:
@@ -128,14 +132,13 @@ if __name__ == '__main__':
         #Fetching    
         InFetch = np.ndarray((BufferSize, len(Rows)), dtype=dtype)
         
-        Procs = {}
-        demind = 0
+
         
         for SweepInd, vgs in enumerate(CMVoltage):
             nSwAc = 'AcSw{0:03d}'.format(SweepAcInd)
             nSwVgs = 'Sw{0:03d}'.format(SweepInd)
             dsetname = nSwAc + nSwVgs
-                    
+            print(dsetname)
             ACqSet.stopSessions()            
             ACqSet.setSignals(ColsConfig=ColsConfig,
                               Vcm=vgs)   
@@ -168,7 +171,7 @@ if __name__ == '__main__':
                                  'PhaseFc': Ph
                                  }
                 
-                    Demkey = 'Dem{0:03d}'.format(demind)
+                    Demkey = 'Dem{0:04d}'.format(demind)
                     demind += 1 
                     Procs[Demkey] = ProcsArgs
     

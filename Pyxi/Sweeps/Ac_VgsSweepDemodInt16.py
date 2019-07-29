@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue May 14 16:48:19 2019
+Created on Mon Jul 29 13:09:18 2019
 
 @author: aemdlabs
 """
-
-import os
 
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import signal
 
+import os
 import h5py
 import multiprocessing as mp
 
@@ -23,31 +22,26 @@ if __name__ == '__main__':
     
 #    plt.close('all')
     
-    
-    
     debug = False
     #llegir fitxer
 
 #    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\VgsSweep_Test4x4_PhaseOpt_PostEth"
 #    Dictname ="F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DCTests\\RTest_Normal_VgsSweep_2Row_2Col_VcmToGnd"
-#    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\25_07_2019\TransistorTest_DC_VgsSweep_8Row_1Col_VcmToVcm_20mV_35kHz_15sec_10sec"
-    Dictname =r"C:\Users\Lucia\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\29_07_2019\Test"
+    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\29_07_2019\ResistorTest_ACDCSweep_8Row_1Col_VcmToGnd_20_100mV_35kHz_5sec_2sec_100K"
     
     FileName = Dictname +'_0'+'.h5'
-    
     hfile = h5py.File(FileName, 'r')
     RGain = 10e3
     FsOut = 5e3
 
     FloatType=True
     
-    
     ProcsDict = FileMod.ReadArchivo(Dictname)
     #lectura de parametres
 
     #Calcul de Parametres per a Demodulcio
     nFFT = 2**17
-#    DownFact = 1
+    DownFact = 100
 
     data = {}
     for k in hfile.keys():
@@ -137,23 +131,6 @@ if __name__ == '__main__':
         print('Collect', gc.collect())   
         
 #%%
-#    dtype = 'complex128'
-#    MaxFileSize = 10000e6
-#    SaveBuf = FileMod.FileBuffer(FileName=SaveName,
-#                                 MaxSize=MaxFileSize,
-#                                 nChannels=1,
-#                                 dtype=dtype) 
-    
-#    for ind, (dem, lab, acqargs) in enumerate(zip(results, Labs, AcqArgs)):
-#        dsetname = ('R'+str(acqargs['dInd'])+acqargs['col']) 
-#        print(dsetname)
-#        SaveBuf.InitDset(dsetname)
-#        dem.resize(len(dem),1)
-#        demArray = np.array(dem)
-#        SaveBuf.AddSample(demArray)
-#   
-#    SaveBuf.close()
-#%%
 #    plt.close('all')
     DelaySamps = 200
 
@@ -181,10 +158,12 @@ if __name__ == '__main__':
 #    OutDataDict = {}
     
     Trts = set([('R'+str(a['dInd'])+a['col']) for a in AcqArgs])
+    AcSw = np.unique([sw['dset'].split('Sw')[1] for sw in AcqArgs])
     Vgs = np.sort(np.unique(([-a['Vgs'] for a in AcqArgs])))
     
     for t in Trts:
-        OutDict[t] = np.array([])
+        for Sw in AcSw:            
+            OutDict[t +'Ac'+str(Sw)] = np.array([])
     
     for lab in Labs:
         DataDict[lab] = np.array([])
@@ -200,8 +179,8 @@ if __name__ == '__main__':
         ptrend = np.polyfit(x, adems, 1)
         trend = np.polyval(ptrend, x)
         ACarr = (2*ptrend[1])/np.sqrt(2)
-        
-        OutDict[TName] = np.append(OutDict[TName], ACarr)
+#        print(lab.split('Sw')[1])
+        OutDict[TName+'Ac'+str((lab.split('Sw'))[1])] = np.append(OutDict[TName +'Ac'+str((lab.split('Sw'))[1])], ACarr)
         
         DataDict[lab] = np.append(DataDict[lab], (adems-trend)) #no tiene en cuenta Vgs sweep CACA
 #        OutDataDict[acqargs[xAxispar]] = np.append(OutDataDict[acqargs[xAxispar]], ACarr)
