@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
 #    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\VgsSweep_Test4x4_PhaseOpt_PostEth"
 #    Dictname ="F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DCTests\\RTest_Normal_VgsSweep_2Row_2Col_VcmToGnd"
-    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\19_07_2019\TEST_TransistorTest_DC_VgsSweep_8Row_1Col_VcmToVcm_20mV_35kHz_10sec_5sec"
+    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\25_07_2019\TransistorTest_DC_VgsSweep_8Row_1Col_VcmToGnd_20mV_35kHz_15sec_10sec_1M"
     
     FileName = Dictname +'_0'+'.h5'
     hfile = h5py.File(FileName, 'r')

@@ -18,7 +18,7 @@ if __name__ == '__main__':
     
     #File To Save
 #    Dictname ="F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DCTests\\RTest_DC_VgsSweep_1Row_1Col_VcmToGnd"
-    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\19_07_2019\TEST_TransistorTest_DC_VgsSweep_8Row_1Col_VcmToVcm_20mV_35kHz_10sec_5sec"
+    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\25_07_2019\TransistorTest_DC_VgsSweep_8Row_1Col_VcmToGnd_20mV_35kHz_15sec_10sec_10K"
     FileName = Dictname +'.h5'
     
     if os.path.isfile(FileName):
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     ScopeFs = 500e3
     nFs = round(GenFs/ScopeFs)
     ScopeFs = GenFs/nFs
-    tFetch = 5
+    tFetch = 15
     NumFetch = 1
     BufferSize = round(tFetch*ScopeFs)
     tFetch = BufferSize/ScopeFs
@@ -90,7 +90,7 @@ if __name__ == '__main__':
         Fc[ind] =  (nc*GenFs)/GenSize
         
     #deefinir vector de CMVoltage (Vgs) que es vol fer el sweep
-    CMVoltage = np.linspace(0, -0.5, num=numSweeps)
+    CMVoltage = np.linspace(0, 0.5, num=numSweeps)
     CMVoltage = np.append(CMVoltage, 0)
     #Es crea una Cols Config que es configurará per cada Sweep amb la freq correcta
 #    ColsConfig={'Col1':{'Frequency': Fc0,
