@@ -17,8 +17,9 @@ import Pyxi.DataAcquisition as DataAcq
 if __name__ == '__main__':
     
     #File To Save
-#    Dictname ="F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DCTests\\RTest_DC_VgsSweep_1Row_1Col_VcmToGnd"
-    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\TransistorTest_DC_VgsSweep_1Row_1Col_VcmToVcm_45mV"
+#    Dictname ="F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DCTests\\RTest_DC_VgsSweep_1Row_1Col_VcmToGnd".
+#    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\29_07_2019\Test"
+    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\29_07_2019\TransistorTest_ACDCSweep_8Row_1Col_VcmToGnd_20_100mV_35kHz_15sec_10sec_100K"
     FileName = Dictname +'.h5'
     
     if os.path.isfile(FileName):
@@ -43,7 +44,7 @@ if __name__ == '__main__':
     RowsArray = []
     rangeScope = 1  #options 0.05, 0.2, 1, 6, 30
     PCBGain = 10e3
-    MaxFileSize = 10000e6
+    MaxFileSize = 10e12 #(10Tb)
 #    dtype = 'int16'
     dtype = 'float'
     
