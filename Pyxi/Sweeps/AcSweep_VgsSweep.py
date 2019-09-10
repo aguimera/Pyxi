@@ -19,7 +19,7 @@ if __name__ == '__main__':
     #File To Save
 #    Dictname ="F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DCTests\\RTest_DC_VgsSweep_1Row_1Col_VcmToGnd".
 #    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\29_07_2019\Test"
-    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\29_07_2019\ResistorTest_ACDCSweep_8Row_1Col_VcmToGnd_20_100mV_35kHz_5sec_2sec_100K"
+    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Resistors\10_09_2019\TestR5K_chn1"
     FileName = Dictname +'.h5'
     
     if os.path.isfile(FileName):
@@ -31,15 +31,16 @@ if __name__ == '__main__':
     ScopeFs = 500e3
     nFs = round(GenFs/ScopeFs)
     ScopeFs = GenFs/nFs
-    tFetch = 5
+    tFetch = 15
     NumFetch = 1
     BufferSize = round(tFetch*ScopeFs)
     tFetch = BufferSize/ScopeFs
-    t_wait_stab = 2 #tiempo estabilización en segundos
+    t_wait_stab = 10 #tiempo estabilización en segundos
     ScopeOffset = int(ScopeFs*t_wait_stab) #Muestras de estabilización
 #    Rows d'exemple a continuació: no borrar
 #    Rows = [('Row1', 0), ('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4), ('Row6', 5), ('Row7', 6), ('Row8', 7)]
-    Rows = [('Row1', 0), ('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4), ('Row6', 5), ('Row7', 6), ('Row8', 7)]
+#    Rows = [('Row1', 0), ('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4), ('Row6', 5), ('Row7', 6), ('Row8', 7)]
+    Rows = [('Row1', 0), ('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4)]
 #    Rows = [('Row2', 1),]
     RowsArray = []
     rangeScope = 1  #options 0.05, 0.2, 1, 6, 30
@@ -72,14 +73,17 @@ if __name__ == '__main__':
             ('Col2', 'PXI1Slot2', 1, 1), 
             )   
 #    numSweeps = 20
-    numSweeps = 5
+    numSweeps = 4
     nAcSweep = 3
     GenSize = 20e3
     Ts = 1/GenFs
     t = np.arange(0, Ts*GenSize, Ts)        
 #    A = [0.015, 0.015, 0.015, 0.015]  
 #    A = [0.0, 0.02] 
-    SwAc = np.linspace(0.02, 0.1, num=nAcSweep)
+    
+#    SwAc = np.linspace(0.02, 0.1, num=nAcSweep)
+    SwAc = np.linspace(0.05, 0.05, num=1)
+    
     #definir les Fc que es volen utilitzar
 #    Fc=np.array([70e3, 85e3, 100e3, 115e3])
 #    Ph = np.array([144.596, -45.1778, -125.836, -110.565])
@@ -91,7 +95,7 @@ if __name__ == '__main__':
         Fc[ind] =  (nc*GenFs)/GenSize
         
     #deefinir vector de CMVoltage (Vgs) que es vol fer el sweep
-    CMVoltage = np.linspace(0, 0.5, num=numSweeps)
+    CMVoltage = np.linspace(0, -0.5, num=numSweeps)
     CMVoltage = np.append(CMVoltage, 0)
     #Es crea una Cols Config que es configurará per cada Sweep amb la freq correcta
 #    ColsConfig={'Col1':{'Frequency': Fc0,
@@ -118,7 +122,7 @@ if __name__ == '__main__':
     Procs = {}
     demind = 0
     for SweepAcInd, Ac in enumerate(SwAc):
-        A = [Ac, 0.0]
+        A = [0.0, Ac]
         for Col in Cols:
             ColsConfig[Col[0]]['Amplitude']=A[Col[3]]
             
@@ -137,6 +141,7 @@ if __name__ == '__main__':
         for SweepInd, vgs in enumerate(CMVoltage):
             nSwAc = 'AcSw{0:03d}'.format(SweepAcInd)
             nSwVgs = 'Sw{0:03d}'.format(SweepInd)
+            print(vgs)
             dsetname = nSwAc + nSwVgs
             print(dsetname)
             ACqSet.stopSessions()            

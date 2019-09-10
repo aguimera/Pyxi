@@ -27,8 +27,8 @@ if __name__ == '__main__':
 
 #    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\VgsSweep_Test4x4_PhaseOpt_PostEth"
 #    Dictname ="F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DCTests\\RTest_Normal_VgsSweep_2Row_2Col_VcmToGnd"
-    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\29_07_2019\ResistorTest_ACDCSweep_8Row_1Col_VcmToGnd_20_100mV_35kHz_5sec_2sec_100K"
-    
+#    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\30_07_2019\Transistor_AcVgsSweep_8Row_1Col_VcmToVcm_20_100mV_35kHz_15sec_10sec_20VgsSw"
+    Dictname=r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Resistors\10_09_2019\TestR5K_chn1"
     FileName = Dictname +'_0'+'.h5'
     hfile = h5py.File(FileName, 'r')
     RGain = 10e3
@@ -137,6 +137,7 @@ if __name__ == '__main__':
     xAxispar = 'Vgs' #modificar segun el AcqArgs para el que se quiera graficar
 
     fig, axR = plt.subplots()  
+    axR.set_title('R')
     for ind, (dem, lab, acqargs) in enumerate(zip(results, Labs, AcqArgs)):
         adems = np.abs(dem[DelaySamps:])
         x = np.arange(adems.size)

@@ -364,8 +364,9 @@ class Columns():
                 continue
             signal = pars['Amplitude']*np.sin(2*np.pi*pars['Frequency']*self.t+((np.pi/180)*pars['Phase']))
             #solo si Vcm no esta conectado a GND
-#            if Col != 'Col1':
-#                Vcm = 0
+            if Col != 'Col1':
+                print('Warning: Vcm=0 en todos los canales menos Chn0 (Vcm not connected to GND in PCB)')
+                Vcm = 0
             self.Columns[Col]['session'].SetArbSignal(index=self.Columns[Col]['index'],
                                                       Signal=signal, 
                                                       gain = 1,
