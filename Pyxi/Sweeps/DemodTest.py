@@ -22,13 +22,13 @@ if __name__ == '__main__':
     
 #    plt.close('all')
     
-    debug = False
+    debug = True
     #llegir fitxer
 
 #    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\VgsSweep_Test4x4_PhaseOpt_PostEth"
 #    Dictname ="F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DCTests\\RTest_Normal_VgsSweep_2Row_2Col_VcmToGnd"
 #    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\30_07_2019\Transistor_AcVgsSweep_8Row_1Col_VcmToVcm_20_100mV_35kHz_15sec_10sec_20VgsSw"
-    Dictname=r"C:\Users\Lucia\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\19_09_2019\SSP54348-T2-3x3-Sig10mVp10Hz"
+    Dictname=r"C:\Users\Lucia\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\16_09_2019\SSP54348-T2-2x2-AMmode_VgsSw_AcSw"
     FileName = Dictname +'_0'+'.h5'
     hfile = h5py.File(FileName, 'r')
     RGain = 10e3
@@ -45,7 +45,6 @@ if __name__ == '__main__':
 
     data = {}
     for k in hfile.keys():
-        print('data load')
         data[k] = hfile[k].value
     hfile.close()
 #%%
@@ -57,19 +56,24 @@ if __name__ == '__main__':
                 LSB = 1
             else:
                 LSB = DemArgs['LSB'][DemArgs['dInd']]
-            Iin = ((data[DemArgs['dset']][:, DemArgs['dInd']])*LSB)/DemArgs['Gain']
             
-            Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['dInd'])
-            print(Lab)
-            
-            ff, psdadem = signal.welch(Iin, fs=DemArgs['Fs'], nperseg=nFFT, scaling='spectrum')            
-            axPsd.loglog(ff, psdadem, label=Lab)
-            Peaks = signal.find_peaks(psdadem, threshold=1e-17)
-    
-            for pi in Peaks[0]:
-                print(ff[pi], '-->>', np.sqrt(psdadem[pi]))
-                axPsd.plot(ff[pi], psdadem[pi], 'k*')
-            axTemp.plot(Iin[:int(DemArgs['Samps'])*2], label=Lab)   
+            if DemArgs['dset']=='AcSw000Sw003':
+                Iin = ((data[DemArgs['dset']][:, DemArgs['dInd']])*LSB)/DemArgs['Gain']
+    #            plt.figure('Time')
+    #            plt.plot(Iin)
+                Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['dInd'])
+                print(Lab)
+                
+    #            ff, psdadem = signal.welch(Iin, fs=DemArgs['Fs'], nperseg=nFFT, scaling='spectrum')            
+    #            axPsd.loglog(ff, psdadem, label=Lab)
+    #            Peaks = signal.find_peaks(psdadem, threshold=1e-17)
+    #    
+    #            for pi in Peaks[0]:
+    #                print(ff[pi], '-->>', np.sqrt(psdadem[pi]))
+    #                axPsd.plot(ff[pi], psdadem[pi], 'k*')
+
+#                axTemp.plot(Iin[:int(DemArgs['Samps'])*2], label=Lab)   
+                axTemp.plot(Iin[:100000], label=Lab)
         
 #%%      
 #    fig, axTemp = plt.subplots()
@@ -86,7 +90,7 @@ if __name__ == '__main__':
     Procs = []
     Labs = []
     AcqArgs = []
-    DivProcs = 20
+    DivProcs = 9 
     results = []
     for dem, DemArgs in ProcsDict.items():
 #        if DemArgs['dInd'] != 1:
@@ -139,17 +143,22 @@ if __name__ == '__main__':
 
     fig, axR = plt.subplots()  
     axR.set_title('R')
+    fig, axTrend = plt.subplots()  
+    axTrend.set_title('Trend')
     for ind, (dem, lab, acqargs) in enumerate(zip(results, Labs, AcqArgs)):
         adems = np.abs(dem[DelaySamps:])
         x = np.arange(adems.size)
         ptrend = np.polyfit(x, adems, 1)
         trend = np.polyval(ptrend, x)
         ACarr = (2*ptrend[1])/np.sqrt(2)
+        
 #        R= (0.015/np.sqrt(2))/((np.max(np.abs(dem[DelaySamps:]))-np.mean(np.abs(dem[DelaySamps:])))/np.sqrt(2))
         
         R= (acqargs['Ac']/np.sqrt(2))/ACarr
         axR.plot(acqargs[xAxispar], R, '*')
-        
+        if ind==13:
+            axTrend.plot(adems)
+            axTrend.plot(trend)
 #%%
 
     fig, axres = plt.subplots()  
@@ -203,7 +212,7 @@ if __name__ == '__main__':
     
     plt.figure()
     for k in set(GoodTrt):
-        plt.plot(Vgs,OutDict[k], label=k)
+        plt.plot(Vgs,OutDict[k][:-1], label=k)
 #    plt.legend()
 #%%
     dtype = 'float64'
