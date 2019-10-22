@@ -28,6 +28,7 @@ import Pyxi.DataAcquisition as DataAcq
 import Pyxi.NifGenerator as NifGen
 import Pyxi.NiScope as NiScope
 import Pyxi.DemodModule as DemMod
+import Pyxi.Sweep as SwMod
 
 class MainWindow(Qt.QWidget):
     ''' Main Window '''
@@ -50,12 +51,15 @@ class MainWindow(Qt.QWidget):
                                                          name='Record File')
         self.Parameters.addChild(self.FileParams)
         
+        self.SweepsParams = SwMod.SweepsParameters(name='Sweep Options')
+        self.Parameters.addChild(self.SweepsParams)
+        
         self.NifGenParams = NifGen.NifGeneratorParameters(name='Pxi Generator')        
         self.Parameters.addChild(self.NifGenParams)
         
         self.NiScopeParams = NiScope.NiScopeParameters(name='Pxi Scope')
-        self.Parameters.addChild(self.NiScopeParams)
-        
+        self.Parameters.addChild(self.NiScopeParams)        
+              
         self.PsdPlotParams = PltMod.PSDParameters(name='PSD Plot Options')
         self.PsdPlotParams.param('Fs').setValue(self.NiScopeParams.FsScope.value())
         self.PsdPlotParams.param('Fmin').setValue(50)
@@ -219,19 +223,11 @@ class MainWindow(Qt.QWidget):
                 self.threadDemodPsdPlotter.stop()
                 self.threadDemodPsdPlotter = None   
                 
-    def on_btnStart(self):       
-        if self.threadAqc is None:
-            print('started')
-#            print('getrows', self.NiScopeParams.GetRows())
-#            print('getrowsparams', self.NiScopeParams.GetRowParams())
-            self.treepar.setParameters(self.Parameters, showTop=False)
-            self.GenKwargs = self.NifGenParams.GetGenParams()
-            self.ScopeKwargs = self.NiScopeParams.GetRowParams()
-            self.DemodKwargs = self.DemodParams.GetParams()
-
+    def on_sweep_start(self):
+        EndSweep, self.GenKwargs = self.SweepsParams.ChangeVCols(**self.GenKwargs)
+        if EndSweep == False:
             self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
             self.threadAqc.NewData.connect(self.on_NewSample)
-                       
             self.Gen_Destroy_PsdPlotter()
             self.Gen_Destroy_Plotters()
             self.SaveFiles()     
@@ -243,11 +239,8 @@ class MainWindow(Qt.QWidget):
                                                          **self.DemodKwargs)
                 self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
                 self.threadDemodAqc.start()
-            
-            
             self.threadAqc.start()
-            self.btnStart.setText("Stop Gen")
-            self.OldTime = time.time()
+            self.Timer.signleShot(self.timerSweep, self.NextSweep)
         else:
             print('stopped')
             self.threadAqc.NewData.disconnect()
@@ -256,6 +249,61 @@ class MainWindow(Qt.QWidget):
             self.threadAqc = None
             
             self.StopThreads()
+            
+            self.btnStart.setText("Start Gen and Adq!")   
+    def NextSweep(self):
+        print('NextSweep')
+        self.threadAqc.NewData.disconnect()
+        self.threadAqc.stopSessions()
+        self.threadAqc.terminate()
+        self.threadAqc = None
+        self.on_sweep_start()
+        
+    def on_btnStart(self):       
+        if self.threadAqc is None:
+            print('started')
+#            print('getrows', self.NiScopeParams.GetRows())
+#            print('getrowsparams', self.NiScopeParams.GetRowParams())
+            self.treepar.setParameters(self.Parameters, showTop=False)
+            self.GenKwargs = self.NifGenParams.GetGenParams()
+            self.ScopeKwargs = self.NiScopeParams.GetRowParams()
+            self.DemodKwargs = self.DemodParams.GetParams()
+            
+            if self.SweepsParams.param('SweepsConfig').param('Enable').value() == False:
+                self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
+                self.threadAqc.NewData.connect(self.on_NewSample)
+                self.Gen_Destroy_PsdPlotter()
+                self.Gen_Destroy_Plotters()
+                self.SaveFiles()     
+                
+                if self.DemodConfig.param('DemEnable').value() == True:
+                    self.threadDemodAqc = DemMod.DemodThread(Fcs=self.NifGenParams.GetCarriers(), 
+                                                             RowList=self.threadAqc.RowsList,
+                                                             FetchSize=self.threadAqc.BufferSize, 
+                                                             **self.DemodKwargs)
+                    self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
+                    self.threadDemodAqc.start()
+                
+                
+                self.threadAqc.start()
+                self.btnStart.setText("Stop Gen")
+                self.OldTime = time.time()
+                
+            if self.SweepsParams.param('SweepsConfig').param('Enable').value() == True:
+                self.btnStart.setText("Stop Gen")
+                self.on_sweep_start()
+                       
+            
+        else:
+            print('stopped')
+            self.threadAqc.NewData.disconnect()
+            self.threadAqc.stopSessions()
+            self.threadAqc.terminate()
+            self.threadAqc = None
+            
+            self.StopThreads()
+            
+            self.SweepsParams.IterVgsSweep = 0
             
             self.btnStart.setText("Start Gen and Adq!")           
 
