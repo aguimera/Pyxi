@@ -53,6 +53,7 @@ class MainWindow(Qt.QWidget):
         
         self.SweepsParams = SwMod.SweepsParameters(name='Sweep Options')
         self.Parameters.addChild(self.SweepsParams)
+        self.SweepsConfig = self.SweepsParams.param('SweepsConfig')
         
         self.NifGenParams = NifGen.NifGeneratorParameters(name='Pxi Generator')        
         self.Parameters.addChild(self.NifGenParams)
@@ -115,9 +116,6 @@ class MainWindow(Qt.QWidget):
         self.threadDemodSave = None
         self.threadDemodPlotter = None
         self.threadDemodPsdPlotter = None
-
-    def MysigFs(self):
-        pass
         
     def on_Params_changed(self, param, changes):
             print("tree changes:")
@@ -227,10 +225,7 @@ class MainWindow(Qt.QWidget):
         EndSweep, self.GenKwargs = self.SweepsParams.ChangeVCols(**self.GenKwargs)
         if EndSweep == False:
             self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
-            self.threadAqc.NewData.connect(self.on_NewSample)
-            self.Gen_Destroy_PsdPlotter()
-            self.Gen_Destroy_Plotters()
-            self.SaveFiles()     
+            self.threadAqc.NewData.connect(self.on_NewSample)  
             
             if self.DemodConfig.param('DemEnable').value() == True:
                 self.threadDemodAqc = DemMod.DemodThread(Fcs=self.NifGenParams.GetCarriers(), 
@@ -267,14 +262,16 @@ class MainWindow(Qt.QWidget):
             self.treepar.setParameters(self.Parameters, showTop=False)
             self.GenKwargs = self.NifGenParams.GetGenParams()
             self.ScopeKwargs = self.NiScopeParams.GetRowParams()
-            self.DemodKwargs = self.DemodParams.GetParams()
+            self.DemodKwargs = self.DemodParams.GetParams()    
+            self.SweepsKwargs = self.SweepsParams.GetSweepParams()
+            
+            self.Gen_Destroy_PsdPlotter()
+            self.Gen_Destroy_Plotters()
+            self.SaveFiles()
             
             if self.SweepsParams.param('SweepsConfig').param('Enable').value() == False:
                 self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
                 self.threadAqc.NewData.connect(self.on_NewSample)
-                self.Gen_Destroy_PsdPlotter()
-                self.Gen_Destroy_Plotters()
-                self.SaveFiles()     
                 
                 if self.DemodConfig.param('DemEnable').value() == True:
                     self.threadDemodAqc = DemMod.DemodThread(Fcs=self.NifGenParams.GetCarriers(), 
@@ -289,7 +286,7 @@ class MainWindow(Qt.QWidget):
                 self.btnStart.setText("Stop Gen")
                 self.OldTime = time.time()
                 
-            if self.SweepsParams.param('SweepsConfig').param('Enable').value() == True:
+            if self.SweepsConfig.param('Enable').value() == True:
                 self.btnStart.setText("Stop Gen")
                 self.on_sweep_start()
                        
@@ -397,16 +394,18 @@ class MainWindow(Qt.QWidget):
                 self.threadSave.start()
             
             if self.DemodConfig.param('DemEnable').value() == True:
-                self.threadDemodSave = FileMod.DataSavingThread(FileName=FileName,
+                self.threadSweepsSave = FileMod.DataSavingThread(FileName=FileName,
                                                                 nChannels=self.ScopeKwargs['NRow']*len(self.NifGenParams.Freqs),
                                                                 MaxSize=MaxSize,
                                                                 dtype='float')
                 
                 self.threadDemodSave.start()
+            
 
             GenName = FileName+'_GenConfig.dat'
             ScopeName = FileName+'_ScopeConfig.dat'
             DemodName = FileName+'_DemodConfig.dat'
+            SweepsName = FileName+'_SweepsConfig.dat'
             if os.path.isfile(GenName):
                 print('Overwriting  file')
                 OutGen = input('y/n + press(Enter)')
@@ -430,6 +429,14 @@ class MainWindow(Qt.QWidget):
                     FileMod.GenArchivo(DemodName, self.DemodKwargs)
             else:
                 FileMod.GenArchivo(DemodName, self.DemodKwargs)
+                
+            if os.path.isfile(SweepsName):
+                print('Overwriting  file')
+                OutScope = input('y/n + press(Enter)')
+                if OutScope =='y':
+                    FileMod.GenArchivo(SweepsName, self.SweepsKwargs)
+            else:
+                FileMod.GenArchivo(SweepsName, self.SweepsKwargs)
             
 if __name__ == '__main__':
     app = Qt.QApplication([])

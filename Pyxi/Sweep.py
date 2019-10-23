@@ -10,8 +10,6 @@ import pyqtgraph.parametertree.parameterTypes as pTypes
 import pyqtgraph.parametertree.Parameter as pParams
 
 import numpy as np
-import niscope
-import nifgen
 import copy
 import time
 import re
