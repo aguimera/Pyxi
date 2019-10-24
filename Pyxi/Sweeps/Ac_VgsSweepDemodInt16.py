@@ -98,7 +98,7 @@ if __name__ == '__main__':
 #<<<<<<< HEAD
 #    DivProcs = 4 
 #=======
-    DivProcs = 9
+    DivProcs = 7
 #>>>>>>> f76cb064240fab7757d563ad181ce0ea254c7eb8
     results = []
     for dem, DemArgs in ProcsDict.items():
@@ -196,11 +196,11 @@ if __name__ == '__main__':
         ACarr = (2*ptrend[1])/np.sqrt(2)
 #        print(lab.split('Sw')[1])
         OutDict[TName+'Ac'+str((lab.split('Sw'))[1])] = np.append(OutDict[TName +'Ac'+str((lab.split('Sw'))[1])], ACarr)
-        if lab.split('Sw')[2][0:3] == '002':
-            plt.figure(20)
-#            time = np.arange(0,len(adems)*1.0/FsOut,1.0/FsOut)
-            ff, PSD = signal.welch(adems,FsOut,scaling='density',nperseg=2**13)
-            plt.loglog(ff,PSD)
+#        if lab.split('Sw')[2][0:3] == '002':
+#            plt.figure(20)
+##            time = np.arange(0,len(adems)*1.0/FsOut,1.0/FsOut)
+#            ff, PSD = signal.welch(adems,FsOut,scaling='density',nperseg=2**13)
+#            plt.loglog(ff,PSD)
         DataDict[lab] = np.append(DataDict[lab], (adems-trend)) #no tiene en cuenta Vgs sweep CACA
 #        OutDataDict[acqargs[xAxispar]] = np.append(OutDataDict[acqargs[xAxispar]], ACarr)
 #        OutVar
