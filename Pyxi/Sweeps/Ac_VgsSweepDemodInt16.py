@@ -144,33 +144,16 @@ if __name__ == '__main__':
         Procs = []
         print('Collect', gc.collect())   
         
+  
 #%%
-#    plt.close('all')
     DelaySamps = 200
-
-    xAxispar = 'Vgs' #modificar segun el AcqArgs para el que se quiera graficar
-
-    fig, axR = plt.subplots()  
-    axR.set_title('R')
-    for ind, (dem, lab, acqargs) in enumerate(zip(results, Labs, AcqArgs)):
-        adems = np.abs(dem[DelaySamps:])
-        x = np.arange(adems.size)
-        ptrend = np.polyfit(x, adems, 1)
-        trend = np.polyval(ptrend, x)
-        ACarr = (2*ptrend[1])/np.sqrt(2)
-#        R= (0.015/np.sqrt(2))/((np.max(np.abs(dem[DelaySamps:]))-np.mean(np.abs(dem[DelaySamps:])))/np.sqrt(2))
-        
-        R= (acqargs['Ac']/np.sqrt(2))/ACarr
-        axR.plot(acqargs[xAxispar], R, '*')
-        
-#%%
-
     fig, axres = plt.subplots()  
     axres.set_title('Vgs')
+    fig, axR = plt.subplots()  
+    axR.set_title('R')
     xAxispar = 'Vgs' #modificar segun el AcqArgs para el que se quiera graficar
     OutDict = {}
     DataDict = {}
-#    OutDataDict = {}
     
     Trts = set([(str(a['ProbeRow'])+a['col']) for a in AcqArgs])
     AcSw = np.unique([sw['dset'].split('Sw')[1] for sw in AcqArgs])
@@ -183,9 +166,6 @@ if __name__ == '__main__':
     for lab in Labs:
         DataDict[lab] = np.array([])
         
-#    for t in Vgs:
-#        OutDataDict[t] = np.array([])
-    
     for ind, (dem, lab, acqargs) in enumerate(zip(results, Labs, AcqArgs)):
         TName = (str(acqargs['ProbeRow'])+acqargs['col']) 
         
@@ -194,16 +174,21 @@ if __name__ == '__main__':
         ptrend = np.polyfit(x, adems, 1)
         trend = np.polyval(ptrend, x)
         ACarr = (2*ptrend[1])/np.sqrt(2)
-#        print(lab.split('Sw')[1])
+
+        R= (acqargs['Ac']/np.sqrt(2))/ACarr
+        axR.plot(acqargs[xAxispar], R, '*')
         OutDict[TName+'Ac'+str((lab.split('Sw'))[1])] = np.append(OutDict[TName +'Ac'+str((lab.split('Sw'))[1])], ACarr)
+<<<<<<< HEAD
 #        if lab.split('Sw')[2][0:3] == '002':
 #            plt.figure(20)
 ##            time = np.arange(0,len(adems)*1.0/FsOut,1.0/FsOut)
 #            ff, PSD = signal.welch(adems,FsOut,scaling='density',nperseg=2**13)
 #            plt.loglog(ff,PSD)
+=======
+        
+>>>>>>> 4ccd6c2b7c62d7c2c9b869cf04052218f25c4e5d
         DataDict[lab] = np.append(DataDict[lab], (adems-trend)) #no tiene en cuenta Vgs sweep CACA
-#        OutDataDict[acqargs[xAxispar]] = np.append(OutDataDict[acqargs[xAxispar]], ACarr)
-#        OutVar
+
         axres.plot(acqargs[xAxispar], ACarr, '*')
     axres.set_xlabel(xAxispar)
 
