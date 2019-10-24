@@ -28,14 +28,16 @@ if __name__ == '__main__':
 #    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\VgsSweep_Test4x4_PhaseOpt_PostEth"
 #    Dictname ="F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DCTests\\RTest_Normal_VgsSweep_2Row_2Col_VcmToGnd"
 #    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\30_07_2019\Transistor_AcVgsSweep_8Row_1Col_VcmToVcm_20_100mV_35kHz_15sec_10sec_20VgsSw"
-<<<<<<< HEAD
-#    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\16_09_2019\Teset_wires"
-#    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Resistors\16_09_2019\4RArray_2k"
-    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\TeamFolderLMU\FreqMux\Characterization\15_10_2019\SSP54348-T4-4x8-VgsSw-Ac0p01-Range1"
-#    Name = "SSP54348-T2-2x2-AMmode_VgsSw_AcSw" 
-=======
-    Dictname=r"C:\Users\Lucia\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\19_09_2019\SSP54348-T2-3x3-Sig10mVp10Hz"
->>>>>>> f76cb064240fab7757d563ad181ce0ea254c7eb8
+#<<<<<<< HEAD
+##    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\16_09_2019\Teset_wires"
+##    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Resistors\16_09_2019\4RArray_2k"
+#    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\TeamFolderLMU\FreqMux\Characterization\15_10_2019\SSP54348-T4-4x8-VgsSw-Ac0p01-Range1"
+##    Name = "SSP54348-T2-2x2-AMmode_VgsSw_AcSw" 
+#=======
+#    Dictname=r"C:\Users\Lucia\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\19_09_2019\SSP54348-T2-3x3-Sig10mVp10Hz"
+#>>>>>>> f76cb064240fab7757d563ad181ce0ea254c7eb8
+    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\TeamFolderLMU\FreqMux\Lucia\DCTests\Transistors\24_10_2019\TestS4_NoDCFilt_t30_stab20"
+
     FileName = Dictname +'_0'+'.h5'
     hfile = h5py.File(FileName, 'r')
     RGain = 10e3
@@ -93,11 +95,11 @@ if __name__ == '__main__':
     Procs = []
     Labs = []
     AcqArgs = []
-<<<<<<< HEAD
-    DivProcs = 4 
-=======
-    DivProcs = 20
->>>>>>> f76cb064240fab7757d563ad181ce0ea254c7eb8
+#<<<<<<< HEAD
+#    DivProcs = 4 
+#=======
+    DivProcs = 9
+#>>>>>>> f76cb064240fab7757d563ad181ce0ea254c7eb8
     results = []
     for dem, DemArgs in ProcsDict.items():
 #        if DemArgs['dInd'] != 1:

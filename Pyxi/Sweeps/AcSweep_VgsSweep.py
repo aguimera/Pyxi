@@ -18,7 +18,7 @@ if __name__ == '__main__':
     
     #File To Save
 #    Dictname ="F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DCTests\\RTest_DC_VgsSweep_1Row_1Col_VcmToGnd".
-    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\TeamFolderLMU\FreqMux\Characterization\15_10_2019\SSP54348-T4-4x8-Acs85mV-Vgs0p27-Range1"
+    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\TeamFolderLMU\FreqMux\Lucia\DCTests\Transistors\24_10_2019\TestS4_NoDCFilt_t30_stab20"
 #    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Resistors\19_09_2019\4x8array"
     FileName = Dictname +'.h5'
     
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     NumFetch = 1
     BufferSize = round(tFetch*ScopeFs)
     tFetch = BufferSize/ScopeFs
-    t_wait_stab = 10 #tiempo estabilización en segundos
+    t_wait_stab = 20 #tiempo estabilización en segundos
     ScopeOffset = int(ScopeFs*t_wait_stab) #Muestras de estabilización
 #    Rows d'exemple a continuació: no borrar
 #    Rows = [('Row1', 0), ('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4), ('Row6', 5), ('Row7', 6), ('Row8', 7)]
@@ -56,8 +56,8 @@ if __name__ == '__main__':
 
 #4x8
     Rows = [('Row1', 0), ('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4), ('Row6', 5), ('Row7', 6), ('Row8', 7)]
-    ProbeR = ['Chn6','Chn8', 'Chn14','Chn1','Chn2','Chn3', 'Chn4','Chn5']
-    ColOn = [1,1,1,1]
+    ProbeR = ['Ch15','Ch16', 'Ch09','Ch14','Ch11','Ch12', 'Ch06','Ch13']
+    ColOn = [1,0,0,0]
      
     RowsArray = []
     rangeScope = 1  #options 0.05, 0.2, 1, 6, 30
@@ -88,13 +88,13 @@ if __name__ == '__main__':
 ##            )                      -- e.g. Standard form with all Cols
     Cols = (('Col1', 'PXI1Slot2', 0, 0), 
             ('Col2', 'PXI1Slot2', 1, 1), 
-            ('Col3', 'PXI1Slot3', 0, 2), 
-            ('Col4', 'PXI1Slot3', 1, 3)
+#            ('Col3', 'PXI1Slot3', 0, 2), 
+#            ('Col4', 'PXI1Slot3', 1, 3)
             )
 
 #    numSweeps = 20
-    numSweeps = 3
-    nAcSweep = 11
+    numSweeps = 30
+    nAcSweep = 1
     GenSize = 20e3
     Ts = 1/GenFs
     t = np.arange(0, Ts*GenSize, Ts)        
@@ -102,8 +102,8 @@ if __name__ == '__main__':
 #    A = [0.0, 0.02] 
     
 #    SwAc = np.linspace(0.07, 0.11, num=nAcSweep)
-#    SwAc = np.linspace(0.05, 0.05, num=1)
-    SwAc=np.array([0.085])#*np.sqrt(2) #,0.025,0.012]
+    SwAc = np.linspace(0.05, 0.05, num=1)
+#    SwAc=np.array([0.085])#*np.sqrt(2) #,0.025,0.012]
     #definir les Fc que es volen utilitzar
     Fc=np.array([70e3, 85e3, 100e3, 115e3])
     Ph = np.array([144.596, -45.1778, -125.836, -110.565])
@@ -115,7 +115,7 @@ if __name__ == '__main__':
         Fc[ind] =  (nc*GenFs)/GenSize
         
     #deefinir vector de CMVoltage (Vgs) que es vol fer el sweep
-    CMVoltage = np.linspace(-0.265, -0.275, num=numSweeps)
+    CMVoltage = np.linspace(0, -0.4, num=numSweeps)
 #    CMVoltage = np.append(CMVoltage, 0)
     #Es crea una Cols Config que es configurará per cada Sweep amb la freq correcta
 #    ColsConfig={'Col1':{'Frequency': Fc0,
