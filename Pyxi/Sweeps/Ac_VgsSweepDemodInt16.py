@@ -37,8 +37,8 @@ if __name__ == '__main__':
 #=======
 #    Dictname=r"C:\Users\Lucia\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\19_09_2019\SSP54348-T2-3x3-Sig10mVp10Hz"
 #>>>>>>> f76cb064240fab7757d563ad181ce0ea254c7eb8
-    Dictname =r"C:\Users\Lucia\Dropbox (ICN2 AEMD - GAB GBIO)\TeamFolderLMU\FreqMux\Lucia\DCTests\Transistors\24_10_2019\TestS4_NoDCFilt_t30_stab20"
-
+#    Dictname =r"C:\Users\Lucia\Dropbox (ICN2 AEMD - GAB GBIO)\TeamFolderLMU\FreqMux\Lucia\DCTests\Transistors\24_10_2019\TestS4_NoDCFilt_t5_stab20"
+    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\TeamFolderLMU\FreqMux\Lucia\DCTests\Transistors\24_10_2019\TestS4_NoDCFilt_t5_stab20"
     FileName = Dictname +'_0'+'.h5'
     hfile = h5py.File(FileName, 'r')
     RGain = 10e3
@@ -133,7 +133,7 @@ if __name__ == '__main__':
         
   
 #%%
-    DelaySamps = 0
+#    DelaySamps = 0
     fig, axres = plt.subplots()  
     axres.set_title('Vgs')
     fig, axR = plt.subplots()  
@@ -154,6 +154,7 @@ if __name__ == '__main__':
         DataDict[lab] = np.array([])
         
     for ind, (dem, lab, acqargs) in enumerate(zip(results, Labs, AcqArgs)):
+        DelaySamps = 0
         TName = (str(acqargs['ProbeRow'])+acqargs['col']) 
         
         adems = np.abs(dem[DelaySamps:])
@@ -161,18 +162,19 @@ if __name__ == '__main__':
         ptrend = np.polyfit(x, adems, 1)
         trend = np.polyval(ptrend, x)
         ACarr = (2*ptrend[1])/np.sqrt(2)
-        slope = lnr(x, trend)
+        slope = lnr(x, trend)[0]
         
-        while slope > 1e-14:
+        while abs(slope) >= 1e-12:
             DelaySamps = DelaySamps + 50
             adems = np.abs(dem[DelaySamps:])
             x = np.arange(adems.size)
             ptrend = np.polyfit(x, adems, 1)
             trend = np.polyval(ptrend, x)
             ACarr = (2*ptrend[1])/np.sqrt(2)
-            slope = lnr(x, trend)
-         
-        DelaySamps = 0
+            slope = lnr(x, trend)[0]
+        
+        plt.figure('trend')
+        plt.plot(x, trend)
         R= (acqargs['Ac']/np.sqrt(2))/ACarr
         axR.plot(acqargs[xAxispar], R, '*')
         OutDict[TName+'Ac'+str((lab.split('Sw'))[1])] = np.append(OutDict[TName +'Ac'+str((lab.split('Sw'))[1])], ACarr)

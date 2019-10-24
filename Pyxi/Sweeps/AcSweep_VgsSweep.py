@@ -18,7 +18,7 @@ if __name__ == '__main__':
     
     #File To Save
 #    Dictname ="F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DCTests\\RTest_DC_VgsSweep_1Row_1Col_VcmToGnd".
-    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\TeamFolderLMU\FreqMux\Lucia\DCTests\Transistors\24_10_2019\TestS4_NoDCFilt_t30_stab20"
+    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\TeamFolderLMU\FreqMux\Lucia\DCTests\Transistors\24_10_2019\TestS4_NoDCFilt_t5_stab20"
 #    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Resistors\19_09_2019\4x8array"
     FileName = Dictname +'.h5'
     
@@ -31,7 +31,7 @@ if __name__ == '__main__':
     ScopeFs = 500e3
     nFs = round(GenFs/ScopeFs)
     ScopeFs = GenFs/nFs
-    tFetch = 30
+    tFetch = 5
     NumFetch = 1
     BufferSize = round(tFetch*ScopeFs)
     tFetch = BufferSize/ScopeFs
@@ -95,7 +95,7 @@ if __name__ == '__main__':
             )
 
 #    numSweeps = 20
-    numSweeps = 30
+    numSweeps = 5
     nAcSweep = 1
     GenSize = 20e3
     Ts = 1/GenFs
@@ -104,7 +104,7 @@ if __name__ == '__main__':
 #    A = [0.0, 0.02] 
     
 #    SwAc = np.linspace(0.07, 0.11, num=nAcSweep)
-    SwAc = np.linspace(0.05, 0.05, num=1)
+    SwAc = np.linspace(0.05, 0.05, num=1)*np.sqrt(2)
 #    SwAc=np.array([0.085])#*np.sqrt(2) #,0.025,0.012]
     #definir les Fc que es volen utilitzar
     Fc=np.array([70e3, 85e3, 100e3, 115e3])
