@@ -55,6 +55,8 @@ if __name__ == '__main__':
 #    ColOn = [1,1,1,0] 
 
 #4x8
+#    Rows = [('Row1', 0), ('Row2', 1), ('Row3', 2), ('Row4', 3)]
+#    ProbeR = ['Ch15','Ch16', 'Ch09','Ch14']
     Rows = [('Row1', 0), ('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4), ('Row6', 5), ('Row7', 6), ('Row8', 7)]
     ProbeR = ['Ch15','Ch16', 'Ch09','Ch14','Ch11','Ch12', 'Ch06','Ch13']
     ColOn = [1,0,0,0]
