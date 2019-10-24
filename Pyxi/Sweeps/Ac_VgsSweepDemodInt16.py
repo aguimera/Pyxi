@@ -28,10 +28,14 @@ if __name__ == '__main__':
 #    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\VgsSweep_Test4x4_PhaseOpt_PostEth"
 #    Dictname ="F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DCTests\\RTest_Normal_VgsSweep_2Row_2Col_VcmToGnd"
 #    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\30_07_2019\Transistor_AcVgsSweep_8Row_1Col_VcmToVcm_20_100mV_35kHz_15sec_10sec_20VgsSw"
+<<<<<<< HEAD
 #    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\16_09_2019\Teset_wires"
 #    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Resistors\16_09_2019\4RArray_2k"
     Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\TeamFolderLMU\FreqMux\Characterization\15_10_2019\SSP54348-T4-4x8-VgsSw-Ac0p01-Range1"
 #    Name = "SSP54348-T2-2x2-AMmode_VgsSw_AcSw" 
+=======
+    Dictname=r"C:\Users\Lucia\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\19_09_2019\SSP54348-T2-3x3-Sig10mVp10Hz"
+>>>>>>> f76cb064240fab7757d563ad181ce0ea254c7eb8
     FileName = Dictname +'_0'+'.h5'
     hfile = h5py.File(FileName, 'r')
     RGain = 10e3
@@ -48,6 +52,7 @@ if __name__ == '__main__':
 
     data = {}
     for k in hfile.keys():
+        print('data load')
         data[k] = hfile[k].value
     hfile.close()
 #%%
@@ -88,7 +93,11 @@ if __name__ == '__main__':
     Procs = []
     Labs = []
     AcqArgs = []
+<<<<<<< HEAD
     DivProcs = 4 
+=======
+    DivProcs = 20
+>>>>>>> f76cb064240fab7757d563ad181ce0ea254c7eb8
     results = []
     for dem, DemArgs in ProcsDict.items():
 #        if DemArgs['dInd'] != 1:
@@ -105,7 +114,7 @@ if __name__ == '__main__':
 #        Iin = ((data[DemArgs['dset']][:, 0])*LSB)/DemArgs['Gain']
 #        Iin = ((data[DemArgs['dset']][:, DemArgs['dInd']])*DemArgs['LSB'][DemArgs['dInd']])/DemArgs['Gain']
 
-        Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['dInd'])
+        Lab = str(DemArgs['dset']) +'-'+ str(DemArgs['ProbeRow']+str(DemArgs['col']))
         print(Lab)     
         DownFact = int(DemArgs['Fs']/FsOut)
         args=(Iin, DemArgs['Fs'], DemArgs['Fc'], int(DemArgs['Samps']), DownFact)
@@ -161,13 +170,13 @@ if __name__ == '__main__':
     DataDict = {}
 #    OutDataDict = {}
     
-    Trts = set([('R'+str(a['dInd'])+a['col']) for a in AcqArgs])
+    Trts = set([(str(a['ProbeRow'])+a['col']) for a in AcqArgs])
     AcSw = np.unique([sw['dset'].split('Sw')[1] for sw in AcqArgs])
     Vgs = np.sort(np.unique(([-a['Vgs'] for a in AcqArgs])))
     
     for t in Trts:
         for Sw in AcSw:            
-            OutDict[t +'Ac'+str(Sw)] = np.array([])
+            OutDict[t + 'Ac' + str(Sw)] = np.array([])
     
     for lab in Labs:
         DataDict[lab] = np.array([])
@@ -176,7 +185,7 @@ if __name__ == '__main__':
 #        OutDataDict[t] = np.array([])
     
     for ind, (dem, lab, acqargs) in enumerate(zip(results, Labs, AcqArgs)):
-        TName = ('R'+str(acqargs['dInd'])+acqargs['col']) 
+        TName = (str(acqargs['ProbeRow'])+acqargs['col']) 
         
         adems = np.abs(dem[DelaySamps:])
         x = np.arange(adems.size)
