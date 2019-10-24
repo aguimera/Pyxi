@@ -20,7 +20,7 @@ import gc
 
 if __name__ == '__main__':
     
-#    plt.close('all')
+    plt.close('all')
     
     debug = False
     #llegir fitxer
@@ -28,7 +28,10 @@ if __name__ == '__main__':
 #    Dictname = "F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DataSaved\VgsSweep_Test4x4_PhaseOpt_PostEth"
 #    Dictname ="F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DCTests\\RTest_Normal_VgsSweep_2Row_2Col_VcmToGnd"
 #    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\30_07_2019\Transistor_AcVgsSweep_8Row_1Col_VcmToVcm_20_100mV_35kHz_15sec_10sec_20VgsSw"
-    Dictname=r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Resistors\10_09_2019\TestR5K_chn1"
+#    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\16_09_2019\Teset_wires"
+#    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Resistors\16_09_2019\4RArray_2k"
+    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\TeamFolderLMU\FreqMux\Characterization\15_10_2019\SSP54348-T4-4x8-VgsSw-Ac0p01-Range1"
+#    Name = "SSP54348-T2-2x2-AMmode_VgsSw_AcSw" 
     FileName = Dictname +'_0'+'.h5'
     hfile = h5py.File(FileName, 'r')
     RGain = 10e3
@@ -85,7 +88,7 @@ if __name__ == '__main__':
     Procs = []
     Labs = []
     AcqArgs = []
-    DivProcs = 9 
+    DivProcs = 4 
     results = []
     for dem, DemArgs in ProcsDict.items():
 #        if DemArgs['dInd'] != 1:
@@ -182,7 +185,11 @@ if __name__ == '__main__':
         ACarr = (2*ptrend[1])/np.sqrt(2)
 #        print(lab.split('Sw')[1])
         OutDict[TName+'Ac'+str((lab.split('Sw'))[1])] = np.append(OutDict[TName +'Ac'+str((lab.split('Sw'))[1])], ACarr)
-        
+        if lab.split('Sw')[2][0:3] == '002':
+            plt.figure(20)
+#            time = np.arange(0,len(adems)*1.0/FsOut,1.0/FsOut)
+            ff, PSD = signal.welch(adems,FsOut,scaling='density',nperseg=2**13)
+            plt.loglog(ff,PSD)
         DataDict[lab] = np.append(DataDict[lab], (adems-trend)) #no tiene en cuenta Vgs sweep CACA
 #        OutDataDict[acqargs[xAxispar]] = np.append(OutDataDict[acqargs[xAxispar]], ACarr)
 #        OutVar
@@ -195,14 +202,14 @@ if __name__ == '__main__':
     for k, v in OutDict.items():
         if np.any(v>1e-7):
             GoodTrt.append(k)
-        plt.plot(v, label=k)
+        plt.plot(Vgs, v, label=k)
     print(set(GoodTrt))    
     plt.legend()
-    
+    plt.savefig('2x2.svg',format='svg',dpi=1200)
     
     plt.figure()
     for k in set(GoodTrt):
-        plt.plot(Vgs,OutDict[k][:-1], label=k)
+        plt.plot(Vgs,OutDict[k], label=k)
 #    plt.legend()
 #%%
     dtype = 'float64'

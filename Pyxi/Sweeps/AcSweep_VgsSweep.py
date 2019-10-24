@@ -18,8 +18,8 @@ if __name__ == '__main__':
     
     #File To Save
 #    Dictname ="F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DCTests\\RTest_DC_VgsSweep_1Row_1Col_VcmToGnd".
-#    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Transistor\29_07_2019\Test"
-    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Resistors\10_09_2019\TestR5K_chn1"
+    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\TeamFolderLMU\FreqMux\Characterization\15_10_2019\SSP54348-T4-4x8-Acs85mV-Vgs0p27-Range1"
+#    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\PyFET\LuciaScripts\Lucia\DCTests\Resistors\19_09_2019\4x8array"
     FileName = Dictname +'.h5'
     
     if os.path.isfile(FileName):
@@ -31,7 +31,7 @@ if __name__ == '__main__':
     ScopeFs = 500e3
     nFs = round(GenFs/ScopeFs)
     ScopeFs = GenFs/nFs
-    tFetch = 15
+    tFetch = 30
     NumFetch = 1
     BufferSize = round(tFetch*ScopeFs)
     tFetch = BufferSize/ScopeFs
@@ -40,8 +40,25 @@ if __name__ == '__main__':
 #    Rows d'exemple a continuació: no borrar
 #    Rows = [('Row1', 0), ('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4), ('Row6', 5), ('Row7', 6), ('Row8', 7)]
 #    Rows = [('Row1', 0), ('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4), ('Row6', 5), ('Row7', 6), ('Row8', 7)]
-    Rows = [('Row1', 0), ('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4)]
-#    Rows = [('Row2', 1),]
+#    Rows = [('Row1', 0), ('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4)]
+#    2x2
+#    Rows = [('Row 4', 3),('Row5', 4)]
+#    ProbeR = ['Chn6', 'Chn14'] #Poner el número de Row real de la probe
+#    ColOn = [0,1,1,0] 
+#    1x1
+#    Rows = [('Row6', 5),]
+#    ProbeR = ['Chn6',] #Poner el número de Row real de la probe
+#    ColOn = [0,1,0,0] 
+#    3x3
+#    Rows = [('Row1', 0),('Row4', 3),('Row5', 4)]
+#    ProbeR = ['Chn6','Chn8', 'Chn14']
+#    ColOn = [1,1,1,0] 
+
+#4x8
+    Rows = [('Row1', 0), ('Row2', 1), ('Row3', 2), ('Row4', 3), ('Row5', 4), ('Row6', 5), ('Row7', 6), ('Row8', 7)]
+    ProbeR = ['Chn6','Chn8', 'Chn14','Chn1','Chn2','Chn3', 'Chn4','Chn5']
+    ColOn = [1,1,1,1]
+     
     RowsArray = []
     rangeScope = 1  #options 0.05, 0.2, 1, 6, 30
     PCBGain = 10e3
@@ -71,32 +88,35 @@ if __name__ == '__main__':
 ##            )                      -- e.g. Standard form with all Cols
     Cols = (('Col1', 'PXI1Slot2', 0, 0), 
             ('Col2', 'PXI1Slot2', 1, 1), 
-            )   
+            ('Col3', 'PXI1Slot3', 0, 2), 
+            ('Col4', 'PXI1Slot3', 1, 3)
+            )
+
 #    numSweeps = 20
-    numSweeps = 4
-    nAcSweep = 3
+    numSweeps = 3
+    nAcSweep = 11
     GenSize = 20e3
     Ts = 1/GenFs
     t = np.arange(0, Ts*GenSize, Ts)        
 #    A = [0.015, 0.015, 0.015, 0.015]  
 #    A = [0.0, 0.02] 
     
-#    SwAc = np.linspace(0.02, 0.1, num=nAcSweep)
-    SwAc = np.linspace(0.05, 0.05, num=1)
-    
+#    SwAc = np.linspace(0.07, 0.11, num=nAcSweep)
+#    SwAc = np.linspace(0.05, 0.05, num=1)
+    SwAc=np.array([0.085])#*np.sqrt(2) #,0.025,0.012]
     #definir les Fc que es volen utilitzar
+    Fc=np.array([70e3, 85e3, 100e3, 115e3])
+    Ph = np.array([144.596, -45.1778, -125.836, -110.565])
 #    Fc=np.array([70e3, 85e3, 100e3, 115e3])
-#    Ph = np.array([144.596, -45.1778, -125.836, -110.565])
-    Fc=np.array([35e3, 35e3])
-    Ph = np.array([0, 0])
+#    Ph = np.array([0, 0, 0, 0])
 #    Ph = np.array([0,0,0,0])
     for ind, f in enumerate(Fc):
         nc = round((GenSize*f)/GenFs)
         Fc[ind] =  (nc*GenFs)/GenSize
         
     #deefinir vector de CMVoltage (Vgs) que es vol fer el sweep
-    CMVoltage = np.linspace(0, -0.5, num=numSweeps)
-    CMVoltage = np.append(CMVoltage, 0)
+    CMVoltage = np.linspace(-0.265, -0.275, num=numSweeps)
+#    CMVoltage = np.append(CMVoltage, 0)
     #Es crea una Cols Config que es configurará per cada Sweep amb la freq correcta
 #    ColsConfig={'Col1':{'Frequency': Fc0,
 #                        'amplitude': A[0],
@@ -122,7 +142,7 @@ if __name__ == '__main__':
     Procs = {}
     demind = 0
     for SweepAcInd, Ac in enumerate(SwAc):
-        A = [0.0, Ac]
+        A = np.array(ColOn)*Ac
         for Col in Cols:
             ColsConfig[Col[0]]['Amplitude']=A[Col[3]]
             
@@ -161,6 +181,7 @@ if __name__ == '__main__':
                 for col in Cols:
                     ProcsArgs = {'dset': dsetname,
                                  'dInd':nr, # Row index inside dataset
+                                 'ProbeRow': ProbeR[nr],
                                  'col': col[0],
                                  'cInd': col[3],
                                  'Fc': Fc[col[3]],
@@ -182,8 +203,14 @@ if __name__ == '__main__':
     
     FileBuf.close()
     ACqSet.stopSessions()     
-      
     FileMod.GenArchivo(name=Dictname, dic2Save=Procs)
+
+    ACqSet.setSignals(ColsConfig=ColsConfig,
+                      Vcm=0)   
+    ACqSet.initSessions()
+    ACqSet.stopSessions() 
+    
+
         
         
         

@@ -25,8 +25,7 @@ if __name__ == '__main__':
     
     #llegir fitxer
 
-    Dictname = "F:\\Dropbox (ICN2 AEMD - GAB GBIO)\\PyFET\\LuciaScripts\\Lucia\\DCTests\\RTest_Normal_AcSweep"
-    
+    Dictname =r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\TeamFolderLMU\FreqMux\Characterization\15_10_2019\SSP54348-T4-4x8-AcsSwHighRange-Vgs0p27-Range1"
     FileName = Dictname +'_0'+'.h5'
     hfile = h5py.File(FileName, 'r')
     FsOut = 5e3
