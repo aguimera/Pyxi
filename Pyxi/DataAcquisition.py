@@ -26,8 +26,9 @@ class DataAcquisitionThread(Qt.QThread):
         print ('TMacqThread, DataAcqThread')
         super(DataAcquisitionThread, self).__init__()
         
-        print(ColsConfig)
-        print(RowsConfig)
+        print("Vgs", CMVoltage)
+        print("Cols Config", ColsConfig)
+        print("Rows Config", RowsConfig)
         self.Cols = NifGen.Columns(ColsConfig=ColsConfig, 
                                    FsGen=FsGen, 
                                    GenSize=GenSize)

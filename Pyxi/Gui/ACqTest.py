@@ -117,6 +117,8 @@ class MainWindow(Qt.QWidget):
         self.threadDemodPlotter = None
         self.threadDemodPsdPlotter = None
         
+        self.Timer = Qt.QTimer()
+        
     def on_Params_changed(self, param, changes):
             print("tree changes:")
             for param, change, data in changes:
@@ -224,6 +226,7 @@ class MainWindow(Qt.QWidget):
     def on_sweep_start(self):
         EndSweep, self.GenKwargs = self.SweepsParams.ChangeVCols(**self.GenKwargs)
         if EndSweep == False:
+            self.OldTime = time.time()
             self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
             self.threadAqc.NewData.connect(self.on_NewSample)  
             
@@ -235,7 +238,7 @@ class MainWindow(Qt.QWidget):
                 self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
                 self.threadDemodAqc.start()
             self.threadAqc.start()
-            self.Timer.signleShot(self.timerSweep, self.NextSweep)
+            self.Timer.singleShot(self.SweepsConfig.param('VgsSweep').param('timeXsweep').value(), self.NextSweep)
         else:
             print('stopped')
             self.threadAqc.NewData.disconnect()

@@ -58,11 +58,7 @@ SweepsParam = {'name':'SweepsConfig',
                                         {'name':'nSweeps',
                                          'type': 'int',
                                          'value': 1},
-                                        {'name':'timeXsweep',
-                                         'type':'int',
-                                         'value':15,
-                                         'siPrefix':True,
-                                         'suffix':'sec'},)                       
+                                        )                       
                            })
               }
                             
@@ -78,8 +74,8 @@ class SweepsParameters(pTypes.GroupParameter):
          self.VgsConfig = self.SweepsConfig.param('VgsSweep')
          self.AcConfig = self.SweepsConfig.param('AcSweep')
 
-         self.IterVgsSweep = 0
-         self.IterAcSweep = 0
+#         self.IterVgsSweep = 0
+#         self.IterAcSweep = 0
          
          self.VgsSweepValues = np.linspace(self.VgsConfig.param('Start').value(),
                                            self.VgsConfig.param('Stop').value(),
@@ -89,6 +85,7 @@ class SweepsParameters(pTypes.GroupParameter):
          self.AcSweepValues = np.linspace(self.AcConfig.param('Start').value(),
                                           self.AcConfig.param('Stop').value(),
                                           self.AcConfig.param('nSweeps').value())
+         
          
      def GetSweepParams(self):
          self.Sweeps = {'VgsSweep':{},
@@ -102,41 +99,47 @@ class SweepsParameters(pTypes.GroupParameter):
 
          return self.Sweeps
 
-     def ChangeVCols(self, ColsConfig, FsGen, GenSize, CMVoltage):
-         self.VgsSweepValues = np.linspace(self.VgsConfig.param('Start').value(),
-                                           self.VgsConfig.param('Stop').value(),
-                                           self.VgsConfig.param('nSweeps').value()
-                                           )
-         print(self.VgsSweepValues, self.IterVgsSweep)
-         self.AcSweepValues = np.linspace(self.AcConfig.param('Start').value(),
-                                          self.AcConfig.param('Stop').value(),
-                                          self.AcConfig.param('nSweeps').value())
-         print(self.AcSweepValues, self.IterAcSweep)
-         if self.IterAcSweep >= len(self.AcSweepValues):
-             CMVoltage=self.VgsSweepValues[self.IterVgsSweep]
-        
-             self.IterAcSweep = 0
-             self.IterVgsSweep = self.IterVgsSweep+1
-         for Col, val in ColsConfig.items():
-             ColsConfig[Col]['Amplitude']=self.AcSweepValues[self.IterAcSweep]
-        
-         self.IterAcSweep = self.IterAcSweep+1
-         self.Generator = {'ColsConfig':ColsConfig,
+#     def ChangeVCols(self, ColsConfig, FsGen, GenSize, CMVoltage):
+#         
+#         if self.IterAcSweep >= len(self.AcSweepValues):
+#             CMVoltage=self.VgsSweepValues[self.IterVgsSweep]
+#        
+#             self.IterAcSweep = 0
+#             self.IterVgsSweep = self.IterVgsSweep+1
+#         for Col, val in ColsConfig.items():
+#             ColsConfig[Col]['Amplitude']=self.AcSweepValues[self.IterAcSweep]
+#        
+#         self.IterAcSweep = self.IterAcSweep+1
+#         self.Generator = {'ColsConfig':ColsConfig,
+#                           'FsGen':FsGen,
+#                           'GenSize':GenSize,
+#                           'CMVoltage':CMVoltage
+#                           }
+#         
+#         if self.IterVgsSweep >= len(self.VgsSweepValues):
+#             EndOfSweeps = True
+#             self.IterAcSweep=0
+#             self.IterVgsSweep=0
+#         if self.IterVgsSweep < len(self.VgsSweepValues):
+#             EndOfSweeps = False
+#             
+#         return EndOfSweeps, self.Generator
+     
+     def NextSweep(self, nAcSw, nVgsSw, ColsConfig, FsGen,GenSize, CMVoltage):
+        #cambiar Vgs
+        CMVoltage=self.VgsSweepValues[nVgsSw]
+        #cambiar Acs
+        for Col, val in ColsConfig.items():
+             ColsConfig[Col]['Amplitude']=self.AcSweepValues[nAcSw]
+             
+        #cambiar el diccionario del generador
+        self.Generator = {'ColsConfig':ColsConfig,
                            'FsGen':FsGen,
                            'GenSize':GenSize,
                            'CMVoltage':CMVoltage
                            }
-         print('GeneratorOutput',self.Generator)
-         if self.IterVgsSweep >= len(self.VgsSweepValues):
-             EndOfSweeps = True
-             self.IterAcSweep=0
-             self.VgsSweepValues=0
-         if self.IterVgsSweep < len(self.VgsSweepValues):
-             EndOfSweeps = False
-             
-         return EndOfSweeps, self.Generator
         
-    
+        return self.Generator
 
 
 
