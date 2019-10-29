@@ -73,9 +73,6 @@ class SweepsParameters(pTypes.GroupParameter):
          self.SweepsConfig = self.param('SweepsConfig')
          self.VgsConfig = self.SweepsConfig.param('VgsSweep')
          self.AcConfig = self.SweepsConfig.param('AcSweep')
-
-#         self.IterVgsSweep = 0
-#         self.IterAcSweep = 0
          
          self.AcConfig.sigTreeStateChanged.connect(self.on_Ac_Sweep_Changed)
          self.on_Ac_Sweep_Changed()
@@ -92,7 +89,18 @@ class SweepsParameters(pTypes.GroupParameter):
                                            self.VgsConfig.param('Stop').value(),
                                            self.VgsConfig.param('nSweeps').value()
                                            )
+         self.VgsTime = self.VgsConfig.param('timeXsweep').value()
          
+         if self.VgsTime > 2:
+             if self.VgsTime % 2 != 0:
+                 self.VgsTime += 1
+             self.CountTime = self.VgsTime/2
+             print(self.VgsTime, self.CountTime)
+        
+         else:
+             self.CountTime = 0
+             print(self.VgsTime, self.CountTime)
+             
      def GetSweepParams(self):
          self.Sweeps = {'VgsSweep':{},
                         'AcSweep':{}

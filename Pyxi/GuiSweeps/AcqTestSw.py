@@ -86,13 +86,22 @@ class MainWindow(Qt.QWidget):
             print('  ----------')
         
             if childName == 'Sweep Options.SweepsConfig.VgsSweep.timeXsweep':
-                self.NiScopeParams.tFetch.setValue(data)
+                if data > 2:
+                    self.NiScopeParams.tFetch.setValue(2)
+                else:
+                    self.NiScopeParams.tFetch.setValue(data)
                 
     def on_btnStart(self):       
         if self.threadAqc is None:
             print('started')
             self.treepar.setParameters(self.Parameters, showTop=False)
-            
+        
+            self.AcSwCount = 0
+            self.VgsSwCount=0
+            self.TCount = 0
+            self.CountTime = self.SweepsParams.CountTime
+
+                
             self.GenKwargs = self.NifGenParams.GetGenParams()
             self.ScopeKwargs = self.NiScopeParams.GetRowParams()
             self.SweepsKwargs = self.SweepsParams.GetSweepParams()
@@ -100,19 +109,14 @@ class MainWindow(Qt.QWidget):
             self.GenKwargs = self.SweepsParams.NextSweep(nAcSw = 0,
                                                          nVgsSw = 0,
                                                          **self.GenKwargs)
-
+            
             self.btnStart.setText("Stop Gen")
             self.OldTime = time.time()
-            
-            self.OnSweep = True
-            self.AcSwCount = 0
-            self.VgsSwCount=0
-            
+                
             self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
-            self.threadAqc.NewData.connect(self.on_New_Sweep)  
+            self.threadAqc.NewData.connect(self.on_New_Adq)  
             self.threadAqc.start()
             
-#            self.on_Sweep()
             
         else:
             print('stopped')
@@ -121,8 +125,16 @@ class MainWindow(Qt.QWidget):
             self.threadAqc.terminate()
             self.threadAqc = None
             
-#    def on_Sweep(self):
-#        if self.OnSweep is True:
+    def on_New_Adq(self): #para que no haya overwrite en los sweeps
+        print(self.TCount)
+        if self.CountTime == 0:
+            self.on_New_Sweep()
+        else:
+            if self.TCount >= self.CountTime:
+                self.TCount = 0
+                self.on_New_Sweep()
+            else:
+                self.TCount += 1
             
     def on_New_Sweep(self):
         self.threadAqc.NewData.disconnect()
@@ -144,7 +156,7 @@ class MainWindow(Qt.QWidget):
                                                              **self.GenKwargs)
                 
                 self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
-                self.threadAqc.NewData.connect(self.on_New_Sweep)  
+                self.threadAqc.NewData.connect(self.on_New_Adq)  
                 self.threadAqc.start()
         else:
             
@@ -153,7 +165,7 @@ class MainWindow(Qt.QWidget):
                                                          **self.GenKwargs)
 
             self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
-            self.threadAqc.NewData.connect(self.on_New_Sweep)  
+            self.threadAqc.NewData.connect(self.on_New_Adq)  
             self.threadAqc.start()
           
             
