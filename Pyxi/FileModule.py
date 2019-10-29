@@ -156,6 +156,9 @@ class DataSavingThread(Qt.QThread):
             else:
                 Qt.QThread.msleep(10)
 
+    def NewDset(self, DSname):
+        self.FileBuff.InitDset(DSname)
+        
     def AddData(self, NewData):
         if self.NewData is not None:
             print('Error Saving !!!!')
