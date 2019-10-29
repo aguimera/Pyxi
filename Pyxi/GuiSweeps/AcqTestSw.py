@@ -96,6 +96,10 @@ class MainWindow(Qt.QWidget):
             self.GenKwargs = self.NifGenParams.GetGenParams()
             self.ScopeKwargs = self.NiScopeParams.GetRowParams()
             self.SweepsKwargs = self.SweepsParams.GetSweepParams()
+            
+            self.GenKwargs = self.SweepsParams.NextSweep(nAcSw = 0,
+                                                         nVgsSw = 0,
+                                                         **self.GenKwargs)
 
             self.btnStart.setText("Stop Gen")
             self.OldTime = time.time()
@@ -125,7 +129,7 @@ class MainWindow(Qt.QWidget):
         self.threadAqc.stopSessions()
         self.threadAqc.terminate()
         self.threadAqc = None
-        print(self.AcSwCount, self.VgsSwCount)
+
         self.VgsSwCount += 1
         if self.VgsSwCount >= self.SweepsParams.VgsConfig.param('nSweeps').value():
             self.AcSwCount += 1
@@ -138,6 +142,7 @@ class MainWindow(Qt.QWidget):
                 self.GenKwargs = self.SweepsParams.NextSweep(nAcSw = self.AcSwCount,
                                                              nVgsSw = self.VgsSwCount,
                                                              **self.GenKwargs)
+                
                 self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
                 self.threadAqc.NewData.connect(self.on_New_Sweep)  
                 self.threadAqc.start()
@@ -146,11 +151,11 @@ class MainWindow(Qt.QWidget):
             self.GenKwargs = self.SweepsParams.NextSweep(nAcSw = self.AcSwCount,
                                                          nVgsSw = self.VgsSwCount,
                                                          **self.GenKwargs)
+
             self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
             self.threadAqc.NewData.connect(self.on_New_Sweep)  
             self.threadAqc.start()
-        
-        print(self.AcSwCount, self.VgsSwCount)   
+          
             
 if __name__ == '__main__':
     app = Qt.QApplication([])

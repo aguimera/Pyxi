@@ -77,15 +77,21 @@ class SweepsParameters(pTypes.GroupParameter):
 #         self.IterVgsSweep = 0
 #         self.IterAcSweep = 0
          
-         self.VgsSweepValues = np.linspace(self.VgsConfig.param('Start').value(),
-                                           self.VgsConfig.param('Stop').value(),
-                                           self.VgsConfig.param('nSweeps').value()
-                                           )
-
+         self.AcConfig.sigTreeStateChanged.connect(self.on_Ac_Sweep_Changed)
+         self.on_Ac_Sweep_Changed()
+         self.VgsConfig.sigTreeStateChanged.connect(self.on_Vgs_Sweep_Changed)
+         self.on_Vgs_Sweep_Changed()
+         
+     def on_Ac_Sweep_Changed(self):
          self.AcSweepValues = np.linspace(self.AcConfig.param('Start').value(),
                                           self.AcConfig.param('Stop').value(),
                                           self.AcConfig.param('nSweeps').value())
          
+     def on_Vgs_Sweep_Changed(self):
+         self.VgsSweepValues = np.linspace(self.VgsConfig.param('Start').value(),
+                                           self.VgsConfig.param('Stop').value(),
+                                           self.VgsConfig.param('nSweeps').value()
+                                           )
          
      def GetSweepParams(self):
          self.Sweeps = {'VgsSweep':{},
@@ -129,6 +135,8 @@ class SweepsParameters(pTypes.GroupParameter):
         #cambiar Vgs
         CMVoltage=self.VgsSweepValues[nVgsSw]
         #cambiar Acs
+        print(CMVoltage, nVgsSw)
+        print(self.AcSweepValues, nAcSw)
         for Col, val in ColsConfig.items():
              ColsConfig[Col]['Amplitude']=self.AcSweepValues[nAcSw]
              
