@@ -67,6 +67,12 @@ class MainWindow(Qt.QWidget):
         self.NiScopeParams = NiScope.NiScopeParameters(name='Pxi Scope')
         self.Parameters.addChild(self.NiScopeParams) 
         
+        #Demodulación
+        self.DemodParams = DemMod.DemodParameters(name='Demod Options')     
+        self.Parameters.addChild(self.DemodParams)
+        self.DemodConfig = self.DemodParams.param('DemodConfig')
+        
+        
         self.Parameters.sigTreeStateChanged.connect(self.on_Params_changed)
         self.treepar = ParameterTree()
         self.treepar.setParameters(self.Parameters, showTop=False)
@@ -80,7 +86,8 @@ class MainWindow(Qt.QWidget):
         self.btnStart.clicked.connect(self.on_btnStart)
         
         self.threadAqc = None
-        self.threadSave = None
+        self.threadDemodAqc = None
+        self.threadDemodSave = None
         
     def on_Params_changed(self, param, changes):
             print("tree changes:")
@@ -109,7 +116,24 @@ class MainWindow(Qt.QWidget):
                 self.PlotParams.SetChannels(self.NiScopeParams.GetRows())
                 self.DemodPlotParams.SetChannels(self.DemodParams.GetChannels(self.NiScopeParams.Rows, 
                                                                               self.NifGenParams.GetCarriers())
-                                                 )   
+                                                )
+            #Generator Changes
+            if childName == 'Pxi Generator.CarriersConfig':
+                self.DemodPlotParams.SetChannels(self.DemodParams.GetChannels(self.NiScopeParams.Rows, 
+                                                                              self.NifGenParams.GetCarriers())
+                                                )
+            
+            #Demodulation Changes
+            if childName == 'Demod Options.DemodConfig.DSFact':
+                self.DemodParams.ReCalc_DSFact(self.NiScopeParams.BufferSize.value())
+                  
+            if childName == 'Demod Options.DemodConfig.DSFs':
+                self.DemodPsdPlotParams.param('Fs').setValue(data)
+                self.DemodPlotParams.param('Fs').setValue(data)
+                if data >= np.min(self.NifGenParams.Freqs):
+                    print('WARNING: FsDemod is higher than FsMin')
+                    
+            
     def on_btnStart(self):       
         if self.threadAqc is None:
             print('started')
@@ -123,6 +147,7 @@ class MainWindow(Qt.QWidget):
                 
             self.GenKwargs = self.NifGenParams.GetGenParams()
             self.ScopeKwargs = self.NiScopeParams.GetRowParams()
+            self.DemodKwargs = self.DemodParams.GetParams()    
             self.SweepsKwargs = self.SweepsParams.GetSweepParams()
             
             self.GenKwargs = self.SweepsParams.NextSweep(nAcSw = 0,
@@ -135,6 +160,12 @@ class MainWindow(Qt.QWidget):
                 
             self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
             self.threadAqc.NewData.connect(self.on_New_Adq)  
+            self.threadDemodAqc = DemMod.DemodThread(Fcs=self.NifGenParams.GetCarriers(), 
+                                                     RowList=self.threadAqc.RowsList,
+                                                     FetchSize=self.threadAqc.BufferSize, 
+                                                     **self.DemodKwargs)
+            self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
+            self.threadDemodAqc.start()
             self.threadAqc.start()
             
             
@@ -148,19 +179,21 @@ class MainWindow(Qt.QWidget):
             self.StopThreads()
             
     def on_New_Adq(self): #para que no haya overwrite en los sweeps
-
+        if self.threadDemodAqc is not None:
+                self.threadDemodAqc.AddData(self.threadAqc.OutData)
+            
         print(self.TCount)
         if self.CountTime == 0:
-            if self.threadSave is not None:
-                    self.threadSave.NewDset(DSname='AcSw{0:03d}'.format(self.AcSwCount)+'Sw{0:03d}'.format(self.VgsSwCount))
-            self.on_NewSample()
+            if self.threadSweepsSave is not None:
+                    self.threadSweepsSave.NewDset(DSname='AcSw{0:03d}'.format(self.AcSwCount)+'Sw{0:03d}'.format(self.VgsSwCount))
+#            self.on_NewSample()
             self.on_New_Sweep()
 
         else:
             if self.TCount >= self.CountTime:
-                if self.threadSave is not None:
-                    self.threadSave.NewDset(DSname='AcSw{0:03d}'.format(self.AcSwCount)+'Sw{0:03d}'.format(self.VgsSwCount))
-                self.on_NewSample()
+                if self.threadSweepsSave is not None:
+                    self.threadSweepsSave.NewDset(DSname='AcSw{0:03d}'.format(self.AcSwCount)+'Sw{0:03d}'.format(self.VgsSwCount))
+#                self.on_NewSample()
                 self.TCount = 0
                 self.on_New_Sweep()
             else:
@@ -179,6 +212,11 @@ class MainWindow(Qt.QWidget):
             if self.AcSwCount >= self.SweepsParams.AcConfig.param('nSweeps').value():
                 print('stopped')
                 self.btnStart.setText("Start Gen and Adq!")  
+                self.threadAqc.NewData.disconnect()
+                self.threadAqc.stopSessions()
+                self.threadAqc.terminate()
+                self.threadAqc = None
+                self.StopThreads()
                 
             else:
                 self.VgsSwCount = 0
@@ -188,6 +226,11 @@ class MainWindow(Qt.QWidget):
                 
                 self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
                 self.threadAqc.NewData.connect(self.on_New_Adq)  
+                self.threadDemodAqc = DemMod.DemodThread(Fcs=self.NifGenParams.GetCarriers(), 
+                                                     RowList=self.threadAqc.RowsList,
+                                                     FetchSize=self.threadAqc.BufferSize, 
+                                                     **self.DemodKwargs)
+                self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
                 self.threadAqc.start()
         else:
             
@@ -197,18 +240,30 @@ class MainWindow(Qt.QWidget):
 
             self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
             self.threadAqc.NewData.connect(self.on_New_Adq)  
+            self.threadDemodAqc = DemMod.DemodThread(Fcs=self.NifGenParams.GetCarriers(), 
+                                                     RowList=self.threadAqc.RowsList,
+                                                     FetchSize=self.threadAqc.BufferSize, 
+                                                     **self.DemodKwargs)
+            self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
             self.threadAqc.start()
       
-    def on_NewSample(self):
+    def on_NewDemodSample(self):
         ''' Visualization of streaming data-WorkThread. '''
         Ts = time.time() - self.OldTime
         self.OldTime = time.time()
-        if self.threadSave is not None:
-#            No usar Int hasta que se haya arreglado problema
-#            Problema: Range scope no es exacto con lo cual hay valores que no deberian saturar y saturan
-#            self.threadSave.AddData(self.threadAqc.IntData)          
-            self.threadSave.AddData(self.threadAqc.OutData)
-    
+            
+        if self.DemodConfig.param('OutType').value() == 'Abs':
+            OutDemodData = np.abs(self.threadDemodAqc.OutDemodData)
+        elif self.DemodConfig.param('OutType').value() == 'Real':
+            OutDemodData = np.real(self.threadDemodAqc.OutDemodData)
+        elif self.DemodConfig.param('OutType').value() == 'Imag':
+            OutDemodData = np.imag(self.threadDemodAqc.OutDemodData)
+        elif self.DemodConfig.param('OutType').value() == 'Angle':
+            OutDemodData = np.angle(self.threadDemodAqc.OutDemodData, deg=True)    
+            
+        if self.threadSweepsSave is not None:
+            self.threadSweepsSave.AddData(OutDemodData)
+            
     def SaveFiles(self):
         FileName = self.FileParams.param('File Path').value()
         if FileName ==  '':
@@ -218,12 +273,12 @@ class MainWindow(Qt.QWidget):
                 print('Remove File')
                 os.remove(FileName)  
             MaxSize = self.FileParams.param('MaxSize').value()
-            self.threadSave = FileMod.DataSavingThread(FileName=FileName,
-                                                       nChannels=self.ScopeKwargs['NRow'],
-                                                       MaxSize=MaxSize,
-                                                       dtype='float' #comment when int save problem solved
-                                                       )
-            self.threadSave.start()
+            self.threadSweepsSave = FileMod.DataSavingThread(FileName=FileName,
+                                                             nChannels=self.ScopeKwargs['NRow']*len(self.NifGenParams.Freqs),
+                                                             MaxSize=MaxSize,
+                                                             dtype='float')
+                
+            self.threadSweepsSave.start()
             
             GenName = FileName+'_GenConfig.dat'
             ScopeName = FileName+'_ScopeConfig.dat'
@@ -241,11 +296,15 @@ class MainWindow(Qt.QWidget):
                 FileMod.GenArchivo(GenName, self.GenKwargs)
                 FileMod.GenArchivo(SweepsName, self.SweepsKwargs)
                 
-    def StopThreads(self):
-        if self.threadSave is not None:
-            self.threadSave.stop()
-            self.threadSave = None            
-                
+    def StopThreads(self):      
+        if self.threadDemodAqc is not None:
+            self.threadDemodAqc.NewData.disconnect()
+            self.threadDemodAqc.stop()
+            self.threadDemodAqc = None 
+        if self.threadDemodSave is not None:
+            self.threadDemodSave.stop()
+            self.threadDemodSave = None
+            
 if __name__ == '__main__':
     app = Qt.QApplication([])
     mw  = MainWindow()
