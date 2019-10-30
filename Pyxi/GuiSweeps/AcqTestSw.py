@@ -183,71 +183,61 @@ class MainWindow(Qt.QWidget):
             
         print(self.TCount)
         if self.CountTime == 0:
-            if self.threadSweepsSave is not None:
-                    self.threadSweepsSave.NewDset(DSname='AcSw{0:03d}'.format(self.AcSwCount)+'Sw{0:03d}'.format(self.VgsSwCount))
-#            self.on_NewSample()
             if self.threadAqc is not None:
                     self.on_New_Sweep()
+            if self.threadSweepsSave is not None:
+                self.DsNameChanged = True
+                self.DsName = 'AcSw{0:03d}'.format(self.AcSwCount)+'Sw{0:03d}'.format(self.VgsSwCount)
+#                    self.threadSweepsSave.NewDset(DSname='AcSw{0:03d}'.format(self.AcSwCount)+'Sw{0:03d}'.format(self.VgsSwCount))
+
+
 
         else:
             if self.TCount >= self.CountTime:
-                if self.threadSweepsSave is not None:
-                    self.threadSweepsSave.NewDset(DSname='AcSw{0:03d}'.format(self.AcSwCount)+'Sw{0:03d}'.format(self.VgsSwCount))
-#                self.on_NewSample()
                 self.TCount = 0
                 if self.threadAqc is not None:
                     self.on_New_Sweep()
+                    
+                if self.threadSweepsSave is not None:
+                    self.DsNameChanged = True
+                    self.DsName = 'AcSw{0:03d}'.format(self.AcSwCount)+'Sw{0:03d}'.format(self.VgsSwCount)
+#                    self.threadSweepsSave.NewDset(DSname='AcSw{0:03d}'.format(self.AcSwCount)+'Sw{0:03d}'.format(self.VgsSwCount))
+
             else:
-#                self.on_NewSample()
+                self.DsNameChanged = False
                 self.TCount += 1
             
     def on_New_Sweep(self):
         self.threadAqc.NewData.disconnect()
         self.threadAqc.stopSessions()
+        self.threadAqc.stopTimer()
         self.threadAqc.terminate()
         self.threadAqc = None
-#        print(self.VgsSwCount, self.AcSwCount)
+
         self.VgsSwCount += 1
         if self.VgsSwCount >= self.SweepsParams.VgsConfig.param('nSweeps').value():
             self.AcSwCount += 1
             if self.AcSwCount >= self.SweepsParams.AcConfig.param('nSweeps').value():
                 print('stopped')
                 self.btnStart.setText("Start Gen and Adq!")  
-                self.threadAqc.NewData.disconnect()
-                self.threadAqc.stopSessions()
-                self.threadAqc.terminate()
-                self.threadAqc = None
                 self.StopThreads()
                 
             else:
                 self.VgsSwCount = 0
-                self.GenKwargs = self.SweepsParams.NextSweep(nAcSw = self.AcSwCount,
-                                                             nVgsSw = self.VgsSwCount,
-                                                             **self.GenKwargs)
-                
-                self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
-                self.threadAqc.NewData.connect(self.on_New_Adq)  
-#                self.threadDemodAqc = DemMod.DemodThread(Fcs=self.NifGenParams.GetCarriers(), 
-#                                                     RowList=self.threadAqc.RowsList,
-#                                                     FetchSize=self.threadAqc.BufferSize, 
-#                                                     **self.DemodKwargs)
-#                self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
-                self.threadAqc.start()
-        else:
-            
-            self.GenKwargs = self.SweepsParams.NextSweep(nAcSw = self.AcSwCount,
-                                                         nVgsSw = self.VgsSwCount,
-                                                         **self.GenKwargs)
+                self.on_NewThreadAdq()
 
-            self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
-            self.threadAqc.NewData.connect(self.on_New_Adq)  
-#            self.threadDemodAqc = DemMod.DemodThread(Fcs=self.NifGenParams.GetCarriers(), 
-#                                                     RowList=self.threadAqc.RowsList,
-#                                                     FetchSize=self.threadAqc.BufferSize, 
-#                                                     **self.DemodKwargs)
-#            self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
-            self.threadAqc.start()
-      
+        else:
+            self.on_NewThreadAdq()
+            
+    def on_NewThreadAdq(self):
+        self.GenKwargs = self.SweepsParams.NextSweep(nAcSw = self.AcSwCount,
+                                                     nVgsSw = self.VgsSwCount,
+                                                     **self.GenKwargs)
+
+        self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
+        self.threadAqc.NewData.connect(self.on_New_Adq)  
+        self.threadAqc.start()
+        
     def on_NewDemodSample(self):
         ''' Visualization of streaming data-WorkThread. '''
         Ts = time.time() - self.OldTime
@@ -264,6 +254,8 @@ class MainWindow(Qt.QWidget):
             
         if self.threadSweepsSave is not None:
             self.threadSweepsSave.AddData(OutDemodData)
+            if self.DsNameChanged == True:
+                self.threadSweepsSave.NewDset(DSname=self.DsName)
             
     def SaveFiles(self):
         FileName = self.FileParams.param('File Path').value()
