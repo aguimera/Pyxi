@@ -104,14 +104,15 @@ class MainWindow(Qt.QWidget):
             
             #Sweep Changes
             if childName == 'Sweep Options.SweepsConfig.VgsSweep.timeXsweep':
-                if data > 2:
-                    self.NiScopeParams.tFetch.setValue(2)
+                if data > 0.2:
+                    self.NiScopeParams.tFetch.setValue(0.2)
                 else:
                     self.NiScopeParams.tFetch.setValue(data)
            #Scope Changes
             if childName == 'Pxi Scope.AcqConfig.FsScope':
                 n =round(self.NifGenParams.FsGen.value()/data)
                 self.NiScopeParams.FsScope.setValue(self.NifGenParams.FsGen.value()/n)
+                self.DemodConfig.param('FsDemod').setValue(self.NiScopeParams.FsScope.value())
             if childName == 'Pxi Scope.AcqConfig.NRow':
                 self.PlotParams.SetChannels(self.NiScopeParams.GetRows())
                 self.DemodPlotParams.SetChannels(self.DemodParams.GetChannels(self.NiScopeParams.Rows, 
@@ -128,8 +129,6 @@ class MainWindow(Qt.QWidget):
                 self.DemodParams.ReCalc_DSFact(self.NiScopeParams.BufferSize.value())
                   
             if childName == 'Demod Options.DemodConfig.DSFs':
-                self.DemodPsdPlotParams.param('Fs').setValue(data)
-                self.DemodPlotParams.param('Fs').setValue(data)
                 if data >= np.min(self.NifGenParams.Freqs):
                     print('WARNING: FsDemod is higher than FsMin')
                     
@@ -187,7 +186,8 @@ class MainWindow(Qt.QWidget):
             if self.threadSweepsSave is not None:
                     self.threadSweepsSave.NewDset(DSname='AcSw{0:03d}'.format(self.AcSwCount)+'Sw{0:03d}'.format(self.VgsSwCount))
 #            self.on_NewSample()
-            self.on_New_Sweep()
+            if self.threadAqc is not None:
+                    self.on_New_Sweep()
 
         else:
             if self.TCount >= self.CountTime:
@@ -195,9 +195,10 @@ class MainWindow(Qt.QWidget):
                     self.threadSweepsSave.NewDset(DSname='AcSw{0:03d}'.format(self.AcSwCount)+'Sw{0:03d}'.format(self.VgsSwCount))
 #                self.on_NewSample()
                 self.TCount = 0
-                self.on_New_Sweep()
+                if self.threadAqc is not None:
+                    self.on_New_Sweep()
             else:
-                self.on_NewSample()
+#                self.on_NewSample()
                 self.TCount += 1
             
     def on_New_Sweep(self):
@@ -205,7 +206,7 @@ class MainWindow(Qt.QWidget):
         self.threadAqc.stopSessions()
         self.threadAqc.terminate()
         self.threadAqc = None
-
+#        print(self.VgsSwCount, self.AcSwCount)
         self.VgsSwCount += 1
         if self.VgsSwCount >= self.SweepsParams.VgsConfig.param('nSweeps').value():
             self.AcSwCount += 1
@@ -226,11 +227,11 @@ class MainWindow(Qt.QWidget):
                 
                 self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
                 self.threadAqc.NewData.connect(self.on_New_Adq)  
-                self.threadDemodAqc = DemMod.DemodThread(Fcs=self.NifGenParams.GetCarriers(), 
-                                                     RowList=self.threadAqc.RowsList,
-                                                     FetchSize=self.threadAqc.BufferSize, 
-                                                     **self.DemodKwargs)
-                self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
+#                self.threadDemodAqc = DemMod.DemodThread(Fcs=self.NifGenParams.GetCarriers(), 
+#                                                     RowList=self.threadAqc.RowsList,
+#                                                     FetchSize=self.threadAqc.BufferSize, 
+#                                                     **self.DemodKwargs)
+#                self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
                 self.threadAqc.start()
         else:
             
@@ -240,11 +241,11 @@ class MainWindow(Qt.QWidget):
 
             self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
             self.threadAqc.NewData.connect(self.on_New_Adq)  
-            self.threadDemodAqc = DemMod.DemodThread(Fcs=self.NifGenParams.GetCarriers(), 
-                                                     RowList=self.threadAqc.RowsList,
-                                                     FetchSize=self.threadAqc.BufferSize, 
-                                                     **self.DemodKwargs)
-            self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
+#            self.threadDemodAqc = DemMod.DemodThread(Fcs=self.NifGenParams.GetCarriers(), 
+#                                                     RowList=self.threadAqc.RowsList,
+#                                                     FetchSize=self.threadAqc.BufferSize, 
+#                                                     **self.DemodKwargs)
+#            self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
             self.threadAqc.start()
       
     def on_NewDemodSample(self):
@@ -282,6 +283,7 @@ class MainWindow(Qt.QWidget):
             
             GenName = FileName+'_GenConfig.dat'
             ScopeName = FileName+'_ScopeConfig.dat'
+            DemodName = FileName+'_DemodConfig.dat'
             SweepsName = FileName+'_SweepsConfig.dat'
                 
             if os.path.isfile(ScopeName):
@@ -291,10 +293,12 @@ class MainWindow(Qt.QWidget):
                     FileMod.GenArchivo(ScopeName, self.ScopeKwargs)
                     FileMod.GenArchivo(GenName, self.GenKwargs)
                     FileMod.GenArchivo(SweepsName, self.SweepsKwargs)
+                    FileMod.GenArchivo(DemodName, self.DemodKwargs)
             else:
                 FileMod.GenArchivo(ScopeName, self.ScopeKwargs)
                 FileMod.GenArchivo(GenName, self.GenKwargs)
                 FileMod.GenArchivo(SweepsName, self.SweepsKwargs)
+                FileMod.GenArchivo(DemodName, self.DemodKwargs)
                 
     def StopThreads(self):      
         if self.threadDemodAqc is not None:

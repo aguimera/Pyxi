@@ -91,10 +91,10 @@ class SweepsParameters(pTypes.GroupParameter):
                                            )
          self.VgsTime = self.VgsConfig.param('timeXsweep').value()
          
-         if self.VgsTime > 2:
+         if self.VgsTime > 0.2:
              if self.VgsTime % 2 != 0:
                  self.VgsTime += 1
-             self.CountTime = self.VgsTime/2
+             self.CountTime = self.VgsTime/0.2
              print(self.VgsTime, self.CountTime)
         
          else:

@@ -10,31 +10,49 @@ import matplotlib.pyplot as plt
 from scipy import signal
 import numpy as np
 
-import FileBuffer as FB
+import Pyxi.FileModule as FileMod
 
 plt.close('all')
 
-FileData = "DataSaved/4Cols_7Rows_100_125_150_175_25mV_Demod_0.h5"
-FileScopeConfig = "DataSaved/4Cols_7Rows_100_125_150_175_25mV_Demod.h5_ScopeConfig.dat"
-FileDemodConfig = "DataSaved/4Cols_7Rows_100_125_150_175_25mV_Demod.h5_DemodConfig.dat"
+Folder = r"F:\Dropbox (ICN2 AEMD - GAB GBIO)\TeamFolderLMU\FreqMux\Lucia\GuiSweeps\Test30_10_2019"
+File = "\TestSweepDemod_2_4seconds"
+FileData = Folder + File +"_0.h5"
+
+FileGenConfig = Folder + File + ".h5_GenConfig.dat"
+FileScopeConfig = Folder + File + ".h5_ScopeConfig.dat"
+FileDemodConfig = Folder + File + ".h5_DemodConfig.dat"
+FileSweepConfig = Folder + File + ".h5_SweepsConfig.dat"
 
 hfile = h5py.File(FileData, 'r')
 
-ScopeConfig = FB.ReadArchivo(FileScopeConfig)
-DemodConfig = FB.ReadArchivo(FileDemodConfig)
+ScopeConfig = FileMod.ReadArchivo(FileScopeConfig)
+GenConfig = FileMod.ReadArchivo(FileGenConfig)
+SweepConfig = FileMod.ReadArchivo(FileSweepConfig)
+DemodConfig = FileMod.ReadArchivo(FileDemodConfig)
 
 #Fs = ScopeConfig['FsScope']
 FsDSDemod = DemodConfig['FsDemod']/DemodConfig['DSFact']
 TsDSDemod = 1/FsDSDemod
 
-fig, axPsdDS = plt.subplots()   
-fig, axTempDS = plt.subplots()
-#Per fer PSD dels fitxers de VgsSweep
-
-for i in range(hfile['data'].shape[1]):
-
-    ff, psd = signal.welch(hfile['data'][:, i], fs=FsDSDemod, nperseg=2**21)
-    axPsdDS.loglog(ff, psd)
+data = {}
+DataSets = []
+for k in hfile.keys():
+        print('data load')
+        data[k] = hfile[k].value
+        DataSets.append(k)
     
-    #50 samples to avoid the stabilization peack
-    axTempDS.plot(np.arange(0, TsDSDemod*(hfile['data'].shape[0]-50), TsDSDemod), hfile['data'][50:, i])
+    
+for DS in DataSets:
+#    if DS == 'data':
+#        continue
+    for i in range(hfile[DS].shape[1]):
+    
+        ff, psd = signal.welch(hfile[DS][:, i], fs=FsDSDemod, nperseg=2**21)
+        plt.figure(DS)
+        plt.loglog(ff, psd)
+        
+        #50 samples to avoid the stabilization peack
+        plt.figure(DS+'temp')
+        plt.plot(np.arange(0, TsDSDemod*(hfile[DS].shape[0]-50), TsDSDemod), hfile[DS][50:, i])
+
+hfile.close()
