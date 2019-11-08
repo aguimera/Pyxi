@@ -206,10 +206,13 @@ class DemodThread(Qt.QThread):
         self.ToDemData = NewData 
         
     def stop (self):
-        if self.ToDemData is None:
-            self.terminate()  
-        else:
-            self.stop()
+        while self.ToDemData is not None:
+            print('Demodulation In Course')
+        self.terminate()
+#        if self.ToDemData is None:
+#            self.terminate()  
+#        else:
+#            self.stop()
         
         
         
