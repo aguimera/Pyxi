@@ -76,8 +76,7 @@ class MainWindow(Qt.QWidget):
         self.Parameters.sigTreeStateChanged.connect(self.on_Params_changed)
         self.treepar = ParameterTree()
         self.treepar.setParameters(self.Parameters, showTop=False)
-        self.treepar.setWindowTitle('pyqtgraph example: Parameter Tree')
-        
+        self.treepar.setWindowTitle('pyqtgraph example: Parameter Tree')        
         
         layout.addWidget(self.treepar)
         
@@ -165,8 +164,7 @@ class MainWindow(Qt.QWidget):
                                                      **self.DemodKwargs)
             self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
             self.threadDemodAqc.start()
-            self.threadAqc.start()
-            
+            self.threadAqc.start()       
             
         else:
             print('stopped')
@@ -189,8 +187,6 @@ class MainWindow(Qt.QWidget):
                 self.DsNameChanged = True
                 self.DsName = 'AcSw{0:03d}'.format(self.AcSwCount)+'Sw{0:03d}'.format(self.VgsSwCount)
 #                    self.threadSweepsSave.NewDset(DSname='AcSw{0:03d}'.format(self.AcSwCount)+'Sw{0:03d}'.format(self.VgsSwCount))
-
-
 
         else:
             if self.TCount >= self.CountTime:
