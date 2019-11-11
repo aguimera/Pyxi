@@ -175,7 +175,7 @@ class DemodThread(Qt.QThread):
     def __init__(self, Fcs, RowList, FetchSize, FsDemod, DSFact, FiltOrder,**Keywards):
        super(DemodThread, self).__init__() 
        self.ToDemData = None
-       
+       self.CountIterEnd = 0
        self.DemOutputs = []
        for Row in RowList:
            DemOut = []
@@ -206,15 +206,16 @@ class DemodThread(Qt.QThread):
         self.ToDemData = NewData 
         
     def stop (self):
-        while self.ToDemData is not None:
-            print('Demodulation In Course')
-        self.terminate()
-#        if self.ToDemData is None:
-#            self.terminate()  
-#        else:
-#            self.stop()
-        
-        
+        if self.ToDemData is not None:
+            self.CountIterEnd += 1
+            self.nextIter()
+        if self.ToDemData is None:
+            self.terminate()
+    
+    def nextIter(self):
+        print('Demodulation In Course', self.CountIterEnd)
+#        Qt.QThread.msleep(10)
+        self.stop()
         
         
         
