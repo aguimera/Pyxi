@@ -141,6 +141,7 @@ class MainWindow(Qt.QWidget):
             self.VgsSwCount=0
             self.TCount = 0
             self.CountTime = self.SweepsParams.CountTime
+            print('CountTime', self.CountTime)
 
                 
             self.GenKwargs = self.NifGenParams.GetGenParams()
@@ -178,8 +179,7 @@ class MainWindow(Qt.QWidget):
     def on_New_Adq(self): #para que no haya overwrite en los sweeps
         if self.threadDemodAqc is not None:
                 self.threadDemodAqc.AddData(self.threadAqc.OutData)
-            
-        print(self.TCount)
+        print(self.TCount)  
         if self.CountTime == 0:
             if self.threadAqc is not None:
                     self.on_New_Sweep()
@@ -206,7 +206,7 @@ class MainWindow(Qt.QWidget):
     def on_New_Sweep(self):
         self.threadAqc.NewData.disconnect()
         self.threadAqc.stopSessions()
-        self.threadAqc.stopTimer()
+#        self.threadAqc.stopTimer()
         self.threadAqc.terminate()
         self.threadAqc = None
 
@@ -250,8 +250,10 @@ class MainWindow(Qt.QWidget):
             
         if self.threadSweepsSave is not None:
             self.threadSweepsSave.AddData(OutDemodData)
+
             if self.DsNameChanged == True:
                 self.threadSweepsSave.NewDset(DSname=self.DsName)
+                self.DsNameChanged = False
             
     def SaveFiles(self):
         FileName = self.FileParams.param('File Path').value()
@@ -290,8 +292,8 @@ class MainWindow(Qt.QWidget):
                 
     def StopThreads(self):      
         if self.threadDemodAqc is not None:
-            self.threadDemodAqc.NewData.disconnect()
             self.threadDemodAqc.stop()
+            self.threadDemodAqc.NewData.disconnect()
             self.threadDemodAqc = None 
         if self.threadDemodSave is not None:
             self.threadDemodSave.stop()
