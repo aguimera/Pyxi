@@ -227,10 +227,12 @@ class MainWindow(Qt.QWidget):
             self.treepar.setParameters(self.Parameters, showTop=False)
             self.GenKwargs = self.NifGenParams.GetGenParams()
             self.ScopeKwargs = self.NiScopeParams.GetRowParams()
+            self.ScopeChns = self.NiScopeParams.GetRowsNames()
             self.DemodKwargs = self.DemodParams.GetParams()
 
-            self.threadAqc = DataAcq.DataAcquisitionThread(**self.GenKwargs, **self.ScopeKwargs)
-            self.threadAqc.NewData.connect(self.on_NewSample)
+            self.threadAqc = DataAcq.DataAcquisitionThread(Channels=self.ScopeChns, 
+                                                           ScopeConfig=self.ScopeKwargs)
+            self.threadAqc.NewMuxData.connect(self.on_NewSample)
                        
             self.Gen_Destroy_PsdPlotter()
             self.Gen_Destroy_Plotters()

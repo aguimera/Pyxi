@@ -5,7 +5,7 @@ Created on Mon Nov 18 12:20:11 2019
 @author: Lucia
 """
 
-import DaqInterface as DaqInt
+import Pyxi.DaqInterface as DaqInt
 #import PyTMCore.DaqInterface as DaqInt
 import numpy as np
 
@@ -66,15 +66,15 @@ class ChannelsConfig():
             InChans.append(aiChannels[ch][0]) #only Output+
             self.SChannelIndex[ch] = (index, sortindex)
             index += 1
-            print(ch, ' Single -->', aiChannels[ch][0])
-            print('SortIndex ->', self.DCChannelIndex[ch])
+            print(ch, 'Single -->', aiChannels[ch][0])
+            print('SortIndex ->', self.SChannelIndex[ch])
             if self.AcqD:
             #Only read Output- when diff activated
                 InChans.append(aiChannels[ch][1])
                 self.DChannelIndex[ch] = (index, sortindex)
                 index += 1
-                print(ch, ' AC -->', aiChannels[ch][1])
-                print('SortIndex ->', self.ACChannelIndex[ch])
+                print(ch, ' Differential -->', aiChannels[ch][1])
+                print('SortIndex ->', self.DChannelIndex[ch])
             sortindex += 1
         print('Input ai', InChans)
 
@@ -83,17 +83,12 @@ class ChannelsConfig():
         self.AnalogInputs.EveryNEvent = self.EveryNEventCallBack
         self.AnalogInputs.DoneEvent = self.DoneEventCallBack
         
-
-    def StartAcquisition(self, Fs, nSampsCo, nBlocks, Vgs, Vds, **kwargs):
+    def StartAcquisition(self, Fs, EveryN):
+#    def StartAcquisition(self, Fs, nSampsCo, nBlocks, numCols):
         print('StartAcquisition')
-        self.SetBias(Vgs=Vgs, Vds=Vds)
-        self.SetDigitalOutputs(nSampsCo=nSampsCo)
         print('DSig set')
-        self.nBlocks = nBlocks
-        self.nSampsCo = nSampsCo
-#        self.OutputShape = (nColumns * nRows, nSampsCh, nblocs)
-        self.OutputShape = (len(self.MuxChannelNames), nSampsCo, nBlocks)
-        EveryN = len(self.DigColumns)*nSampsCo*nBlocks
+
+#        EveryN = numCols*nSampsCo*nBlocks
         self.AnalogInputs.ReadContData(Fs=Fs,
                                        EverySamps=EveryN)
 

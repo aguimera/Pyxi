@@ -62,7 +62,7 @@ NiScopeAcqParam =  {'name': 'AcqConfig',
                  }
 NiScopeRowsParam = {'name': 'RowsConfig',
                    'type': 'group',
-                   'children':({'name':'Row1',
+                   'children':({'name':'Ch01',
                                 'type': 'group',
                                 'children':({'name': 'Enable',
                                              'type': 'bool',
@@ -79,7 +79,7 @@ NiScopeRowsParam = {'name': 'RowsConfig',
                                              'visible': True
                                              }
                                             )},
-                               {'name':'Row2',
+                               {'name':'Ch02',
                                 'type': 'group',
                                 'children':({'name': 'Enable',
                                              'type': 'bool',
@@ -96,7 +96,7 @@ NiScopeRowsParam = {'name': 'RowsConfig',
                                              'visible': True
                                              }
                                             )},
-                               {'name':'Row3',
+                               {'name':'Ch03',
                                 'type': 'group',
                                 'children':({'name': 'Enable',
                                              'type': 'bool',
@@ -113,7 +113,7 @@ NiScopeRowsParam = {'name': 'RowsConfig',
                                              'visible': True
                                              }
                                             )},
-                               {'name':'Row4',
+                               {'name':'Ch04',
                                 'type': 'group',
                                 'children':({'name': 'Enable',
                                              'type': 'bool',
@@ -130,7 +130,7 @@ NiScopeRowsParam = {'name': 'RowsConfig',
                                              'visible': True
                                              }
                                             )},
-                               {'name':'Row5',
+                               {'name':'Ch05',
                                 'type': 'group',
                                 'children':({'name': 'Enable',
                                              'type': 'bool',
@@ -147,7 +147,7 @@ NiScopeRowsParam = {'name': 'RowsConfig',
                                              'visible': True
                                              }
                                             )},
-                               {'name':'Row6',
+                               {'name':'Ch06',
                                 'type': 'group',
                                 'children':({'name': 'Enable',
                                              'type': 'bool',
@@ -164,7 +164,7 @@ NiScopeRowsParam = {'name': 'RowsConfig',
                                              'visible': True
                                              }
                                             )},
-                               {'name':'Row7',
+                               {'name':'Ch07',
                                 'type': 'group',
                                 'children':({'name': 'Enable',
                                              'type': 'bool',
@@ -181,7 +181,7 @@ NiScopeRowsParam = {'name': 'RowsConfig',
                                              'visible': True
                                              }
                                             )},  
-                               {'name':'Row8',
+                               {'name':'Ch08',
                                 'type': 'group',
                                 'children':({'name': 'Enable',
                                              'type': 'bool',
@@ -319,80 +319,20 @@ class NiScopeParameters(pTypes.GroupParameter):
         for i,r in enumerate(self.Rows):
             RowNames[r]=i
         return RowNames
-
-class Rows():
-#Init Scope Channels
-    Rows = {} #{'Row1': Range, Index}
-    def __init__(self, RowsConfig, FsScope, ResourceScope):
-        """
-        Class used to configure the Scope channels and adcquisition
+    
+    def GetRowsNames(self):
+        '''
+        Generates a array with names of rows
         
-        RowsConfig: Dictionary that has all the information of the generators 
-                    and the waveforms to be generated:
-                    (Solo deben aparecer las Rows que se van a utilizar)
-            {Row1: {Enable: (True or False) ,
-                    Index: (0 to 7 depending on the Row),
-                    AcqVRange: (Voltage Range of the ADC)
-                    }
-            ...
-             Row8: {Enable: ,
-                    Index: ,
-                    AcqVRange: ,
-                    Gain: ,
-                    Resource: ,
-                    }
-            }
-            
-        FsScope: Sampling Frequency for the adquisition
-        ResourceScope: fixed to PXI1Slot4
-        """
-        self.SesScope = SigScope(resource_name=ResourceScope, options=OptionsScope)
-        self.SesScope.acquisition_type=niscope.AcquisitionType.NORMAL
-        self.SesScope.configure_horizontal_timing(min_sample_rate=FsScope,
-                                                  min_num_pts=int(1e3),
-                                                  ref_position=50.0,
-                                                  num_records=1,
-                                                  enforce_realtime=True)
-        self.SesScope.exported_start_trigger_output_terminal = 'PXI_Trig0'
-        self.SesScope.input_clock_source='PXI_Clk'
-        self.SesScope.configure_trigger_software()
-        self.SesScope.Scope_GetSignal(RowsConfig)
+        RowNames=[]
+        '''
+        RowNames = []
+        for Config in self.RowsConfig.children():
+            if Config.param('Enable').value() == True:
+                RowNames.append(Config.name())
 
-    #Init Acquisition
-    def Session_Scope_Initiate(self):
-        self.SesScope.initiate()
+        return RowNames
 
-    def Session_Scope_Abort(self):
-        self.SesScope.abort()
-        
-# Init Session of Scope        
-class SigScope(niscope.Session):
-    def Scope_GetSignal(self, RowsConfig):#RowsConfig = {'Row1': Range, Index}
-        """
-        Configure the vertical range and characteristics of the scope for the
-        adcquisition
-        
-        RowsConfig: Dictionary that has all the information of the generators 
-                    and the waveforms to be generated:
-                    (Solo deben aparecer las Rows que se van a utilizar)
-            {Row1: {Enable: (True or False) ,
-                    Index: (0 to 7 depending on the Row),
-                    AcqVRange: (Voltage Range of the ADC)
-                    }
-            ...
-             Row8: {Enable: ,
-                    Index: ,
-                    AcqVRange: ,
-                    Gain: ,
-                    Resource: ,
-                    }
-            }
-        """
-        for Rows, params in RowsConfig.items():
-            self.channels[params['Index']].configure_vertical(range=params['AcqVRange'], 
-                                                              coupling=niscope.VerticalCoupling.AC)
-            self.channels[params['Index']].configure_chan_characteristics(input_impedance=1000000, 
-                                                                          max_input_frequency=600000.0)
             
             
         
