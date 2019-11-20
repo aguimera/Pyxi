@@ -252,8 +252,9 @@ class MainWindow(Qt.QWidget):
             self.OldTime = time.time()
         else:
             print('stopped')
-            self.threadAqc.NewData.disconnect()
-            self.threadAqc.stopSessions()
+            self.threadAqc.NewMuxData.disconnect()
+            self.threadAcq.DaqInterface.Stop()
+#            self.threadAqc.stopSessions()
             self.threadAqc.terminate()
             self.threadAqc = None
             
@@ -301,14 +302,14 @@ class MainWindow(Qt.QWidget):
             self.threadSave.AddData(self.threadAqc.OutData)
         
         if self.threadPlotter is not None:
-            self.threadPlotter.AddData(self.threadAqc.OutData)
+            self.threadPlotter.AddData(self.threadAcq.aiData.transpose())
             
         if self.threadPsdPlotter is not None:  
-            self.threadPsdPlotter.AddData(self.threadAqc.OutData)
+            self.threadPsdPlotter.AddData(self.threadAcq.OutData.transpose())
        
         if self.DemodConfig.param('DemEnable').value() == True:
             if self.threadDemodAqc is not None:
-                self.threadDemodAqc.AddData(self.threadAqc.OutData)
+                self.threadDemodAqc.AddData(self.threadAqc.aiData)
                 
         print('Sample time', Ts)
 
