@@ -229,11 +229,11 @@ class MainWindow(Qt.QWidget):
             self.ScopeKwargs = self.NiScopeParams.GetRowParams()
             self.ScopeChns = self.NiScopeParams.GetRowsNames()
             self.DemodKwargs = self.DemodParams.GetParams()
-
-            self.threadAqc = DataAcq.DataAcquisitionThread(Channels=self.ScopeChns, 
+            self.threadAqc = DataAcq.DataAcquisitionThread(GenConfig=self.GenKwargs,
+                                                           Channels=self.ScopeChns, 
                                                            ScopeConfig=self.ScopeKwargs)
             self.threadAqc.NewMuxData.connect(self.on_NewSample)
-                       
+            
             self.Gen_Destroy_PsdPlotter()
             self.Gen_Destroy_Plotters()
             self.SaveFiles()     

@@ -44,16 +44,22 @@ class ReadAnalog(Daq.Task):
     EveryNEvent = None
     DoneEvent = None
 
-    def __init__(self, InChans, Range=5.0):
+    def __init__(self, InChans, Range=5.0, Diff=False):
         Daq.Task.__init__(self)
         self.Channels = InChans
 
         Dev = GetDevName()
         for Ch in self.Channels:
-            self.CreateAIVoltageChan(Dev.format(Ch), "",
-                                     Daq.DAQmx_Val_RSE,
-                                     -Range, Range,
-                                     Daq.DAQmx_Val_Volts, None)
+            if Diff == False:
+                self.CreateAIVoltageChan(Dev.format(Ch), "",
+                                         Daq.DAQmx_Val_RSE,
+                                         -Range, Range,
+                                         Daq.DAQmx_Val_Volts, None)
+            if Diff == True:
+                self.CreateAIVoltageChan(Dev.format(Ch), "",
+                                         Daq.DAQmx_Val_Diff,
+                                         -Range, Range,
+                                         Daq.DAQmx_Val_Volts, None)
 
         self.AutoRegisterDoneEvent(0)
 

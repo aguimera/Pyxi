@@ -44,12 +44,13 @@ class ChannelsConfig():
     DataEveryNEvent = None
     DataDoneEvent = None
     
-    def __init__(self, Channels, AcqSingle=True, AcqDiff=False):
+    def __init__(self, ChannelsScope, AcqDiff=False, ChVcm='ao0', ChCol1='ao1'):
         print('InitChannels')
 
-        self.ChNamesList = sorted(Channels)
+        self._InitAnalogOutputs(ChVcm=ChVcm,
+                                ChVd=ChCol1)
+        self.ChNamesList = sorted(ChannelsScope)
         print(self.ChNamesList)
-        self.AcqS = AcqSingle
         self.AcqD = AcqDiff
         self._InitAnalogInputs()
 
@@ -61,38 +62,49 @@ class ChannelsConfig():
         index = 0
         sortindex = 0
         for ch in self.ChNamesList:
-#            if self.AcqS:
             #Output+ is always read
             InChans.append(aiChannels[ch][0]) #only Output+
             self.SChannelIndex[ch] = (index, sortindex)
             index += 1
             print(ch, 'Single -->', aiChannels[ch][0])
             print('SortIndex ->', self.SChannelIndex[ch])
-            if self.AcqD:
-            #Only read Output- when diff activated
-                InChans.append(aiChannels[ch][1])
-                self.DChannelIndex[ch] = (index, sortindex)
-                index += 1
-                print(ch, ' Differential -->', aiChannels[ch][1])
-                print('SortIndex ->', self.DChannelIndex[ch])
-            sortindex += 1
+#            if self.AcqD:
+#            #Only read Output- when diff activated
+#                InChans.append(aiChannels[ch][1])
+#                self.DChannelIndex[ch] = (index, sortindex)
+#                index += 1
+#                print(ch, ' Differential -->', aiChannels[ch][1])
+#                print('SortIndex ->', self.DChannelIndex[ch])
+#            sortindex += 1
         print('Input ai', InChans)
 
-        self.AnalogInputs = DaqInt.ReadAnalog(InChans=InChans)
+        self.AnalogInputs = DaqInt.ReadAnalog(InChans=InChans, 
+                                              Diff=False)
         # events linking
         self.AnalogInputs.EveryNEvent = self.EveryNEventCallBack
         self.AnalogInputs.DoneEvent = self.DoneEventCallBack
         
-    def StartAcquisition(self, Fs, EveryN):
+    def _InitAnalogOutputs(self, ChVcm, ChVd):
+        print('ChVds ->', ChVd)
+        print('ChVcm ->', ChVcm)
+        self.VcmOut = DaqInt.WriteAnalog((ChVcm,))
+        self.VdOut = DaqInt.WriteAnalog((ChVd,))   
+        
+    def StartAcquisition(self, Fs, EveryN, Vgs, Signal):
 #    def StartAcquisition(self, Fs, nSampsCo, nBlocks, numCols):
         print('StartAcquisition')
         print('DSig set')
-
+        self.SetOutput(Vcm=Vgs,
+                       Signal=Signal)
 #        EveryN = numCols*nSampsCo*nBlocks
         self.AnalogInputs.ReadContData(Fs=Fs,
                                        EverySamps=EveryN)
 
-
+    
+    def SetOutput(self, Vcm, Signal):
+        self.VcmOut.SetVal(Vcm)
+        self.VdOut.SetContSignal(Signal)
+        
     def EveryNEventCallBack(self, Data):
         print('EveryNEventCallBack')
         _DataEveryNEvent = self.DataEveryNEvent
