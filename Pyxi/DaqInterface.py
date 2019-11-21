@@ -64,11 +64,11 @@ class ReadAnalog(Daq.Task):
         self.AutoRegisterDoneEvent(0)
 
     def ReadContData(self, Fs, EverySamps):
-        self.Fs = Fs
+        self.FsXChan = Fs/len(self.Channels)
         self.EverySamps = np.int32(EverySamps)
         self.ContSamps = True
 
-        self.CfgSampClkTiming("", Fs, Daq.DAQmx_Val_Rising,
+        self.CfgSampClkTiming("", self.FsXChan, Daq.DAQmx_Val_Rising,
                               Daq.DAQmx_Val_ContSamps,
                               self.EverySamps)
 

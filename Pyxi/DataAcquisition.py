@@ -29,15 +29,18 @@ class DataAcquisitionThread(Qt.QThread):
         print(Channels)
         print(ScopeConfig)
         print(GenConfig)
-        self.DaqInterface = CoreMod.ChannelsConfig(ChannelsScope=Channels)
+        self.DaqInterface = CoreMod.ChannelsConfig(ChannelsScope=Channels, 
+                                                   GenConfig=GenConfig)
         self.DaqInterface.DataEveryNEvent = self.NewData
         self.AvgIndex = AvgIndex
-        self.FsScope = ScopeConfig['FsScope'].value()
-        self.EveryN = ScopeConfig['BufferSize'].value()
+        self.FsScope = ScopeConfig['FsScope']
+        self.EveryN = ScopeConfig['BufferSize']
+
+        self.FsGen = GenConfig['FsGen']
+        self.GenSize = GenConfig['GenSize']
+        self.Vcm = GenConfig['CMVoltage']
+        
         self.ColsConfig = GenConfig['ColsConfig']
-        self.FsGen = self.ColsConfig['FsGen']
-        self.GenSize = self.ColsConfig['GenSize']
-        self.Vcm = self.ColsConfig['CMVoltage']
         self.Col1 = self.ColsConfig['Col1']
         self.OutSignal(Amp=self.Col1['Amplitude'],
                        Freq=self.Col1['Frequency'],

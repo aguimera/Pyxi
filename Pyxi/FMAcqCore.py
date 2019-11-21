@@ -44,7 +44,7 @@ class ChannelsConfig():
     DataEveryNEvent = None
     DataDoneEvent = None
     
-    def __init__(self, ChannelsScope, AcqDiff=False, ChVcm='ao0', ChCol1='ao1'):
+    def __init__(self, ChannelsScope, GenConfig, AcqDiff=False, ChVcm='ao0', ChCol1='ao1'):
         print('InitChannels')
 
         self._InitAnalogOutputs(ChVcm=ChVcm,
@@ -54,6 +54,15 @@ class ChannelsConfig():
         self.AcqD = AcqDiff
         self._InitAnalogInputs()
 
+        self.Cols = []
+        MuxChannelNames = []
+        for Row in self.ChNamesList:
+            for Col, val in GenConfig['ColsConfig'].items():
+                MuxChannelNames.append(Row + Col)
+                self.Cols.append(Col)
+        self.MuxChannelNames = MuxChannelNames
+        print(self.MuxChannelNames)
+        
     def _InitAnalogInputs(self):
         print('InitAnalogInputs')
         self.SChannelIndex = {}
@@ -94,26 +103,60 @@ class ChannelsConfig():
 #    def StartAcquisition(self, Fs, nSampsCo, nBlocks, numCols):
         print('StartAcquisition')
         print('DSig set')
+        
+        self.nSampsCo = 10
+        self.nBlocks = EveryN/self.nSampsCo
+        
         self.SetOutput(Vcm=Vgs,
                        Signal=Signal)
-#        EveryN = numCols*nSampsCo*nBlocks
+        self.OutputShape = (len(self.MuxChannelNames), self.nSampsCo, int(EveryN/10))
+#        EveryN = 1*10*3000
         self.AnalogInputs.ReadContData(Fs=Fs,
                                        EverySamps=EveryN)
 
     
     def SetOutput(self, Vcm, Signal):
         self.VcmOut.SetVal(Vcm)
-        self.VdOut.SetContSignal(Signal)
-        
+        print(Signal, len(Signal))
+        self.VdOut.SetContSignal(Signal=Signal,
+                                 nSamps=len(Signal))
+    
+    def _SortChannels(self, data, SortDict):
+        print('SortChannels')
+        print(data.shape)
+        # Sort by aianalog input
+        (samps, inch) = data.shape
+        aiData = np.zeros((samps, len(SortDict)))
+        for chn, inds in sorted(SortDict.items()):
+            aiData[:, inds[1]] = data[:, inds[0]]
+
+        # Sort by digital columns
+        aiData = aiData.transpose()
+        MuxData = np.ndarray(self.OutputShape)
+
+        print('columns')
+        nColumns = len(self.Cols)
+        for indB in range(self.nBlocks):
+            startind = indB * self.nSampsCo * nColumns
+            stopind = self.nSampsCo * nColumns * (indB + 1)
+            Vblock = aiData[:, startind: stopind]
+            ind = 0
+            for chData in Vblock[:, :]:
+                for Inds in self.SortDInds:
+                    MuxData[ind, :, indB] = chData[Inds]
+                    ind += 1
+
+        return aiData, MuxData
+    
     def EveryNEventCallBack(self, Data):
         print('EveryNEventCallBack')
         _DataEveryNEvent = self.DataEveryNEvent
 
-        if _DataEveryNEvent is not None:
-            if self.AcqS:
-                _DataEveryNEvent = Data
-#            if self.AcqD:
-#                self.AiOutput
+#        aiDataAC, MuxDataAC = self._SortChannels(Data,
+#                                                 self.SChannelIndex)
+#        aiDataAC = aiDataAC / self.ACGain
+#        MuxDataAC = MuxDataAC / self.ACGain
+#        _DataEveryNEvent(Data, Data)
 
 
     def DoneEventCallBack(self, Data):
@@ -121,4 +164,5 @@ class ChannelsConfig():
 
     def Stop(self):
         print('Stopppp')
+        self.SetBias(Vgs=0, Vds=0)
         self.AnalogInputs.StopContData()
