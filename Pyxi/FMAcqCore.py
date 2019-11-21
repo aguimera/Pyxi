@@ -104,15 +104,13 @@ class ChannelsConfig():
         print('StartAcquisition')
         print('DSig set')
         
-        self.nSampsCo = 10
-        self.nBlocks = EveryN/self.nSampsCo
-        
+        self.nBlocks = EveryN       
         self.SetOutput(Vcm=Vgs,
                        Signal=Signal)
-        self.OutputShape = (len(self.MuxChannelNames), self.nSampsCo, int(EveryN/10))
-#        EveryN = 1*10*3000
+        self.OutputShape = (len(self.MuxChannelNames), int(EveryN))
+
         self.AnalogInputs.ReadContData(Fs=Fs,
-                                       EverySamps=EveryN)
+                                       EverySamps=self.nBlocks)
 
     
     def SetOutput(self, Vcm, Signal):
@@ -129,35 +127,17 @@ class ChannelsConfig():
         aiData = np.zeros((samps, len(SortDict)))
         for chn, inds in sorted(SortDict.items()):
             aiData[:, inds[1]] = data[:, inds[0]]
-
-        # Sort by digital columns
-        aiData = aiData.transpose()
-        MuxData = np.ndarray(self.OutputShape)
-
-        print('columns')
-        nColumns = len(self.Cols)
-        for indB in range(self.nBlocks):
-            startind = indB * self.nSampsCo * nColumns
-            stopind = self.nSampsCo * nColumns * (indB + 1)
-            Vblock = aiData[:, startind: stopind]
-            ind = 0
-            for chData in Vblock[:, :]:
-                for Inds in self.SortDInds:
-                    MuxData[ind, :, indB] = chData[Inds]
-                    ind += 1
-
-        return aiData, MuxData
+            
+        return aiData
     
     def EveryNEventCallBack(self, Data):
         print('EveryNEventCallBack')
         _DataEveryNEvent = self.DataEveryNEvent
 
-#        aiDataAC, MuxDataAC = self._SortChannels(Data,
-#                                                 self.SChannelIndex)
-#        aiDataAC = aiDataAC / self.ACGain
-#        MuxDataAC = MuxDataAC / self.ACGain
-#        _DataEveryNEvent(Data, Data)
+        aiDataChns = self._SortChannels(Data,
+                                     self.SChannelIndex)
 
+        _DataEveryNEvent(aiDataChns)
 
     def DoneEventCallBack(self, Data):
         print('Done callback')

@@ -31,12 +31,12 @@ class DataAcquisitionThread(Qt.QThread):
         print(GenConfig)
         self.DaqInterface = CoreMod.ChannelsConfig(ChannelsScope=Channels, 
                                                    GenConfig=GenConfig)
+        self.Channels = Channels
         self.DaqInterface.DataEveryNEvent = self.NewData
         self.AvgIndex = AvgIndex
         self.FsScope = ScopeConfig['FsScope']
         self.EveryN = ScopeConfig['BufferSize']
 
-        self.FsGen = GenConfig['FsGen']
         self.GenSize = GenConfig['GenSize']
         self.Vcm = GenConfig['CMVoltage']
         
@@ -47,7 +47,7 @@ class DataAcquisitionThread(Qt.QThread):
                        phase=self.Col1['Phase'])
         
     def OutSignal(self, Amp, Freq, phase=0):
-        Ts = 1/self.FsGen
+        Ts = 1/(self.FsScope/len(self.Channels))
         Time = np.arange(0, Ts*self.GenSize, Ts)
         self.Signal = Amp*np.sin(2*np.pi*Freq*Time+((np.pi/180)*phase))
         
@@ -59,13 +59,7 @@ class DataAcquisitionThread(Qt.QThread):
         loop = Qt.QEventLoop()
         loop.exec_()
 
-    def CalcAverage(self, MuxData):
-        return np.mean(MuxData[:, self.AvgIndex:, :], axis=1)
-
-    def CalcDiff(self, aiDataPos, aiDataNeg):
-        return aiDataPos-aiDataNeg
     
-    def NewData(self, aiData, MuxData):
-        self.OutData = self.CalcAverage(MuxData)
-        self.aiData = aiData
+    def NewData(self, aiData):
+        self.OutData = aiData
         self.NewMuxData.emit()

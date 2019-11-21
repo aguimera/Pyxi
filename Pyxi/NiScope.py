@@ -10,8 +10,6 @@ import pyqtgraph.parametertree.parameterTypes as pTypes
 import pyqtgraph.parametertree.Parameter as pParams
 
 import numpy as np
-import niscope
-import nifgen
 import copy
 import time
 import re
@@ -28,12 +26,13 @@ NiScopeAcqParam =  {'name': 'AcqConfig',
                                     'title': 'Buffer Size',
                                     'type': 'int',
                                     'value': int(20e3),
-                                    'readonly': True,
+                                    'readonly': False,
                                     'siPrefix': True,
                                     'suffix': 'Samples'},
                                    {'name': 'tFetch',
                                     'title': 'Fetching Time',
                                     'type': 'float',
+                                    'readonly': True,
                                     'value': 0.5,
                                     'siPrefix': True,
                                     'suffix': 's'},
@@ -44,21 +43,12 @@ NiScopeAcqParam =  {'name': 'AcqConfig',
                                     'readonly': True,
                                     'siPrefix': True,
                                     'suffix': 'Chan'},
-                                   {'name': 'OffsetRows',
-                                    'value': 0,
-                                    'type': 'int',
-                                    'siPrefix': True,
-                                    'suffix': 'Samples'},
                                    {'name': 'GainBoard',
                                     'titel': 'System Gain',
                                     'value': (10e3),
                                     'type': 'int',
                                     'siPrefix': True,
-                                    'suffix': 'Ohms'},
-                                   {'name':'ResourceScope',
-                                    'type': 'str',
-                                    'readonly': True,
-                                    'value': 'PXI1Slot4'},)
+                                    'suffix': 'Ohms'},)
                  }
 NiScopeRowsParam = {'name': 'RowsConfig',
                    'type': 'group',
@@ -74,7 +64,7 @@ NiScopeRowsParam = {'name': 'RowsConfig',
                                             {'name': 'AcqVRange',
                                              'title': 'Voltage Range',
                                              'type': 'list',
-                                             'values': [0.05, 0.2, 1, 6],
+                                             'values': [0.1, 0.2, 0.5, 1, 2, 5, 10],
                                              'value': 1,
                                              'visible': True
                                              }
@@ -91,7 +81,7 @@ NiScopeRowsParam = {'name': 'RowsConfig',
                                             {'name': 'AcqVRange',
                                              'title': 'Voltage Range',
                                              'type': 'list',
-                                             'values': [0.05, 0.2, 1, 6],
+                                             'values': [0.1, 0.2, 0.5, 1, 2, 5, 10],
                                              'value': 1,
                                              'visible': True
                                              }
@@ -108,7 +98,7 @@ NiScopeRowsParam = {'name': 'RowsConfig',
                                             {'name': 'AcqVRange',
                                              'title': 'Voltage Range',
                                              'type': 'list',
-                                             'values': [0.05, 0.2, 1, 6],
+                                             'values': [0.1, 0.2, 0.5, 1, 2, 5, 10],
                                              'value': 1,
                                              'visible': True
                                              }
@@ -125,7 +115,7 @@ NiScopeRowsParam = {'name': 'RowsConfig',
                                             {'name': 'AcqVRange',
                                              'title': 'Voltage Range',
                                              'type': 'list',
-                                             'values': [0.05, 0.2, 1, 6],
+                                             'values': [0.1, 0.2, 0.5, 1, 2, 5, 10],
                                              'value': 1,
                                              'visible': True
                                              }
@@ -142,7 +132,7 @@ NiScopeRowsParam = {'name': 'RowsConfig',
                                             {'name': 'AcqVRange',
                                              'title': 'Voltage Range',
                                              'type': 'list',
-                                             'values': [0.05, 0.2, 1, 6],
+                                             'values': [0.1, 0.2, 0.5, 1, 2, 5, 10],
                                              'value': 1,
                                              'visible': True
                                              }
@@ -159,7 +149,7 @@ NiScopeRowsParam = {'name': 'RowsConfig',
                                             {'name': 'AcqVRange',
                                              'title': 'Voltage Range',
                                              'type': 'list',
-                                             'values': [0.05, 0.2, 1, 6],
+                                             'values': [0.1, 0.2, 0.5, 1, 2, 5, 10],
                                              'value': 1,
                                              'visible': True
                                              }
@@ -176,7 +166,7 @@ NiScopeRowsParam = {'name': 'RowsConfig',
                                             {'name': 'AcqVRange',
                                              'title': 'Voltage Range',
                                              'type': 'list',
-                                             'values': [0.05, 0.2, 1, 6],
+                                             'values': [0.1, 0.2, 0.5, 1, 2, 5, 10],
                                              'value': 1,
                                              'visible': True
                                              }
@@ -193,7 +183,7 @@ NiScopeRowsParam = {'name': 'RowsConfig',
                                             {'name': 'AcqVRange',
                                              'title': 'Voltage Range',
                                              'type': 'list',
-                                             'values': [0.05, 0.2, 1, 6],
+                                             'values': [0.1, 0.2, 0.5, 1, 2, 5, 10],
                                              'value': 1,
                                              'visible': True
                                              }
@@ -201,12 +191,7 @@ NiScopeRowsParam = {'name': 'RowsConfig',
                                ) 
                         }  
                                 
-OptionsScope = {'simulate': False,
-                'driver_setup': {'Model': 'NI PXIe-5105',
-                                 'BoardType': 'PXIe',
-                                 },
-                }      
-                         
+     
 ##############################SCOPE##########################################                                
 class NiScopeParameters(pTypes.GroupParameter):
         
@@ -222,14 +207,13 @@ class NiScopeParameters(pTypes.GroupParameter):
         self.FsScope = self.AcqConfig.param('FsScope')
         self.BufferSize = self.AcqConfig.param('BufferSize')
         self.NRows = self.AcqConfig.param('NRow')
-        self.OffsetRows = self.AcqConfig.param('OffsetRows')
         self.tFetch = self.AcqConfig.param('tFetch')
         self.on_BufferSize_Changed()
         
         self.RowsConfig.sigTreeStateChanged.connect(self.on_RowsConfig_Changed)
         self.on_RowsConfig_Changed()
-        self.FsScope.sigValueChanged.connect(self.on_FsScope_Changed)
-        self.tFetch.sigValueChanged.connect(self.on_BufferSize_Changed)
+        self.FsScope.sigValueChanged.connect(self.on_BufferSize_Changed)
+        self.BufferSize.sigValueChanged.connect(self.on_BufferSize_Changed)
 
     def on_RowsConfig_Changed(self):
         self.Rows = []
@@ -237,17 +221,13 @@ class NiScopeParameters(pTypes.GroupParameter):
             if p.param('Enable').value():
                 self.Rows.append(p.name())
         self.NRows.setValue(len(self.Rows))
-       
-    def on_FsScope_Changed(self):
-        self.on_BufferSize_Changed()
         
     def on_BufferSize_Changed(self):
         Fs = self.FsScope.value()
+        BS = self.BufferSize.value()
         tF = self.tFetch.value()
-        Samples = round(tF*Fs)
-        tF = Samples/Fs
+        tF = BS/Fs
         self.tFetch.setValue(tF)
-        self.BufferSize.setValue(Samples)
      
     def GetRowParams(self):
         '''
@@ -332,7 +312,6 @@ class NiScopeParameters(pTypes.GroupParameter):
                 RowNames.append(Config.name())
 
         return RowNames
-
             
             
         

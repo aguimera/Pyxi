@@ -134,8 +134,8 @@ class MainWindow(Qt.QWidget):
                                                                               )
             
             if childName == 'Pxi Scope.AcqConfig.FsScope':
-                n =round(self.NifGenParams.FsGen.value()/data)
-                self.NiScopeParams.FsScope.setValue(self.NifGenParams.FsGen.value()/n)
+
+                self.NifGenParams.FsGen.setValue(data)
                 self.PlotParams.param('Fs').setValue(self.NiScopeParams.FsScope.value())
                 self.PsdPlotParams.param('Fs').setValue(self.NiScopeParams.FsScope.value())
                 self.DemodConfig.param('FsDemod').setValue(self.NiScopeParams.FsScope.value())
@@ -302,14 +302,14 @@ class MainWindow(Qt.QWidget):
             self.threadSave.AddData(self.threadAqc.OutData)
         
         if self.threadPlotter is not None:
-            self.threadPlotter.AddData(self.threadAcq.aiData.transpose())
+            self.threadPlotter.AddData(self.threadAcq.OutData)
             
         if self.threadPsdPlotter is not None:  
-            self.threadPsdPlotter.AddData(self.threadAcq.OutData.transpose())
+            self.threadPsdPlotter.AddData(self.threadAcq.OutData)
        
         if self.DemodConfig.param('DemEnable').value() == True:
             if self.threadDemodAqc is not None:
-                self.threadDemodAqc.AddData(self.threadAqc.aiData)
+                self.threadDemodAqc.AddData(self.threadAqc.OutData)
                 
         print('Sample time', Ts)
 

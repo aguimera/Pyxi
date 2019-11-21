@@ -72,7 +72,7 @@ class ReadAnalog(Daq.Task):
                               Daq.DAQmx_Val_ContSamps,
                               self.EverySamps)
 
-        self.CfgInputBuffer(self.EverySamps*10)
+        self.CfgInputBuffer(self.EverySamps)
         self.AutoRegisterEveryNSamplesEvent(Daq.DAQmx_Val_Acquired_Into_Buffer,
                                             self.EverySamps, 0)
 
@@ -86,9 +86,13 @@ class ReadAnalog(Daq.Task):
         print('Every')
         read = c_int32()
         data = np.zeros((self.EverySamps, len(self.Channels)))
-        self.ReadAnalogF64(self.EverySamps, 10.0,
-                           Daq.DAQmx_Val_GroupByScanNumber,
-                           data, data.size, byref(read), None)
+        self.ReadAnalogF64(numSampsPerCahan=self.EverySamps, 
+                           timeout=10.0,
+                           fillMode=Daq.DAQmx_Val_GroupByScanChannel,
+                           readArray=data, 
+                           arraySizeInSamps=data.size, 
+                           sampsPerChanRead=byref(read), 
+                           reserved=None)
 
         print('EveryN')
 
