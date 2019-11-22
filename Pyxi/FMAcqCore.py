@@ -135,7 +135,7 @@ class ChannelsConfig():
         _DataEveryNEvent = self.DataEveryNEvent
 
         aiDataChns = self._SortChannels(Data,
-                                     self.SChannelIndex)
+                                        self.SChannelIndex)
 
         _DataEveryNEvent(aiDataChns)
 
