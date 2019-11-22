@@ -86,9 +86,9 @@ class ReadAnalog(Daq.Task):
         print('Every')
         read = c_int32()
         data = np.zeros((self.EverySamps, len(self.Channels)))
-        self.ReadAnalogF64(numSampsPerCahan=self.EverySamps, 
+        self.ReadAnalogF64(numSampsPerChan=self.EverySamps, 
                            timeout=10.0,
-                           fillMode=Daq.DAQmx_Val_GroupByScanChannel,
+                           fillMode=Daq.DAQmx_Val_GroupByChannel,
                            readArray=data, 
                            arraySizeInSamps=data.size, 
                            sampsPerChanRead=byref(read), 

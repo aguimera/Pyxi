@@ -239,9 +239,13 @@ class MainWindow(Qt.QWidget):
             self.SaveFiles()     
             
             if self.DemodConfig.param('DemEnable').value() == True:
+                print('GetCarriers', self.NifGenParams.GetCarriers())
+                print('RowList', self.ScopeChns)
+                print('BS', self.NiScopeParams.BufferSize.value())
+                print('DKwargs',self.DemodKwargs)
                 self.threadDemodAqc = DemMod.DemodThread(Fcs=self.NifGenParams.GetCarriers(), 
-                                                         RowList=self.threadAqc.RowsList,
-                                                         FetchSize=self.threadAqc.BufferSize, 
+                                                         RowList=self.ScopeChns,
+                                                         FetchSize=self.NiScopeParams.BufferSize.value(), 
                                                          **self.DemodKwargs)
                 self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
                 self.threadDemodAqc.start()
@@ -253,7 +257,6 @@ class MainWindow(Qt.QWidget):
         else:
             print('stopped')
             self.threadAqc.NewMuxData.disconnect()
-            self.threadAcq.DaqInterface.Stop()
 #            self.threadAqc.stopSessions()
             self.threadAqc.terminate()
             self.threadAqc = None
@@ -302,10 +305,10 @@ class MainWindow(Qt.QWidget):
             self.threadSave.AddData(self.threadAqc.OutData)
         
         if self.threadPlotter is not None:
-            self.threadPlotter.AddData(self.threadAcq.OutData)
+            self.threadPlotter.AddData(self.threadAqc.OutData)
             
         if self.threadPsdPlotter is not None:  
-            self.threadPsdPlotter.AddData(self.threadAcq.OutData)
+            self.threadPsdPlotter.AddData(self.threadAqc.OutData)
        
         if self.DemodConfig.param('DemEnable').value() == True:
             if self.threadDemodAqc is not None:

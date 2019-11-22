@@ -134,6 +134,7 @@ class Demod():
         self.FiltI = Filter(Fs, self.FsOut/2, 'lp', Order)
 
         step = 2*np.pi*(Fc/Fs)
+        print('steo', step)
         self.vcoi = np.exp(1j*(step*np.arange(FetchSize)))
         
     def Apply(self, SigIn):    

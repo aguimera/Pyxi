@@ -88,7 +88,7 @@ class ChannelsConfig():
         print('Input ai', InChans)
 
         self.AnalogInputs = DaqInt.ReadAnalog(InChans=InChans, 
-                                              Diff=False)
+                                              Diff=self.AcqD)
         # events linking
         self.AnalogInputs.EveryNEvent = self.EveryNEventCallBack
         self.AnalogInputs.DoneEvent = self.DoneEventCallBack
@@ -134,10 +134,11 @@ class ChannelsConfig():
         print('EveryNEventCallBack')
         _DataEveryNEvent = self.DataEveryNEvent
 
-        aiDataChns = self._SortChannels(Data,
-                                        self.SChannelIndex)
+#        aiDataChns = self._SortChannels(Data,
+#                                        self.SChannelIndex)
 
-        _DataEveryNEvent(aiDataChns)
+#        _DataEveryNEvent(aiDataChns)
+        _DataEveryNEvent(Data)
 
     def DoneEventCallBack(self, Data):
         print('Done callback')
