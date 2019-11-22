@@ -39,12 +39,14 @@ class ChannelsConfig():
     ChNamesList = None
     AnalogInputs = None
     DigitalOutputs = None
+    VcmOut = None
+    VdOut = None
 
     # Events list
     DataEveryNEvent = None
     DataDoneEvent = None
     
-    def __init__(self, ChannelsScope, GenConfig, AcqDiff=False, ChVcm='ao0', ChCol1='ao1'):
+    def __init__(self, ChannelsScope, GenConfig, AcqDiff=True, ChVcm='ao0', ChCol1='ao1'):
         print('InitChannels')
 
         self._InitAnalogOutputs(ChVcm=ChVcm,
@@ -138,6 +140,7 @@ class ChannelsConfig():
 #                                        self.SChannelIndex)
 
 #        _DataEveryNEvent(aiDataChns)
+#        print(Data.shape)
         _DataEveryNEvent(Data)
 
     def DoneEventCallBack(self, Data):
@@ -145,5 +148,11 @@ class ChannelsConfig():
 
     def Stop(self):
         print('Stopppp')
-        self.SetBias(Vgs=0, Vds=0)
+#        self.VcmOut.SetVal(0)
+#        self.VdOut.SetVal(0)
         self.AnalogInputs.StopContData()
+        self.VcmOut.ClearTask()
+        self.VcmOut=None
+        self.VdOut.ClearTask()
+        self.VdOut=None
+        

@@ -257,6 +257,7 @@ class MainWindow(Qt.QWidget):
         else:
             print('stopped')
             self.threadAqc.NewMuxData.disconnect()
+            self.threadAqc.DaqInterface.Stop()
 #            self.threadAqc.stopSessions()
             self.threadAqc.terminate()
             self.threadAqc = None

@@ -64,7 +64,7 @@ class ReadAnalog(Daq.Task):
         self.AutoRegisterDoneEvent(0)
 
     def ReadContData(self, Fs, EverySamps):
-        self.FsXChan = Fs/len(self.Channels)
+        self.FsXChan = Fs
         self.EverySamps = np.int32(EverySamps)
         self.ContSamps = True
 
@@ -72,7 +72,7 @@ class ReadAnalog(Daq.Task):
                               Daq.DAQmx_Val_ContSamps,
                               self.EverySamps)
 
-        self.CfgInputBuffer(self.EverySamps)
+        self.CfgInputBuffer(self.EverySamps*10)
         self.AutoRegisterEveryNSamplesEvent(Daq.DAQmx_Val_Acquired_Into_Buffer,
                                             self.EverySamps, 0)
 
@@ -88,7 +88,7 @@ class ReadAnalog(Daq.Task):
         data = np.zeros((self.EverySamps, len(self.Channels)))
         self.ReadAnalogF64(numSampsPerChan=self.EverySamps, 
                            timeout=10.0,
-                           fillMode=Daq.DAQmx_Val_GroupByChannel,
+                           fillMode=Daq.DAQmx_Val_GroupByScanNumber,
                            readArray=data, 
                            arraySizeInSamps=data.size, 
                            sampsPerChanRead=byref(read), 
