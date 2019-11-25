@@ -47,15 +47,26 @@ class DataAcquisitionThread(Qt.QThread):
                        phase=self.Col1['Phase'])
         
     def OutSignal(self, Amp, Freq, phase=0):
-        Ts = 1/(self.FsScope)
-        Time = np.arange(0, Ts*self.GenSize, Ts)
-        self.Signal = Amp*np.sin(2*np.pi*Freq*Time+((np.pi/180)*phase))
+        step = 2*np.pi*(Freq/self.FsScope)
+        self.Signal = np.float64(Amp*np.exp(1j*(step*np.arange(self.GenSize))))
+#        Ts = 1/(self.FsScope)
+#        Time = np.arange(0, Ts*self.GenSize, Ts)
+#        self.Signal = Amp*np.sin(2*np.pi*Freq*Time+((np.pi/180)*phase))
         
     def run(self, *args, **kwargs):
         self.DaqInterface.StartAcquisition(Fs=self.FsScope, 
                                            EveryN=self.EveryN,
                                            Vgs=self.Vcm,
-                                           Signal=self.Signal[:-1])
+                                           Signal=self.Signal
+                                           )
+#DemodTest with SigTest
+#        ModSig=np.float64(self.Col1['Amplitude']*0.1*np.exp(1j*(2*np.pi*(1e3/self.FsScope)*np.arange(self.GenSize))))
+#        SigTest=self.Signal+(ModSig*self.Signal)
+#        self.DaqInterface.StartAcquisition(Fs=self.FsScope, 
+#                                           EveryN=self.EveryN,
+#                                           Vgs=self.Vcm,
+#                                           Signal=SigTest)
+        
         loop = Qt.QEventLoop()
         loop.exec_()
 

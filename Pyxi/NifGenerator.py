@@ -51,7 +51,7 @@ NifGenGeneratorParam =  {'name': 'GeneratorConfig',
                                     'title': 'Generation Size',
                                     'type': 'int',
                                     'readonly': True,
-                                    'value': int(2e3),
+                                    'value': int(20e3),
                                     'siPrefix': True,
                                     'suffix': 'Samples'},
                                    {'name': 'CMVoltage',
@@ -116,6 +116,7 @@ class NifGeneratorParameters(pTypes.GroupParameter):
         
         self.on_FreqCol_Changed()
         
+        self.GenSize.sigValueChanged.connect(self.on_FreqCol_Changed)
         self.FsGen.sigValueChanged.connect(self.on_FreqCol_Changed)
         self.Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
 

@@ -132,9 +132,9 @@ class MainWindow(Qt.QWidget):
                 self.DemodPlotParams.SetChannels(self.DemodParams.GetChannels(self.NiScopeParams.Rows, 
                                                                               self.NifGenParams.GetCarriers())
                                                                               )
-            
+            if childName == 'Pxi Scope.AcqConfig.BufferSize':
+                self.NifGenParams.GenSize.setValue(data)
             if childName == 'Pxi Scope.AcqConfig.FsScope':
-
                 self.NifGenParams.FsGen.setValue(data)
                 self.PlotParams.param('Fs').setValue(self.NiScopeParams.FsScope.value())
                 self.PsdPlotParams.param('Fs').setValue(self.NiScopeParams.FsScope.value())
@@ -246,6 +246,7 @@ class MainWindow(Qt.QWidget):
                 self.threadDemodAqc = DemMod.DemodThread(Fcs=self.NifGenParams.GetCarriers(), 
                                                          RowList=self.ScopeChns,
                                                          FetchSize=self.NiScopeParams.BufferSize.value(), 
+                                                         Signal=self.threadAqc.Signal,
                                                          **self.DemodKwargs)
                 self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
                 self.threadDemodAqc.start()

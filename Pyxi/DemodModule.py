@@ -123,7 +123,7 @@ class Filter():
 
 
 class Demod():
-    def __init__(self, Fc, FetchSize, Fs, DownFact, Order):
+    def __init__(self, Fc, FetchSize, Fs, DownFact, Order, Signal):
 
         self.Fs = Fs
         self.Fc = Fc
@@ -133,9 +133,10 @@ class Demod():
         self.FiltR = Filter(Fs, self.FsOut/2, 'lp', Order)
         self.FiltI = Filter(Fs, self.FsOut/2, 'lp', Order)
 
-        step = 2*np.pi*(Fc/Fs)
-        print('steo', step)
-        self.vcoi = np.exp(1j*(step*np.arange(FetchSize)))
+#        step = 2*np.pi*(Fc/Fs)
+#        print('steo', step)
+#        self.vcoi = np.exp(1j*(step*np.arange(FetchSize)))
+        self.vcoi = Signal
         
     def Apply(self, SigIn):    
         rdem = np.real(self.vcoi*SigIn)
@@ -153,27 +154,27 @@ class Demod():
 
         return complexDem
 
-def DemodProc(Iin, Fs, Fc, Samps, DownFact, Order=2):
-    dem = Demod(Fs=Fs, 
-                Fc=Fc, 
-                FetchSize=Samps, 
-                DownFact=DownFact, 
-                Order=Order)
-    DemOut = np.array([])
-    for IndDemod in np.arange(0, Iin.size, Samps):  
-        SigIn = Iin[IndDemod:(IndDemod+Samps)]
-        if not SigIn.size == Samps:
-            continue
-
-        Complexdem = dem.Apply(SigIn)
-        DemOut = np.append(DemOut, Complexdem)
-        
-    print(Fc, 'end')
-    return DemOut
+#def DemodProc(Iin, Fs, Fc, Samps, DownFact, Order=2):
+#    dem = Demod(Fs=Fs, 
+#                Fc=Fc, 
+#                FetchSize=Samps, 
+#                DownFact=DownFact, 
+#                Order=Order)
+#    DemOut = np.array([])
+#    for IndDemod in np.arange(0, Iin.size, Samps):  
+#        SigIn = Iin[IndDemod:(IndDemod+Samps)]
+#        if not SigIn.size == Samps:
+#            continue
+#
+#        Complexdem = dem.Apply(SigIn)
+#        DemOut = np.append(DemOut, Complexdem)
+#        
+#    print(Fc, 'end')
+#    return DemOut
 
 class DemodThread(Qt.QThread):
     NewData = Qt.pyqtSignal()
-    def __init__(self, Fcs, RowList, FetchSize, FsDemod, DSFact, FiltOrder,**Keywards):
+    def __init__(self, Fcs, RowList, FetchSize, FsDemod, DSFact, FiltOrder, Signal, **Keywards):
        super(DemodThread, self).__init__() 
        self.ToDemData = None
        
@@ -181,7 +182,7 @@ class DemodThread(Qt.QThread):
        for Row in RowList:
            DemOut = []
            for Cols, Freq in Fcs.items():
-               Dem = Demod(Freq, FetchSize, FsDemod, DSFact, FiltOrder)
+               Dem = Demod(Freq, FetchSize, FsDemod, DSFact, FiltOrder, Signal)
                DemOut.append(Dem)
            self.DemOutputs.append(DemOut) 
        self.OutDemodData = np.ndarray((round(FetchSize/DSFact),round(len(RowList)*len(Fcs.keys()))), dtype=float)
