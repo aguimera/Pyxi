@@ -100,7 +100,7 @@ class MainWindow(Qt.QWidget):
         
         self.setGeometry(550, 10, 300, 700)
         self.setWindowTitle('MainWindow')
-#        self.btnStart.clicked.connect(self.on_btnStart)
+        self.btnStart.clicked.connect(self.on_btnStart)
 #        
         self.threadAqc = None
         self.threadSave = None
@@ -147,7 +147,7 @@ class MainWindow(Qt.QWidget):
         if childName == 'Demod Options.DemodConfig.DSFs':
             self.DemodPsdPlotParams.param('Fs').setValue(data)
             self.DemodPlotParams.param('Fs').setValue(data)
-            if data >= np.min(self.NifGenParams.Freqs):
+            if data >= np.min(self.GenAcqParams.Freqs):
                 print('WARNING: FsDemod is higher than FsMin')
         
         if self.threadPlotter is not None: 

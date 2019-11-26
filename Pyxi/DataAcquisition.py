@@ -24,7 +24,7 @@ import Pyxi.FMAcqCore as CoreMod
 class DataAcquisitionThread(Qt.QThread):
     NewMuxData = Qt.pyqtSignal()
 
-    def __init__(self, GenConfig, Channels, ScopeConfig, Range, AvgIndex=5):
+    def __init__(self, GenConfig, Channels, ScopeConfig, AvgIndex=5):
         super(DataAcquisitionThread, self).__init__()
         print(Channels)
         print(ScopeConfig)
@@ -39,7 +39,7 @@ class DataAcquisitionThread(Qt.QThread):
         self.EveryN = ScopeConfig['BufferSize']
 
         self.Vcm = ScopeConfig['CMVoltage']
-        
+        self.gain = ScopeConfig['GainBoard']
         self.ColsConfig = GenConfig['ColsConfig']
         self.Col1 = self.ColsConfig['Col1']
         self.OutSignal(Amp=self.Col1['Amplitude'],
@@ -69,5 +69,5 @@ class DataAcquisitionThread(Qt.QThread):
 
     
     def NewData(self, aiData):
-        self.OutData = aiData
+        self.OutData = aiData/self.gain
         self.NewMuxData.emit()
