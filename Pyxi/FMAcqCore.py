@@ -46,7 +46,7 @@ class ChannelsConfig():
     DataEveryNEvent = None
     DataDoneEvent = None
     
-    def __init__(self, ChannelsScope, GenConfig, AcqDiff=True, ChVcm='ao0', ChCol1='ao1'):
+    def __init__(self, ChannelsScope, Range, GenConfig,  AcqDiff=True, ChVcm='ao0', ChCol1='ao1'):
         print('InitChannels')
 
         self._InitAnalogOutputs(ChVcm=ChVcm,
@@ -54,6 +54,7 @@ class ChannelsConfig():
         self.ChNamesList = sorted(ChannelsScope)
         print(self.ChNamesList)
         self.AcqD = AcqDiff
+        self.Range = Range
         self._InitAnalogInputs()
 
         self.Cols = []
@@ -90,7 +91,8 @@ class ChannelsConfig():
         print('Input ai', InChans)
 
         self.AnalogInputs = DaqInt.ReadAnalog(InChans=InChans, 
-                                              Diff=self.AcqD)
+                                              Diff=self.AcqD,
+                                              Range=self.Range)
         # events linking
         self.AnalogInputs.EveryNEvent = self.EveryNEventCallBack
         self.AnalogInputs.DoneEvent = self.DoneEventCallBack

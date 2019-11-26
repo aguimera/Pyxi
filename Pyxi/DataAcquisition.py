@@ -24,21 +24,21 @@ import Pyxi.FMAcqCore as CoreMod
 class DataAcquisitionThread(Qt.QThread):
     NewMuxData = Qt.pyqtSignal()
 
-    def __init__(self, GenConfig, Channels, ScopeConfig, AvgIndex=5):
+    def __init__(self, GenConfig, Channels, ScopeConfig, Range, AvgIndex=5):
         super(DataAcquisitionThread, self).__init__()
         print(Channels)
         print(ScopeConfig)
         print(GenConfig)
-        self.DaqInterface = CoreMod.ChannelsConfig(ChannelsScope=Channels, 
+        self.DaqInterface = CoreMod.ChannelsConfig(ChannelsScope=Channels,
+                                                   Range=ScopeConfig['AcqVRange'],
                                                    GenConfig=GenConfig)
         self.Channels = Channels
         self.DaqInterface.DataEveryNEvent = self.NewData
         self.AvgIndex = AvgIndex
-        self.FsScope = ScopeConfig['FsScope']
+        self.FsScope = ScopeConfig['Fs']
         self.EveryN = ScopeConfig['BufferSize']
 
-        self.GenSize = GenConfig['GenSize']
-        self.Vcm = GenConfig['CMVoltage']
+        self.Vcm = ScopeConfig['CMVoltage']
         
         self.ColsConfig = GenConfig['ColsConfig']
         self.Col1 = self.ColsConfig['Col1']
@@ -48,10 +48,7 @@ class DataAcquisitionThread(Qt.QThread):
         
     def OutSignal(self, Amp, Freq, phase=0):
         step = 2*np.pi*(Freq/self.FsScope)
-        self.Signal = np.float64(Amp*np.exp(1j*(step*np.arange(self.GenSize))))
-#        Ts = 1/(self.FsScope)
-#        Time = np.arange(0, Ts*self.GenSize, Ts)
-#        self.Signal = Amp*np.sin(2*np.pi*Freq*Time+((np.pi/180)*phase))
+        self.Signal = np.float64(Amp*np.exp(1j*(step*np.arange(self.EveryN))))
         
     def run(self, *args, **kwargs):
         self.DaqInterface.StartAcquisition(Fs=self.FsScope, 
