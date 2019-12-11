@@ -79,7 +79,7 @@ class StbDetThread(Qt.QThread):
             self.DCIds[ind] = (2*self.ptrend[-1])/np.sqrt(2) #Se toma el ultimo valor
         
         #Se guardan los valores DC
-        self.SaveDCAC.SaveDCDict(Ids=self.DCIds)
+        self.SaveDCAC.SaveDCDict(Ids=self.DCIds) #FALTA PASAR INDICES DE SWEEPS
         
     def on_PSDDone(self):
         self.freqs = self.threadCalcPSD.ff
@@ -89,7 +89,7 @@ class StbDetThread(Qt.QThread):
         #Se guarda en AC dicts
         self.SaveDCAC.SaveACDict(psd=self.PSDdata,
                                  ff=self.freqs
-                                 )
+                                 )#FALTA PASAR INDICES DE SWEEPS
             
     def Next(self):
         #Y se emite la señal para el siguiente sweep de VG

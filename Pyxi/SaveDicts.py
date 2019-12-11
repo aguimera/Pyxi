@@ -36,17 +36,17 @@ class SaveDicts():
                                              ChNames=self.ChNamesList)
         
         
-     def SaveDCDict(self, Ids):
+     def SaveDCDict(self, Ids, SwVgsInd, SwVdsInd):
         for chn, inds in self.ChannelIndex.items():
-            self.DevDCVals[chn]['Ids'][self.SwVgsInd,
-                                       self.SwVdsInd] = Ids[inds]
+            self.DevDCVals[chn]['Ids'][SwVgsInd,
+                                       SwVdsInd] = Ids[inds]
    
         print('DCSaved')
         
-     def SaveACDict(self, psd, ff):
+     def SaveACDict(self, psd, ff, SwVgsInd, SwVdsInd)):
         for chn, inds in self.ChannelIndex.items():
-            self.DevACVals[chn]['PSD']['Vd{}'.format(self.SwVdsInd)][
-                    self.SwVgsInd] = psd[:, inds]
+            self.DevACVals[chn]['PSD']['Vd{}'.format(SwVdsInd)][
+                    SwVgsInd] = psd[:, inds]
             self.DevACVals[chn]['Fpsd'] = ff
         print('ACSaved')
         self.PSDSaved.emit()
