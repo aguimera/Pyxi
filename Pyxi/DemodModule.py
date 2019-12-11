@@ -42,7 +42,17 @@ DemodulParams = ({'name': 'DemodConfig',
                                 'title': 'Output Var Type',
                                 'type': 'list',
                                 'values': ['Real', 'Imag', 'Angle', 'Abs'],
-                                'value': 'Abs'}
+                                'value': 'Abs'},
+                               {'name': 'MaxSlope',
+                                'title':'Maximum Slope',
+                                'type': 'float',
+                                'value': 1e-10},
+                               {'name': 'TimeOut',
+                                'title':'Max Time for Stabilization',
+                                'type': 'int',
+                                'value': 10,
+                                'siPrefix': True,
+                                'suffix': 's'},
                               )
                 })
                   
@@ -179,11 +189,13 @@ class DemodThread(Qt.QThread):
        self.ToDemData = None
        
        self.DemOutputs = []
+       self.NamesForDict = []
        for Row in RowList:
            DemOut = []
            for Cols, Freq in Fcs.items():
                Dem = Demod(Freq, FetchSize, FsDemod, DSFact, FiltOrder, Signal)
                DemOut.append(Dem)
+               self.NamesForDict.append(str(Row+Cols))
            self.DemOutputs.append(DemOut) 
        self.OutDemodData = np.ndarray((round(FetchSize/DSFact),round(len(RowList)*len(Fcs.keys()))), dtype=float)
        

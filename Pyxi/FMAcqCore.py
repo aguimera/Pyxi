@@ -48,7 +48,7 @@ class ChannelsConfig():
     
     def __init__(self, ChannelsScope, Range, GenConfig,  AcqDiff=True, ChVcm='ao0', ChCol1='ao1'):
         print('InitChannels')
-
+        
         self._InitAnalogOutputs(ChVcm=ChVcm,
                                 ChVd=ChCol1)
         self.ChNamesList = sorted(ChannelsScope)
@@ -103,25 +103,26 @@ class ChannelsConfig():
         self.VcmOut = DaqInt.WriteAnalog((ChVcm,))
         self.VdOut = DaqInt.WriteAnalog((ChVd,))   
         
-    def StartAcquisition(self, Fs, EveryN, Vgs, Signal):
+#    def StartAcquisition(self, Fs, EveryN, Vgs, Signal):
 #    def StartAcquisition(self, Fs, nSampsCo, nBlocks, numCols):
+    def StartAcquisition(self, Fs, EveryN, Vgs):
         print('StartAcquisition')
         print('DSig set')
         
         self.nBlocks = EveryN       
-        self.SetOutput(Vcm=Vgs,
-                       Signal=Signal)
+        self.SetVcm(Vcm=Vgs)
         self.OutputShape = (len(self.MuxChannelNames), int(EveryN))
 
         self.AnalogInputs.ReadContData(Fs=Fs,
                                        EverySamps=self.nBlocks)
 
-    
-    def SetOutput(self, Vcm, Signal):
+    def SetVcm(self,Vcm):
         self.VcmOut.SetVal(Vcm)
-        print(Signal, len(Signal))
+        
+    def SetSignal(self, Signal):
         self.VdOut.SetContSignal(Signal=Signal,
                                  nSamps=len(Signal))
+        
     
     def _SortChannels(self, data, SortDict):
         print('SortChannels')

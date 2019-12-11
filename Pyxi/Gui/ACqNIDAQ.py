@@ -27,6 +27,7 @@ import Pyxi.PlotModule as PltMod
 import Pyxi.DataAcquisition as DataAcq
 import Pyxi.GenAqcCondigModule as NiConfig
 import Pyxi.DemodModule as DemMod
+import Pyxi.StabDetector as StbDet
 
 
 class MainWindow(Qt.QWidget):
@@ -110,6 +111,7 @@ class MainWindow(Qt.QWidget):
         self.threadDemodSave = None
         self.threadDemodPlotter = None
         self.threadDemodPsdPlotter = None
+        self.threadStbDet = None
         
  ##############################Changes Control##############################         
     def on_Params_changed(self, param, changes):
@@ -193,8 +195,18 @@ class MainWindow(Qt.QWidget):
                                                          Signal=self.threadAqc.Signal,
                                                          **self.DemodKwargs)
                 self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
+                
+                self.threadStbDet = StbDet.StbDetThread(MaxSlope=self.DemodConfig.param('MaxSlope').value(),
+                                                        TimeOut=self.DemodConfig.param('TimeOut').value(),
+                                                        PlotterDemodKwargs=self.DemodPlotParams.GetParams(),
+                                                        VdVals=self.GenAcqParams.VdSweepVals.value(),
+                                                        VgVals=self.GenAcqParams.VgSweepVals.value())
+                
                 self.threadDemodAqc.start()
+                self.threadStbDet.initTimer()
+                self.threadStbDet.start()
                  
+            self.threadAqc.DaqInterface.SetSignal(self.threadAqc.DaqInterface.Signal)
             self.threadAqc.start()
             self.btnStart.setText("Stop Gen")
             self.OldTime = time.time()
@@ -242,8 +254,14 @@ class MainWindow(Qt.QWidget):
             OutDemodData = np.imag(self.threadDemodAqc.OutDemodData)
         elif self.DemodConfig.param('OutType').value() == 'Angle':
             OutDemodData = np.angle(self.threadDemodAqc.OutDemodData, deg=True)   
-         
+        
+        if self.threadStbDet is not None:
+            self.threadStbDet.AddData(OutDemodData)
+            
         if self.threadDemodSave is not None:
+            #Yo iria haciendo aqui appends, hasta que acabase el sweep de Vgs
+            #una vez acaba el sweep, guardo los valores de IDS en el diccionario
+            #DC, y calculo los PSD para guardar en el diccionario AC
             self.threadDemodSave.AddData(OutDemodData)
         if self.threadDemodPlotter is not None:
             self.threadDemodPlotter.AddData(OutDemodData)

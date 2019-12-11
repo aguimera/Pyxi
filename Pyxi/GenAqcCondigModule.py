@@ -36,12 +36,40 @@ ConfigParam =  {'name': 'AcqConfig',
                                     'value': 0.5,
                                     'siPrefix': True,
                                     'suffix': 's'},
-                                   {'name': 'CMVoltage',
-                                    'title': 'Common Mode Voltage',
-                                    'value': 0.0,
-                                    'type': 'float',
-                                    'siPrefix': True,
-                                    'suffix': 'V'},
+                                   {'name': 'VgSweep',
+                                    'type': 'group',
+                                    'children': ({'name':'Vinit',
+                                                  'type':'float',
+                                                  'value':0,
+                                                  'siPrefix':True,
+                                                  'suffix':'V'},
+                                                 {'name':'Vfinal',
+                                                  'type':'float',
+                                                  'value':-0.4,
+                                                  'siPrefix':True,
+                                                  'suffix':'V'},
+                                                 {'name':'Vstep',
+                                                  'type':'float',
+                                                  'value':0.01,
+                                                  'siPrefix':True,
+                                                  'suffix':'V'},)},
+                                   {'name': 'VdSweep',
+                                    'type': 'group',
+                                    'children': ({'name':'Vinit',
+                                                  'type':'float',
+                                                  'value':0.02,
+                                                  'siPrefix':True,
+                                                  'suffix':'V'},
+                                                 {'name':'Vfinal',
+                                                  'type':'float',
+                                                  'value':0.2,
+                                                  'siPrefix':True,
+                                                  'suffix':'V'},
+                                                 {'name':'Vstep',
+                                                  'type':'float',
+                                                  'value':0.01,
+                                                  'siPrefix':True,
+                                                  'suffix':'V'},)}, 
                                    {'name': 'AcqVRange',
                                     'title': 'Voltage Range',
                                     'type': 'list',
@@ -227,7 +255,14 @@ class GenAcqConfig(pTypes.GroupParameter):
         self.Vcm = self.AcqConfig.param('CMVoltage')
         self.NRows = self.AcqConfig.param('NRow')
         self.GainBoard = self.AcqConfig.param('GainBoard')
-
+        
+        self.VgSweepVals = np.arange(self.AcqConfig.param('VgSweep').param('Vinit'),
+                                     self.AcqConfig.param('VgSweep').param('Vfinal'),
+                                     self.AcqConfig.param('VgSweep').param('Vstep'))
+        self.VdSweepVals = np.arange(self.AcqConfig.param('VdSweep').param('Vinit'),
+                                     self.AcqConfig.param('VdSweep').param('Vfinal'),
+                                     self.AcqConfig.param('VdSweep').param('Vstep'))
+        
         self.Fs.sigValueChanged.connect(self.on_Config_Changed)
         self.BufferSize.sigValueChanged.connect(self.on_Config_Changed)
         
