@@ -186,8 +186,8 @@ class MainWindow(Qt.QWidget):
             self.ScopeKwargs = self.GenAcqParams.GetRowParams()
             self.ScopeChns = self.GenAcqParams.GetRowsNames()
             self.DemodKwargs = self.DemodParams.GetParams()
-            self.VdSweepVals = self.GenAcqParams.VdSweepVals.value()
-            self.VgSweepVals = self.GenAcqParams.VgSweepVals.value()
+            self.VdSweepVals = self.GenAcqParams.VdSweepVals
+            self.VgSweepVals = self.GenAcqParams.VgSweepVals
             
             self.threadAqc = DataAcq.DataAcquisitionThread(GenConfig=self.GenKwargs,
                                                            Channels=self.ScopeChns, 

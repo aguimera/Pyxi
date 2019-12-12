@@ -234,11 +234,6 @@ CarrierParam = {'name':'ColX',
                              'type': 'float',
                              'siPrefix': True,
                              'suffix': 'º'},
-                            {'name': 'Amplitude',
-                             'value': 0.25,
-                             'type': 'float',
-                             'siPrefix': True,
-                             'suffix': 'V'},
                             )
                }
 
@@ -401,7 +396,7 @@ class GenAcqConfig(pTypes.GroupParameter):
         for col in Cols:
             cc = copy.deepcopy(CarrierParam)
             cc['name'] = col
-            cc['children'][2]['value'] = 2*cc['children'][1]['value']
+#            cc['children'][2]['value'] = 2*cc['children'][1]['value']
             self.CarrierConfig.addChild(cc)
         for p in self.CarrierConfig.children():
             p.param('Frequency').sigValueChanged.connect(self.on_FreqSig_Changed)
