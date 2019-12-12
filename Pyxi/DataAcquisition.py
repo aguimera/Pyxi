@@ -43,6 +43,7 @@ class DataAcquisitionThread(Qt.QThread):
         self.EveryN = ScopeConfig['BufferSize']
 
         self.VcmValues = ScopeConfig['VgSweep'] #array de Sweep Vgs
+        print(self.VcmValues)
         self.Vcm = self.VcmValues[0] #se empieza el sweep con el primer valor
         self.gain = ScopeConfig['GainBoard']
         self.ColsConfig = GenConfig['ColsConfig']
