@@ -50,7 +50,7 @@ ConfigParam =  {'name': 'AcqConfig',
                                                   'suffix':'V'},
                                                  {'name':'Vstep',
                                                   'type':'float',
-                                                  'value':0.01,
+                                                  'value':-0.01,
                                                   'siPrefix':True,
                                                   'suffix':'V'},)},
                                    {'name': 'VdSweep',
@@ -256,6 +256,7 @@ class GenAcqConfig(pTypes.GroupParameter):
         self.VgSweepVals = np.arange(self.VgParams.param('Vinit').value(),
                                      self.VgParams.param('Vfinal').value(),
                                      self.VgParams.param('Vstep').value())
+
         self.VdSweepVals = np.arange(self.VdParams.param('Vinit').value(),
                                      self.VdParams.param('Vfinal').value(),
                                      self.VdParams.param('Vstep').value())
@@ -340,6 +341,13 @@ class GenAcqConfig(pTypes.GroupParameter):
         for Config in self.AcqConfig.children():
             if Config.name() =='tFetch':
                 continue
+            if Config.name() == 'VgSweep':
+                Scope[Config.name()]=self.VgSweepVals
+                continue
+            if Config.name() == 'VdSweep':
+                Scope[Config.name()]=self.VdSweepVals
+                continue
+                
             Scope[Config.name()] = Config.value()
 
         return Scope
