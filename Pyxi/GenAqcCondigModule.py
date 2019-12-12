@@ -276,6 +276,7 @@ class GenAcqConfig(pTypes.GroupParameter):
         self.ColConfig.sigTreeStateChanged.connect(self.on_ColConfig_Changed)
         
         self.Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
+
         for p in self.CarrierConfig.children():
             p.param('Frequency').sigValueChanged.connect(self.on_FreqSig_Changed())
          
@@ -283,6 +284,7 @@ class GenAcqConfig(pTypes.GroupParameter):
         self.on_Config_Changed()
         self.on_RowsConfig_Changed()
         self.on_ColConfig_Changed()
+        self.on_FreqSig_Changed()
  ##############################GeneralConfig##############################     
     def on_Config_Changed(self):
         Fs = self.Fs.value()
@@ -403,7 +405,8 @@ class GenAcqConfig(pTypes.GroupParameter):
             nc = round((Samps*Fc)/Fs)
             Fnew =  (nc*Fs)/Samps
             p.param('Frequency').setValue(Fnew)
-            
+        self.Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
+        print('freqs',self.Freqs)
     def on_ColConfig_Changed(self):
         Cols = []
         for p in self.ColConfig.children():
@@ -416,8 +419,8 @@ class GenAcqConfig(pTypes.GroupParameter):
             cc['name'] = col
 #            cc['children'][2]['value'] = 2*cc['children'][1]['value']
             self.CarrierConfig.addChild(cc)
-        for p in self.CarrierConfig.children():
-            p.param('Frequency').sigValueChanged.connect(self.on_FreqSig_Changed)
+#        for p in self.CarrierConfig.children():
+#            p.param('Frequency').sigValueChanged.connect(self.on_FreqSig_Changed)
         
     def GetGenParams(self):       
         """

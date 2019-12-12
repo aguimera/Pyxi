@@ -5,22 +5,23 @@ Created on Wed Dec 11 14:37:00 2019
 @author: Lucia
 """
 import numpy as np
+from PyQt5 import Qt
+from PyQt5.QtCore import QObject
 import PyGFETdb.DataStructures as PyData
 
-class SaveDicts():
-     PSDSaved = None
+class SaveDicts(QObject):
+     PSDSaved = Qt.pyqtSignal()
      def __init__(self, SwVdsVals, SwVgsVals, Channels, nFFT, FsDemod, Gate=False):
-        InChans = []
+        super(SaveDicts, self).__init__()
         self.ChNamesList = sorted(Channels)
         self.ChannelIndex = {}
         index = 0
         for ch in sorted(Channels):
-            InChans.append(self.aiChannels[ch])
             self.ChannelIndex[ch] = (index)
          
          # DC dictionaries
-        self.DevDCVals = PyData.InitDCRecord(nVds=self.SwVdsVals,
-                                             nVgs=self.SwVgsVals,
+        self.DevDCVals = PyData.InitDCRecord(nVds=SwVdsVals,
+                                             nVgs=SwVgsVals,
                                              ChNames=self.ChNamesList,
                                              Gate=Gate)
         # AC dictionaries
@@ -29,8 +30,8 @@ class SaveDicts():
         
         Fpsd = np.fft.rfftfreq(self.PSDnFFT, 1/self.PSDFs)
         nFgm = np.array([])
-        self.DevACVals = PyData.InitACRecord(nVds=self.SwVdsVals,
-                                             nVgs=self.SwVgsVals,
+        self.DevACVals = PyData.InitACRecord(nVds=SwVdsVals,
+                                             nVgs=SwVgsVals,
                                              nFgm=nFgm,
                                              nFpsd=Fpsd,
                                              ChNames=self.ChNamesList)

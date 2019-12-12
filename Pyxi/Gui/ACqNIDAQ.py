@@ -206,11 +206,10 @@ class MainWindow(Qt.QWidget):
                                                          Signal=self.threadAqc.Signal,
                                                          **self.DemodKwargs)
                 self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
-                
                 self.threadStbDet = StbDet.StbDetThread(MaxSlope=self.DemodConfig.param('MaxSlope').value(),
                                                         TimeOut=self.DemodConfig.param('TimeOut').value(),
                                                         nChannels=self.ScopeKwargs['NRow']*len(self.GenAcqParams.Freqs),
-                                                        ChnName= self.DemodParams.GetChannels(self.GenAcqParams.Rows, 
+                                                        ChnName=self.DemodParams.GetChannels(self.GenAcqParams.Rows, 
                                                                       self.GenAcqParams.GetCarriers()),
                                                         PlotterDemodKwargs=self.DemodPsdPlotParams.GetParams(),
                                                         VdVals=self.VdSweepVals,
@@ -296,7 +295,8 @@ class MainWindow(Qt.QWidget):
             self.VgInd += 1
             self.threadAqc.DaqInterface.VcmOut.ClearTask()
             self.threadAqc.Vcm = self.VgSweepVals[self.VgInd]
-        
+            self.threadStbDet.VgIndex= self.VgInd 
+            self.threadStbDet.Stable= False
             self.threadStbDet.initTimer()
         
         else:
@@ -321,6 +321,7 @@ class MainWindow(Qt.QWidget):
             self.threadAqc.NewMuxData.connect(self.on_NewSample)
             self.threadAqc.DaqInterface.SetSignal(self.threadAqc.Signal)
             self.threadAqc.start()
+            self.threadStbDet.VdIndex= self.VdInd 
             self.threadStbDet.initTimer()
         else:
             print('SweepEnded')

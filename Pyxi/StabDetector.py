@@ -20,19 +20,21 @@ class StbDetThread(Qt.QThread):
        self.MaxSlope = MaxSlope
        self.TimeOut = TimeOut
        
+       self.VgIndex=0
+       self.VdIndex=0
+       
        self.Timer = Qt.QTimer()
        self.Timer.moveToThread(self)
-       
+       print('nchannels',nChannels)
        self.threadCalcPSD = PSD.CalcPSD(nChannels=nChannels,
                                         **PlotterDemodKwargs)
        self.threadCalcPSD.PSDDone.connect(self.on_PSDDone)
-       
        self.SaveDCAC = SaveDicts.SaveDicts(SwVdsVals=VdVals,
                                            SwVgsVals=VgVals,
                                            Channels=ChnName,
-                                           nFFT=PlotterDemodKwargs['nFFT'],
+                                           nFFT=int(PlotterDemodKwargs['nFFT']),
                                            FsDemod=PlotterDemodKwargs['Fs']
-                                           ) 
+                                           )
        self.SaveDCAC.PSDSaved.connect(self.on_NextVg)
        
     def initTimer(self):
@@ -52,6 +54,9 @@ class StbDetThread(Qt.QThread):
                     self.Timer.stop()
                     self.Timer.killTimer(self.Id)
                     self.DCIdCalc()
+                    
+                else:
+                    self.ToStabData = None
                                         
             else:
                 Qt.QThread.msleep(10)
@@ -80,7 +85,9 @@ class StbDetThread(Qt.QThread):
             self.DCIds[ind] = (2*self.ptrend[-1])/np.sqrt(2) #Se toma el ultimo valor
         
         #Se guardan los valores DC
-        self.SaveDCAC.SaveDCDict(Ids=self.DCIds) #FALTA PASAR INDICES DE SWEEPS
+        self.SaveDCAC.SaveDCDict(Ids=self.DCIds, 
+                                 SwVgsInd=self.VgIndex, 
+                                 SwVdsInd=self.VdIndex) #FALTA PASAR INDICES DE SWEEPS
         
     def on_PSDDone(self):
         self.freqs = self.threadCalcPSD.ff
@@ -89,7 +96,9 @@ class StbDetThread(Qt.QThread):
         self.threadCalcPSD.stop()
         #Se guarda en AC dicts
         self.SaveDCAC.SaveACDict(psd=self.PSDdata,
-                                 ff=self.freqs
+                                 ff=self.freqs,
+                                 SwVgsInd=self.VgIndex, 
+                                 SwVdsInd=self.VdIndex
                                  )#FALTA PASAR INDICES DE SWEEPS
             
     def on_NextVg(self):
