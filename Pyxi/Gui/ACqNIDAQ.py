@@ -210,6 +210,8 @@ class MainWindow(Qt.QWidget):
                 self.threadStbDet = StbDet.StbDetThread(MaxSlope=self.DemodConfig.param('MaxSlope').value(),
                                                         TimeOut=self.DemodConfig.param('TimeOut').value(),
                                                         nChannels=self.ScopeKwargs['NRow']*len(self.GenAcqParams.Freqs),
+                                                        ChnName= self.DemodParams.GetChannels(self.GenAcqParams.Rows, 
+                                                                      self.GenAcqParams.GetCarriers()),
                                                         PlotterDemodKwargs=self.DemodPsdPlotParams.GetParams(),
                                                         VdVals=self.VdSweepVals,
                                                         VgVals=self.VgSweepVals)
