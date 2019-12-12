@@ -31,7 +31,7 @@ class StbDetThread(Qt.QThread):
                                            Channels=ChnName,
                                            nFFT=PlotterDemodKwargs['nFFT'],
                                            FsDemod=PlotterDemodKwargs['Fs']
-                                           )
+                                           ) 
        self.SaveDCAC.PSDSaved.connect(self.on_NextVg)
        
     def initTimer(self):
