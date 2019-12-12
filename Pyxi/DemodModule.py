@@ -107,7 +107,7 @@ class DemodParameters(pTypes.GroupParameter):
         i=0
         for r in Rows:
             for col, f in Fcs.items():
-                DemChnNames[r+'_'+col]=i
+                DemChnNames[r+col]=i
                 i=i+1
         return DemChnNames
         
