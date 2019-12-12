@@ -252,16 +252,18 @@ class GenAcqConfig(pTypes.GroupParameter):
         self.Fs = self.AcqConfig.param('Fs')
         self.BufferSize = self.AcqConfig.param('BufferSize')
         self.FetchTime = self.AcqConfig.param('tFetch')
-        self.Vcm = self.AcqConfig.param('CMVoltage')
+#        self.Vcm = self.AcqConfig.param('CMVoltage')
         self.NRows = self.AcqConfig.param('NRow')
         self.GainBoard = self.AcqConfig.param('GainBoard')
         
-        self.VgSweepVals = np.arange(self.AcqConfig.param('VgSweep').param('Vinit'),
-                                     self.AcqConfig.param('VgSweep').param('Vfinal'),
-                                     self.AcqConfig.param('VgSweep').param('Vstep'))
-        self.VdSweepVals = np.arange(self.AcqConfig.param('VdSweep').param('Vinit'),
-                                     self.AcqConfig.param('VdSweep').param('Vfinal'),
-                                     self.AcqConfig.param('VdSweep').param('Vstep'))
+        self.VgParams = self.AcqConfig.param('VgSweep')
+        self.VdParams = self.AcqConfig.param('VdSweep')
+        self.VgSweepVals = np.arange(self.VgParams.param('Vinit').value(),
+                                     self.VgParams.param('Vfinal').value(),
+                                     self.VgParams.param('Vstep').value())
+        self.VdSweepVals = np.arange(self.VdParams.param('Vinit').value(),
+                                     self.VdParams.param('Vfinal').value(),
+                                     self.VdParams.param('Vstep').value())
         
         self.Fs.sigValueChanged.connect(self.on_Config_Changed)
         self.BufferSize.sigValueChanged.connect(self.on_Config_Changed)
@@ -324,7 +326,8 @@ class GenAcqConfig(pTypes.GroupParameter):
                                  }, 
                   'Fs': 2000000.0, 
                   'BufferSize': 1000000, 
-                  'CMVoltage': 0.0,
+                  'VgSweep': [,,],
+                  'VdSweep': [,,],
                   'AcqVRange': 1,
                   'NRow': 8,  
                   'GainBoard': 10000.0

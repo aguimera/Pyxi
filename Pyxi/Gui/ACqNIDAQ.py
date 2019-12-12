@@ -174,15 +174,23 @@ class MainWindow(Qt.QWidget):
     def on_btnStart(self):       
         if self.threadAqc is None:
             print('started')
+            self.VdInd = 0
+            
             self.treepar.setParameters(self.Parameters, showTop=False)
             self.GenKwargs = self.GenAcqParams.GetGenParams()
             self.ScopeKwargs = self.GenAcqParams.GetRowParams()
             self.ScopeChns = self.GenAcqParams.GetRowsNames()
             self.DemodKwargs = self.DemodParams.GetParams()
+            self.VdSweepVals = self.GenAcqParams.VdSweepVals.value()
+            self.VgSweepVals = self.GenAcqParams.VgSweepVals.value()
+            
             self.threadAqc = DataAcq.DataAcquisitionThread(GenConfig=self.GenKwargs,
                                                            Channels=self.ScopeChns, 
-                                                           ScopeConfig=self.ScopeKwargs,)
+                                                           ScopeConfig=self.ScopeKwargs,
+                                                           VcmVals=self.VgSweepVals,
+                                                           Vd=self.VdSweepVals[0]) #empieza por el primer valor del sweep Vd
             self.threadAqc.NewMuxData.connect(self.on_NewSample)
+            self.threadAqc.VgsEnd.connect(self.on_NextVd)
             
             self.Gen_Destroy_PsdPlotter()
             self.Gen_Destroy_Plotters()
@@ -199,8 +207,8 @@ class MainWindow(Qt.QWidget):
                 self.threadStbDet = StbDet.StbDetThread(MaxSlope=self.DemodConfig.param('MaxSlope').value(),
                                                         TimeOut=self.DemodConfig.param('TimeOut').value(),
                                                         PlotterDemodKwargs=self.DemodPlotParams.GetParams(),
-                                                        VdVals=self.GenAcqParams.VdSweepVals.value(),
-                                                        VgVals=self.GenAcqParams.VgSweepVals.value())
+                                                        VdVals=self.VdSweepVals,
+                                                        VgVals=self.VgSweepVals)
                 
                 self.threadDemodAqc.start()
                 self.threadStbDet.initTimer()
@@ -271,7 +279,32 @@ class MainWindow(Qt.QWidget):
 
         if self.threadDemodPsdPlotter is not None:  
             self.threadDemodPsdPlotter.AddData(OutDemodData)
- 
+
+##############################Nex Vd Value##############################     
+    def on_NextVd(self):
+        self.threadAqc.NewMuxData.disconnect()
+        self.threadAqc.VgsEnd.disconnect()
+        self.threadAqc.DaqInterface.Stop()
+        self.threadAqc.terminate()
+        self.threadAqc = None
+
+        if self.VdInd < len(self.VdSweepVals):
+            self.VdInd += 1
+            self.VdValue = self.VdSweepVals[self.VdInd]
+            self.threadAqc = DataAcq.DataAcquisitionThread(GenConfig=self.GenKwargs,
+                                                           Channels=self.ScopeChns, 
+                                                           ScopeConfig=self.ScopeKwargs,
+                                                           VcmVals=self.VgSweepVals,
+                                                           Vd=self.VdValue) 
+            self.threadAqc.NewMuxData.connect(self.on_NewSample)
+            self.threadAqc.VgsEnd.connect(self.on_NextVd)
+            self.threadAqc.DaqInterface.SetSignal(self.threadAqc.DaqInterface.Signal)
+        else:
+            print('SweepEnded')
+            self.StopThreads()
+            self.btnStart.setText("Start Gen and Adq!") 
+            #Aqui tocaria guardar el archivo ACDC en el formato correcto
+        
 ##############################Savind Files##############################  
     def SaveFiles(self):
         FileName = self.FileParams.param('File Path').value()

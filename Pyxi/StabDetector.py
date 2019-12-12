@@ -25,6 +25,7 @@ class StbDetThread(Qt.QThread):
        
        self.threadCalcPSD = PSD.CalcPSD(**PlotterDemodKwargs)
        self.threadCalcPSD.PSDDone.connect(self.on_PSDDone)
+       self.VgIndSweep = 0
        
        self.SaveDCAC = SaveDicts.SaveDicts(SwVdsVals=VdVals,
                                            SwVgsVals=VgVals,
@@ -93,6 +94,7 @@ class StbDetThread(Qt.QThread):
             
     def Next(self):
         #Y se emite la señal para el siguiente sweep de VG
+        self.VgIndSweep += 1
         self.NextVg.emit() 
         
     def stop(self):

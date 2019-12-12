@@ -4,7 +4,7 @@ Created on Wed Dec 11 13:04:39 2019
 
 @author: Lucia
 """
-from pyQt5 import Qt
+from PyQt5 import Qt
 from scipy.signal import welch
 import numpy as np
 

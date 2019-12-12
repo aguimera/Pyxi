@@ -43,7 +43,7 @@ class SaveDicts():
    
         print('DCSaved')
         
-     def SaveACDict(self, psd, ff, SwVgsInd, SwVdsInd)):
+     def SaveACDict(self, psd, ff, SwVgsInd, SwVdsInd):
         for chn, inds in self.ChannelIndex.items():
             self.DevACVals[chn]['PSD']['Vd{}'.format(SwVdsInd)][
                     SwVgsInd] = psd[:, inds]

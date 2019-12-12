@@ -25,9 +25,8 @@ import Pyxi.StabDetector as StbDet
 class DataAcquisitionThread(Qt.QThread):
     NewMuxData = Qt.pyqtSignal()
     VgsEnd = Qt.pyqtSignal()
-    VdsEnd = Qt.pyqtSignal()
     
-    def __init__(self, GenConfig, Channels, ScopeConfig, AvgIndex=5):
+    def __init__(self, GenConfig, Channels, ScopeConfig, VcmVals, Vd, AvgIndex=5):
         super(DataAcquisitionThread, self).__init__()
         print(Channels)
         print(ScopeConfig)
@@ -42,21 +41,21 @@ class DataAcquisitionThread(Qt.QThread):
         self.FsScope = ScopeConfig['Fs']
         self.EveryN = ScopeConfig['BufferSize']
 
-        self.Vcm = ScopeConfig['CMVoltage'] #array de Sweep Vgs
+        self.VcmValues = VcmVals #array de Sweep Vgs
+        self.Vcm = self.VcmValues[0] #se empieza el sweep con el primer valor
         self.gain = ScopeConfig['GainBoard']
         self.ColsConfig = GenConfig['ColsConfig']
         self.Col1 = self.ColsConfig['Col1']
-        self.OutSignal(Amp=self.Col1['Amplitude'],#1 solo valor
-                       Freq=self.Col1['Frequency'],
-                       phase=self.Col1['Phase'])
+        self.Freq = self.Col1['Frequency'],
+        self.phase = self.Col1['Phase']
+        self.OutSignal(Amp=Vd)
         
-        self.Sweep = 0
         self.Scopeconfig = ScopeConfig
         self.threadStbDet.NextVg.connect(self.NextVgsSweep)#aqui va el emit de PSD acabado
         
-    def OutSignal(self, Amp, Freq, phase=0):
+    def OutSignal(self, Amp):
 
-        step = 2*np.pi*(Freq/self.FsScope)
+        step = 2*np.pi*(self.Freq/self.FsScope)
         self.Signal = np.float64(Amp*np.exp(1j*(step*np.arange(self.EveryN))))
 
             
@@ -77,13 +76,16 @@ class DataAcquisitionThread(Qt.QThread):
         
         loop = Qt.QEventLoop()
         loop.exec_()
-
-    
+        
     def NewData(self, aiData):
         self.OutData = aiData/self.gain
         self.NewMuxData.emit()
 
     def NextVgsSweep(self):
-        self.Sweep += 1
-        self.Vcm = self.ScopeConfig['CMVoltage'][self.Sweep]
-        self.DaqInterface.VcmOut.ClearTask()
+        if self.threadStbDet.VgIndSweep <= len(self.VcmValues.size):
+            self.Vcm = self.VcmValues[self.threadStbDet.VgIndSweep]
+            self.DaqInterface.VcmOut.ClearTask()
+        else:
+            print('VgSweepEnded, Next Vd')
+            self.VgsEnd.emit()
+            
