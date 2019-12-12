@@ -57,7 +57,7 @@ class Buffer2D(np.ndarray):
 
 class CalcPSD(Qt.QThread):
     PSDDone = Qt.pyqtSignal()
-    def __init__(self, Fs, nFFT, nAvg, nChannels, scaling, ChannelConf):
+    def __init__(self, Fs, nFFT, nAvg, nChannels, scaling):
         super(CalcPSD, self).__init__()
 
         self.scaling = scaling

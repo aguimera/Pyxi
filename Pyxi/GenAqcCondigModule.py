@@ -260,8 +260,8 @@ class GenAcqConfig(pTypes.GroupParameter):
         self.VdSweepVals = np.arange(self.VdParams.param('Vinit').value(),
                                      self.VdParams.param('Vfinal').value(),
                                      self.VdParams.param('Vstep').value())
-        self.VgParams.sigValueChanged.connecT(self.on_Sweeps_Changed)
-        self.VdParams.sigValueChanged.connecT(self.on_Sweeps_Changed)
+        self.VgParams.sigValueChanged.connect(self.on_Sweeps_Changed)
+        self.VdParams.sigValueChanged.connect(self.on_Sweeps_Changed)
         self.Fs.sigValueChanged.connect(self.on_Config_Changed)
         self.BufferSize.sigValueChanged.connect(self.on_Config_Changed)
         

@@ -24,9 +24,7 @@ import Pyxi.StabDetector as StbDet
 #DAQ Data Acq
 class DataAcquisitionThread(Qt.QThread):
     NewMuxData = Qt.pyqtSignal()
-    NextVgs = Qt.pyqtSignal()
-    VgsEnd = Qt.pyqtSignal()
-    
+
     def __init__(self, GenConfig, Channels, ScopeConfig, Vd, AvgIndex=5):
         super(DataAcquisitionThread, self).__init__()
         print(Channels)
@@ -43,17 +41,16 @@ class DataAcquisitionThread(Qt.QThread):
         self.EveryN = ScopeConfig['BufferSize']
 
         self.VcmValues = ScopeConfig['VgSweep'] #array de Sweep Vgs
-        print(self.VcmValues)
+
         self.Vcm = self.VcmValues[0] #se empieza el sweep con el primer valor
         self.gain = ScopeConfig['GainBoard']
         self.ColsConfig = GenConfig['ColsConfig']
         self.Col1 = self.ColsConfig['Col1']
-        self.Freq = self.Col1['Frequency'],
+        self.Freq = self.Col1['Frequency']
         self.phase = self.Col1['Phase']
         self.OutSignal(Amp=Vd)
         
         self.Scopeconfig = ScopeConfig
-        self.threadStbDet.NextVg.connect(self.NextVgsSweep)#aqui va el emit de PSD acabado
         
     def OutSignal(self, Amp):
 
