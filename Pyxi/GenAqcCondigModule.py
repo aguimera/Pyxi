@@ -50,7 +50,7 @@ ConfigParam =  {'name': 'AcqConfig',
                                                   'suffix':'V'},
                                                  {'name':'Vstep',
                                                   'type':'float',
-                                                  'value':0.01,
+                                                  'value':-0.01,
                                                   'siPrefix':True,
                                                   'suffix':'V'},)},
                                    {'name': 'VdSweep',
@@ -259,7 +259,8 @@ class GenAcqConfig(pTypes.GroupParameter):
         self.VdSweepVals = np.arange(self.VdParams.param('Vinit').value(),
                                      self.VdParams.param('Vfinal').value(),
                                      self.VdParams.param('Vstep').value())
-        
+        self.VgParams.sigValueChanged.connecT(self.on_Sweeps_Changed)
+        self.VdParams.sigValueChanged.connecT(self.on_Sweeps_Changed)
         self.Fs.sigValueChanged.connect(self.on_Config_Changed)
         self.BufferSize.sigValueChanged.connect(self.on_Config_Changed)
         
@@ -289,6 +290,15 @@ class GenAcqConfig(pTypes.GroupParameter):
         tF = BS/Fs
         self.FetchTime.setValue(tF)
         self.on_FreqSig_Changed()
+        
+    def on_Sweeps_Changed(self):
+        self.VgSweepVals = np.arange(self.VgParams.param('Vinit').value(),
+                                     self.VgParams.param('Vfinal').value(),
+                                     self.VgParams.param('Vstep').value())
+        
+        self.VdSweepVals = np.arange(self.VdParams.param('Vinit').value(),
+                                     self.VdParams.param('Vfinal').value(),
+                                     self.VdParams.param('Vstep').value())
         
   ##############################RowsConfig##############################             
     def on_RowsConfig_Changed(self):
