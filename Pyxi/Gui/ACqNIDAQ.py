@@ -28,6 +28,7 @@ import Pyxi.DataAcquisition as DataAcq
 import Pyxi.GenAqcCondigModule as NiConfig
 import Pyxi.DemodModule as DemMod
 import Pyxi.StabDetector as StbDet
+import Pyxi.SaveSweepModule as SaveSw
 
 
 class MainWindow(Qt.QWidget):
@@ -51,6 +52,9 @@ class MainWindow(Qt.QWidget):
                                                          name='Record File')
         self.Parameters.addChild(self.FileParams)
         
+        self.SaveSwParams = SaveSw.SaveSweepParameters(QTparent=self,
+                                                         name='Sweeps File')
+        self.Parameters.addChild(self.SaveSwParams)
  ##############################Configuration##############################   
         self.GenAcqParams = NiConfig.GenAcqConfig(name='NI DAQ Configuration')
         self.Parameters.addChild(self.GenAcqParams)
@@ -175,6 +179,7 @@ class MainWindow(Qt.QWidget):
         if self.threadAqc is None:
             print('started')
             self.VdInd = 0
+            self.VgInd = 0
             
             self.treepar.setParameters(self.Parameters, showTop=False)
             self.GenKwargs = self.GenAcqParams.GetGenParams()
@@ -187,10 +192,8 @@ class MainWindow(Qt.QWidget):
             self.threadAqc = DataAcq.DataAcquisitionThread(GenConfig=self.GenKwargs,
                                                            Channels=self.ScopeChns, 
                                                            ScopeConfig=self.ScopeKwargs,
-                                                           VcmVals=self.VgSweepVals,
                                                            Vd=self.VdSweepVals[0]) #empieza por el primer valor del sweep Vd
             self.threadAqc.NewMuxData.connect(self.on_NewSample)
-            self.threadAqc.VgsEnd.connect(self.on_NextVd)
             
             self.Gen_Destroy_PsdPlotter()
             self.Gen_Destroy_Plotters()
@@ -211,7 +214,8 @@ class MainWindow(Qt.QWidget):
                                                         VgVals=self.VgSweepVals)
                 
                 self.threadDemodAqc.start()
-                self.threadStbDet.initTimer()
+                self.threadStbDet.NextVg.connect(self.on_NextVg)
+                self.threadStbDet.initTimer() #TimerPara el primer Sweep
                 self.threadStbDet.start()
                  
             self.threadAqc.DaqInterface.SetSignal(self.threadAqc.DaqInterface.Signal)
@@ -221,6 +225,7 @@ class MainWindow(Qt.QWidget):
         else:
             print('stopped')
             self.threadAqc.NewMuxData.disconnect()
+            self.threadStbDet.NextVg.disconnect()
             self.threadAqc.DaqInterface.Stop()
             self.threadAqc.terminate()
             self.threadAqc = None
@@ -279,11 +284,25 @@ class MainWindow(Qt.QWidget):
 
         if self.threadDemodPsdPlotter is not None:  
             self.threadDemodPsdPlotter.AddData(OutDemodData)
-
+##############################Restart Timer Stabilization##############################  
+    def on_NextVg(self):
+        self.threadStbDet.Timer.stop()
+        self.threadStbDet.Timer.killTimer(self.Id)
+        
+        if self.VgInd < len(self.VgSweepVals):
+            self.VgInd += 1
+            self.threadAqc.DaqInterface.VcmOut.ClearTask()
+            self.threadAqc.Vcm = self.VgSweepVals[self.VgInd]
+        
+            self.threadStbDet.initTimer()
+        
+        else:
+            self.VgInd = 0
+            self.on_NextVd()
+        
 ##############################Nex Vd Value##############################     
     def on_NextVd(self):
         self.threadAqc.NewMuxData.disconnect()
-        self.threadAqc.VgsEnd.disconnect()
         self.threadAqc.DaqInterface.Stop()
         self.threadAqc.terminate()
         self.threadAqc = None
@@ -297,14 +316,20 @@ class MainWindow(Qt.QWidget):
                                                            VcmVals=self.VgSweepVals,
                                                            Vd=self.VdValue) 
             self.threadAqc.NewMuxData.connect(self.on_NewSample)
-            self.threadAqc.VgsEnd.connect(self.on_NextVd)
             self.threadAqc.DaqInterface.SetSignal(self.threadAqc.DaqInterface.Signal)
+            self.threadAqc.start()
+            self.threadStbDet.initTimer()
         else:
             print('SweepEnded')
             self.StopThreads()
             self.btnStart.setText("Start Gen and Adq!") 
-            #Aqui tocaria guardar el archivo ACDC en el formato correcto
-        
+            #guardar el archivo ACDC en el formato correcto
+            DCDict = self.threadStbDet.SaveDCAC.DevDCVals
+            ACDict = self.threadStbDet.SaveDCAC.DevACVals
+            self.SaveSwParams.SaveDicts(DCDict, ACDict)
+            #Parar thread de estabilización
+            self.threadStbDet.NextVg.disconnect()
+            self.threadStbDet.stop()
 ##############################Savind Files##############################  
     def SaveFiles(self):
         FileName = self.FileParams.param('File Path').value()

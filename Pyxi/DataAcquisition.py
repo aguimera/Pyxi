@@ -24,9 +24,10 @@ import Pyxi.StabDetector as StbDet
 #DAQ Data Acq
 class DataAcquisitionThread(Qt.QThread):
     NewMuxData = Qt.pyqtSignal()
+    NextVgs = Qt.pyqtSignal()
     VgsEnd = Qt.pyqtSignal()
     
-    def __init__(self, GenConfig, Channels, ScopeConfig, VcmVals, Vd, AvgIndex=5):
+    def __init__(self, GenConfig, Channels, ScopeConfig, Vd, AvgIndex=5):
         super(DataAcquisitionThread, self).__init__()
         print(Channels)
         print(ScopeConfig)
@@ -34,14 +35,14 @@ class DataAcquisitionThread(Qt.QThread):
         self.DaqInterface = CoreMod.ChannelsConfig(ChannelsScope=Channels,
                                                    Range=ScopeConfig['AcqVRange'],
                                                    GenConfig=GenConfig)
-        self.threadStbDet = StbDet#Aqui va el thread para hacer el psd
+  
         self.Channels = Channels
         self.DaqInterface.DataEveryNEvent = self.NewData
         self.AvgIndex = AvgIndex
         self.FsScope = ScopeConfig['Fs']
         self.EveryN = ScopeConfig['BufferSize']
 
-        self.VcmValues = VcmVals #array de Sweep Vgs
+        self.VcmValues = ScopeConfig['VgSweep'] #array de Sweep Vgs
         self.Vcm = self.VcmValues[0] #se empieza el sweep con el primer valor
         self.gain = ScopeConfig['GainBoard']
         self.ColsConfig = GenConfig['ColsConfig']
@@ -81,11 +82,3 @@ class DataAcquisitionThread(Qt.QThread):
         self.OutData = aiData/self.gain
         self.NewMuxData.emit()
 
-    def NextVgsSweep(self):
-        if self.threadStbDet.VgIndSweep <= len(self.VcmValues.size):
-            self.Vcm = self.VcmValues[self.threadStbDet.VgIndSweep]
-            self.DaqInterface.VcmOut.ClearTask()
-        else:
-            print('VgSweepEnded, Next Vd')
-            self.VgsEnd.emit()
-            
