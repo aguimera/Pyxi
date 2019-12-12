@@ -12,7 +12,7 @@ import Pyxi.SaveDicts as SaveDicts
 
 class StbDetThread(Qt.QThread):
     NextVg = Qt.pyqtSignal()
-    def __init__(self, VdVals, VgVals, MaxSlope, TimeOut, PlotterDemodKwargs):
+    def __init__(self, VdVals, VgVals, MaxSlope, TimeOut, nChannels, PlotterDemodKwargs):
        super(StbDetThread, self).__init__() 
        self.ToStabData = None
        self.Stable = False
@@ -23,12 +23,13 @@ class StbDetThread(Qt.QThread):
        self.Timer = Qt.QTimer()
        self.Timer.moveToThread(self)
        
-       self.threadCalcPSD = PSD.CalcPSD(**PlotterDemodKwargs)
+       self.threadCalcPSD = PSD.CalcPSD(nChannels=nChannels,
+                                        **PlotterDemodKwargs)
        self.threadCalcPSD.PSDDone.connect(self.on_PSDDone)
        
        self.SaveDCAC = SaveDicts.SaveDicts(SwVdsVals=VdVals,
                                            SwVgsVals=VgVals,
-                                           Channels=PlotterDemodKwargs['nChannels'],
+                                           Channels=nChannels,
                                            nFFT=PlotterDemodKwargs['nFFT'],
                                            FsDemod=PlotterDemodKwargs['Fs']
                                            )

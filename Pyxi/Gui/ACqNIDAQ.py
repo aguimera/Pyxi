@@ -209,7 +209,8 @@ class MainWindow(Qt.QWidget):
                 
                 self.threadStbDet = StbDet.StbDetThread(MaxSlope=self.DemodConfig.param('MaxSlope').value(),
                                                         TimeOut=self.DemodConfig.param('TimeOut').value(),
-                                                        PlotterDemodKwargs=self.DemodPlotParams.GetParams(),
+                                                        nChannels=self.ScopeKwargs['NRow']*len(self.GenAcqParams.Freqs),
+                                                        PlotterDemodKwargs=self.DemodPsdPlotParams.GetParams(),
                                                         VdVals=self.VdSweepVals,
                                                         VgVals=self.VgSweepVals)
                 
@@ -218,7 +219,7 @@ class MainWindow(Qt.QWidget):
                 self.threadStbDet.initTimer() #TimerPara el primer Sweep
                 self.threadStbDet.start()
                  
-            self.threadAqc.DaqInterface.SetSignal(self.threadAqc.DaqInterface.Signal)
+            self.threadAqc.DaqInterface.SetSignal(self.threadAqc.Signal)
             self.threadAqc.start()
             self.btnStart.setText("Stop Gen")
             self.OldTime = time.time()
@@ -316,7 +317,7 @@ class MainWindow(Qt.QWidget):
                                                            VcmVals=self.VgSweepVals,
                                                            Vd=self.VdValue) 
             self.threadAqc.NewMuxData.connect(self.on_NewSample)
-            self.threadAqc.DaqInterface.SetSignal(self.threadAqc.DaqInterface.Signal)
+            self.threadAqc.DaqInterface.SetSignal(self.threadAqc.Signal)
             self.threadAqc.start()
             self.threadStbDet.initTimer()
         else:
