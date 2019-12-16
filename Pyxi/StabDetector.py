@@ -16,9 +16,11 @@ class StbDetThread(Qt.QThread):
        super(StbDetThread, self).__init__() 
        self.ToStabData = None
        self.Stable = False
+       self.Datos = None
        
        self.MaxSlope = MaxSlope
        self.TimeOut = TimeOut
+       print(TimeOut)
        
        self.VgIndex=0
        self.VdIndex=0
@@ -38,11 +40,12 @@ class StbDetThread(Qt.QThread):
        self.SaveDCAC.PSDSaved.connect(self.on_NextVg)
        
     def initTimer(self):
-        self.Timer.singleShot(self.TimeOut, self.DCIdCalc)
-        
+        self.Timer.singleShot((self.TimeOut*1000), self.DCIdCalc)
+        self.Id = self.Timer.timerId()
     def run(self):       
         while True:
             if self.ToStabData is not None:
+                
                 Data = np.abs(self.ToStabData[:,0])#se mira la estabilización en la priemra row adquirida
                 x = np.arange(Data.size)
                 self.ptrend = np.polyfit(x, Data, 1)
@@ -50,43 +53,47 @@ class StbDetThread(Qt.QThread):
                 
                 slope = lnr(x, trend)[0] 
                 if slope <= self.MaxSlope:
-                    #se descoencta el timer 
-                    self.Timer.stop()
-                    self.Timer.killTimer(self.Id)
+
                     self.DCIdCalc()
                     
-                else:
-                    self.ToStabData = None
-                                        
+                self.ToStabData = None
+                                            
             else:
                 Qt.QThread.msleep(10)
 
     def AddData(self, NewData):
         if self.ToStabData is not None:
             print('Error STAB!!!!')
+            
         if self.Stable is False:
             self.ToStabData = NewData 
+            print('SaveDatos')
+            self.Datos = self.ToStabData#se guardan los datos para que no se sobreescriban
         if self.Stable is True:
             self.threadCalcPSD.AddData(NewData)
     
     def DCIdCalc(self):
         print('DATA STAB')
-        Datos=self.ToStabData #se guardan los datos para que no se sobreescriban
+        #se descoencta el timer 
+        self.Timer.stop()
+        self.Timer.killTimer(self.Id)
+        
         self.ToStabData = None
         #se activa el flag de estable
         self.Stable = True
         #se activa el thread para calcular PSD
         self.threadCalcPSD.start()
         #se obtiene el punto para cada Row
-        for ind in Datos.shape[1]:
-            Data = np.abs(Datos[:,ind])
+        DCIds = np.ndarray((self.Datos.shape[1], 1))
+        for ind in range(self.Datos.shape[1]):
+            Data = np.abs(self.Datos[:,ind])
             x = np.arange(Data.size)
             self.ptrend = np.polyfit(x, Data, 1)
                         
-            self.DCIds[ind] = (2*self.ptrend[-1])/np.sqrt(2) #Se toma el ultimo valor
+            DCIds[ind] = (2*self.ptrend[-1])/np.sqrt(2) #Se toma el ultimo valor
         
         #Se guardan los valores DC
-        self.SaveDCAC.SaveDCDict(Ids=self.DCIds, 
+        self.SaveDCAC.SaveDCDict(Ids=DCIds, 
                                  SwVgsInd=self.VgIndex, 
                                  SwVdsInd=self.VdIndex)
         

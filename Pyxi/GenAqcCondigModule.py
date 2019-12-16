@@ -253,15 +253,11 @@ class GenAcqConfig(pTypes.GroupParameter):
         
         self.VgParams = self.AcqConfig.param('VgSweep')
         self.VdParams = self.AcqConfig.param('VdSweep')
-        self.VgSweepVals = np.arange(self.VgParams.param('Vinit').value(),
-                                     self.VgParams.param('Vfinal').value(),
-                                     self.VgParams.param('Vstep').value())
 
-        self.VdSweepVals = np.arange(self.VdParams.param('Vinit').value(),
-                                     self.VdParams.param('Vfinal').value(),
-                                     self.VdParams.param('Vstep').value())
-        self.VgParams.sigValueChanged.connect(self.on_Sweeps_Changed)
-        self.VdParams.sigValueChanged.connect(self.on_Sweeps_Changed)
+        self.VgParams.sigTreeStateChanged.connect(self.on_Sweeps_Changed)
+        self.VdParams.sigTreeStateChanged.connect(self.on_Sweeps_Changed)
+        self.on_Sweeps_Changed()
+        
         self.Fs.sigValueChanged.connect(self.on_Config_Changed)
         self.BufferSize.sigValueChanged.connect(self.on_Config_Changed)
         
@@ -302,7 +298,8 @@ class GenAcqConfig(pTypes.GroupParameter):
         self.VdSweepVals = np.arange(self.VdParams.param('Vinit').value(),
                                      self.VdParams.param('Vfinal').value(),
                                      self.VdParams.param('Vstep').value())
-        
+        print('hola')
+        print(self.VgSweepVals, self.VdSweepVals)
   ##############################RowsConfig##############################             
     def on_RowsConfig_Changed(self):
         self.Rows = []

@@ -25,7 +25,7 @@ class SaveDicts(QObject):
                                              ChNames=self.ChNamesList,
                                              Gate=Gate)
         # AC dictionaries
-        self.PSDnFFT = nFFT
+        self.PSDnFFT = 2**nFFT
         self.PSDFs = FsDemod
         
         Fpsd = np.fft.rfftfreq(self.PSDnFFT, 1/self.PSDFs)
@@ -47,7 +47,7 @@ class SaveDicts(QObject):
      def SaveACDict(self, psd, ff, SwVgsInd, SwVdsInd):
         for chn, inds in self.ChannelIndex.items():
             self.DevACVals[chn]['PSD']['Vd{}'.format(SwVdsInd)][
-                    SwVgsInd] = psd[:, inds]
+                    SwVgsInd] = psd[:, inds].flatten()
             self.DevACVals[chn]['Fpsd'] = ff
         print('ACSaved')
         self.PSDSaved.emit()

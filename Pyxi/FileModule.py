@@ -206,7 +206,8 @@ class SaveSateParameters(pTypes.GroupParameter):
                                                     "state File",
                                                     "",
                                                    )
-        
+
+        print(type(RecordFile), RecordFile)        
         if RecordFile:
             with open(RecordFile, 'wb') as file:
                 file.write(pickle.dumps(parent.saveState()))

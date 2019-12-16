@@ -290,10 +290,11 @@ class MainWindow(Qt.QWidget):
 ##############################Restart Timer Stabilization##############################  
     def on_NextVg(self):
         self.threadStbDet.Timer.stop()
-        self.threadStbDet.Timer.killTimer(self.Id)
-        
+        self.threadStbDet.Timer.killTimer(self.threadStbDet.Id)
+        print('PARAAAAAAAAAAAAAAAAAAAAAAAA',self.VgSweepVals.shape)
+        self.VgInd += 1
         if self.VgInd < len(self.VgSweepVals):
-            self.VgInd += 1
+            print(self.VgInd)
             self.threadAqc.DaqInterface.VcmOut.ClearTask()
             self.threadAqc.Vcm = self.VgSweepVals[self.VgInd]
             self.threadStbDet.VgIndex= self.VgInd 
@@ -312,14 +313,14 @@ class MainWindow(Qt.QWidget):
         self.threadAqc.DaqInterface.Stop()
         self.threadAqc.terminate()
         self.threadAqc = None
-
+        self.VdInd += 1
         if self.VdInd < len(self.VdSweepVals):
-            self.VdInd += 1
+
             self.VdValue = self.VdSweepVals[self.VdInd]
             self.threadAqc = DataAcq.DataAcquisitionThread(GenConfig=self.GenKwargs,
                                                            Channels=self.ScopeChns, 
                                                            ScopeConfig=self.ScopeKwargs,
-                                                           VcmVals=self.VgSweepVals,
+#                                                           VcmVals=self.VgSweepVals,
                                                            Vd=self.VdValue) 
             self.threadAqc.NewMuxData.connect(self.on_NewSample)
             self.threadAqc.DaqInterface.SetSignal(self.threadAqc.Signal)
@@ -331,15 +332,19 @@ class MainWindow(Qt.QWidget):
             print('END VDS SWEEP')
             self.StopThreads()
             self.btnStart.setText("Start Gen and Adq!") 
+            #Parar thread de estabilización       
+            self.threadStbDet.Timer.stop()
+            self.threadStbDet.Timer.killTimer(self.threadStbDet.Id)
+            self.VdInd = 0
+            self.threadStbDet.VdIndex= self.VdInd 
+            self.threadStbDet.NextVg.disconnect()
+            self.threadStbDet.stop()
+            
             #guardar el archivo ACDC en el formato correcto
             DCDict = self.threadStbDet.SaveDCAC.DevDCVals
             ACDict = self.threadStbDet.SaveDCAC.DevACVals
             self.SaveSwParams.SaveDicts(DCDict, ACDict)
-            #Parar thread de estabilización
-            self.threadStbDet.NextVg.disconnect()
-            self.threadStbDet.stop()
-            self.VdInd = 0
-            self.threadStbDet.VdIndex= self.VdInd 
+
 ##############################Savind Files##############################  
     def SaveFiles(self):
         FileName = self.FileParams.param('File Path').value()

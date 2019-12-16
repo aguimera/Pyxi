@@ -11,6 +11,7 @@ import h5py
 from PyQt5 import Qt
 import os
 import deepdish as dd
+import pickle
 
 SaveSweepParams = [{'name': 'Save File',
                     'type': 'action'},
@@ -38,10 +39,6 @@ class SaveSweepParameters(pTypes.GroupParameter):
         self.QTparent = QTparent
         self.addChildren(SaveSweepParams)
         self.param('Save File').sigActivated.connect(self.FileDialog)
-        self.File = self.param('File Path').value()
-        self.Oblea = self.param('Oblea').value()
-        self.Disp = self.param('Disp').value()
-        self.Cycle = self.param('Cycle').value()
         
     def FileDialog(self):
         RecordFile = QFileDialog.getExistingDirectory(self.QTparent,
@@ -51,8 +48,16 @@ class SaveSweepParameters(pTypes.GroupParameter):
             self.param('File Path').setValue(RecordFile)
             
     def SaveDicts(self, Dcdict, Acdict):
-        self.FileName = self.File+"/"+self.Oblea+"-"+self.Disp+"-"+self.Name+"{}-Cy{}.h5".format('', self.Cycle)
-        dd.io.save(self.Filename, (Dcdict, Acdict), ('zlib', 1))
+        self.FileName = '{}/{}-{}-{}-Cy{}.h5'.format(self.param('File Path').value(),
+                                           self.param('Oblea').value(),
+                                           self.param('Disp').value(),
+                                           self.param('Name').value(),
+                                           self.param('Cycle').value())
+#        print(self.FileName)
+        with open(self.FileName, "wb") as f:
+            pickle.dump(Dcdict, f)
+            pickle.dump(Acdict, f)
+#        dd.io.save(self.Filename, (Dcdict, Acdict), ('zlib', 1))
         
     def FilePath(self):
         return self.param('File Path').value()
