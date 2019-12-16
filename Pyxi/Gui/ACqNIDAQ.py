@@ -271,6 +271,7 @@ class MainWindow(Qt.QWidget):
             OutDemodData = np.angle(self.threadDemodAqc.OutDemodData, deg=True)   
         
         if self.threadStbDet is not None:
+            print('Demod Done')
             self.threadStbDet.AddData(OutDemodData)
             
         if self.threadDemodSave is not None:
@@ -298,9 +299,11 @@ class MainWindow(Qt.QWidget):
             self.threadStbDet.VgIndex= self.VgInd 
             self.threadStbDet.Stable= False
             self.threadStbDet.initTimer()
-        
+            print('NEXT VGS SWEEP')
         else:
+            print('END VGS SWEEP')
             self.VgInd = 0
+            self.threadStbDet.VgIndex= self.VgInd 
             self.on_NextVd()
         
 ##############################Nex Vd Value##############################     
@@ -323,8 +326,9 @@ class MainWindow(Qt.QWidget):
             self.threadAqc.start()
             self.threadStbDet.VdIndex= self.VdInd 
             self.threadStbDet.initTimer()
+            print('NEXT VDS SWEEP')
         else:
-            print('SweepEnded')
+            print('END VDS SWEEP')
             self.StopThreads()
             self.btnStart.setText("Start Gen and Adq!") 
             #guardar el archivo ACDC en el formato correcto
@@ -334,6 +338,8 @@ class MainWindow(Qt.QWidget):
             #Parar thread de estabilización
             self.threadStbDet.NextVg.disconnect()
             self.threadStbDet.stop()
+            self.VdInd = 0
+            self.threadStbDet.VdIndex= self.VdInd 
 ##############################Savind Files##############################  
     def SaveFiles(self):
         FileName = self.FileParams.param('File Path').value()

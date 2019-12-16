@@ -63,13 +63,14 @@ class StbDetThread(Qt.QThread):
 
     def AddData(self, NewData):
         if self.ToStabData is not None:
-            print('Error!!!!')
+            print('Error STAB!!!!')
         if self.Stable is False:
             self.ToStabData = NewData 
         if self.Stable is True:
             self.threadCalcPSD.AddData(NewData)
     
     def DCIdCalc(self):
+        print('DATA STAB')
         Datos=self.ToStabData #se guardan los datos para que no se sobreescriban
         self.ToStabData = None
         #se activa el flag de estable
@@ -87,9 +88,10 @@ class StbDetThread(Qt.QThread):
         #Se guardan los valores DC
         self.SaveDCAC.SaveDCDict(Ids=self.DCIds, 
                                  SwVgsInd=self.VgIndex, 
-                                 SwVdsInd=self.VdIndex) #FALTA PASAR INDICES DE SWEEPS
+                                 SwVdsInd=self.VdIndex)
         
     def on_PSDDone(self):
+        print('PSD DONE RECIBED')
         self.freqs = self.threadCalcPSD.ff
         self.PSDdata = self.threadCalcPSD.psd
         #se desactiva el thread para calcular PSD
@@ -99,10 +101,11 @@ class StbDetThread(Qt.QThread):
                                  ff=self.freqs,
                                  SwVgsInd=self.VgIndex, 
                                  SwVdsInd=self.VdIndex
-                                 )#FALTA PASAR INDICES DE SWEEPS
+                                 )
             
     def on_NextVg(self):
         #Y se emite la señal para el siguiente sweep de VG
+        print('NEXTVG EMIT')
         self.NextVg.emit() 
         
     def stop(self):

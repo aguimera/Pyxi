@@ -76,6 +76,7 @@ class CalcPSD(Qt.QThread):
                                 nperseg=self.nFFT,
                                 scaling=self.scaling,
                                 axis=0)
+                print('PSD DONE EMIT')
                 self.PSDDone.emit()
 
             else:
