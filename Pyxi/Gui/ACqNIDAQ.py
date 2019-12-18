@@ -180,10 +180,10 @@ class MainWindow(Qt.QWidget):
              self.Gen_Destroy_Plotters()
     def on_RefreshTimePlt_changed(self):
          if self.threadPlotter is not None: 
-             self.threadPlotter.SetRefreshTime(self.PlotParams.param('RefreshTime'))
+             self.threadPlotter.SetRefreshTime(self.PlotParams.param('RefreshTime').value())
     def on_SetViewTimePlt_changed(self): 
          if self.threadPlotter is not None: 
-             self.threadPlotter.SetViewTime(self.PlotParams.param('ViewTime')) 
+             self.threadPlotter.SetViewTime(self.PlotParams.param('ViewTime').value()) 
     def on_RefreshTimeDemod_changed(self):
          if self.threadDemodPlotter is not None:  
              self.threadDemodPlotter.SetRefreshTime(self.DemodPlotParams.param('RefreshTime').value())
