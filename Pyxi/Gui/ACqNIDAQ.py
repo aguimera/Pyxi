@@ -21,15 +21,15 @@ import pyqtgraph.parametertree.parameterTypes as pTypes
 from pyqtgraph.parametertree import Parameter, ParameterTree, ParameterItem, registerParameterType
 from itertools import  cycle
 
-import Pyxi.FileModule as FileMod
-import Pyxi.SampleGenerator as SampGen
-import Pyxi.PlotModule as PltMod
 import Pyxi.DataAcquisition as DataAcq
-import Pyxi.GenAqcCondigModule as NiConfig
-import Pyxi.DemodModule as DemMod
+import Pyxi.GenAqcModule as NiConfig
 import Pyxi.StabDetector as StbDet
-import Pyxi.SweepsModule as SwMod
-import Pyxi.SaveDicts as SaveDc
+
+import PyCont.FileModule as FileMod
+import PyCont.PlotModule as PltMod
+import PyCont.DemodModule as DemMod
+import PyCont.SweepsModule as SwMod
+import PyCont.SaveDictsModule as SaveDc
 
 
 class MainWindow(Qt.QWidget):

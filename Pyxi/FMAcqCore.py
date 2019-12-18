@@ -5,8 +5,7 @@ Created on Mon Nov 18 12:20:11 2019
 @author: Lucia
 """
 
-import Pyxi.DaqInterface as DaqInt
-#import PyTMCore.DaqInterface as DaqInt
+import PyCont.DaqInterface as DaqInt
 import numpy as np
 
 # Daq card connections mapping 'Chname':(AI+, AI-)
@@ -80,14 +79,6 @@ class ChannelsConfig():
             index += 1
             print(ch, 'Single -->', aiChannels[ch][0])
             print('SortIndex ->', self.SChannelIndex[ch])
-#            if self.AcqD:
-#            #Only read Output- when diff activated
-#                InChans.append(aiChannels[ch][1])
-#                self.DChannelIndex[ch] = (index, sortindex)
-#                index += 1
-#                print(ch, ' Differential -->', aiChannels[ch][1])
-#                print('SortIndex ->', self.DChannelIndex[ch])
-#            sortindex += 1
         print('Input ai', InChans)
 
         self.AnalogInputs = DaqInt.ReadAnalog(InChans=InChans, 
@@ -103,8 +94,6 @@ class ChannelsConfig():
         self.VcmOut = DaqInt.WriteAnalog((ChVcm,))
         self.VdOut = DaqInt.WriteAnalog((ChVd,))   
         
-#    def StartAcquisition(self, Fs, EveryN, Vgs, Signal):
-#    def StartAcquisition(self, Fs, nSampsCo, nBlocks, numCols):
     def StartAcquisition(self, Fs, EveryN, Vgs):
         print('StartAcquisition')
         print('DSig set')
@@ -139,11 +128,6 @@ class ChannelsConfig():
         print('EveryNEventCallBack')
         _DataEveryNEvent = self.DataEveryNEvent
 
-#        aiDataChns = self._SortChannels(Data,
-#                                        self.SChannelIndex)
-
-#        _DataEveryNEvent(aiDataChns)
-#        print(Data.shape)
         _DataEveryNEvent(Data)
 
     def DoneEventCallBack(self, Data):
@@ -151,8 +135,7 @@ class ChannelsConfig():
 
     def Stop(self):
         print('Stopppp')
-#        self.VcmOut.SetVal(0)
-#        self.VdOut.SetVal(0)
+
         self.AnalogInputs.StopContData()
         self.VcmOut.ClearTask()
         self.VcmOut=None

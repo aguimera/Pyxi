@@ -19,7 +19,6 @@ import time
 import re
 
 import Pyxi.FMAcqCore as CoreMod
-import Pyxi.StabDetector as StbDet
 
 #DAQ Data Acq
 class DataAcquisitionThread(Qt.QThread):

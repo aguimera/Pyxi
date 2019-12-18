@@ -43,16 +43,6 @@ DemodulParams = ({'name': 'DemodConfig',
                                 'type': 'list',
                                 'values': ['Real', 'Imag', 'Angle', 'Abs'],
                                 'value': 'Abs'},
-#                               {'name': 'MaxSlope',
-#                                'title':'Maximum Slope',
-#                                'type': 'float',
-#                                'value': 1e-10},
-#                               {'name': 'TimeOut',
-#                                'title':'Max Time for Stabilization',
-#                                'type': 'int',
-#                                'value': 10,
-#                                'siPrefix': True,
-#                                'suffix': 's'},
                               )
                 })
                   
