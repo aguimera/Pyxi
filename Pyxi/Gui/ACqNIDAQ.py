@@ -28,7 +28,7 @@ import Pyxi.DataAcquisition as DataAcq
 import Pyxi.GenAqcCondigModule as NiConfig
 import Pyxi.DemodModule as DemMod
 import Pyxi.StabDetector as StbDet
-import Pyxi.SaveSweepModule as SaveSw
+import Pyxi.SweepsModule as SwMod
 import Pyxi.SaveDicts as SaveDc
 
 
@@ -52,10 +52,14 @@ class MainWindow(Qt.QWidget):
         self.FileParams = FileMod.SaveFileParameters(QTparent=self,
                                                          name='Record File')
         self.Parameters.addChild(self.FileParams)
-        
+
+  ##############################Sweep Save##############################       
         self.SaveSwParams = SaveDc.SaveSweepParameters(QTparent=self,
                                                         name='Sweeps File')
         self.Parameters.addChild(self.SaveSwParams)
+ ##############################Sweep Config##############################
+        self.SwParams = SwMod.SweepsConfig(name='Sweeps Configuration')
+        self.Parameters.addChild(self.SwParams)
  ##############################Configuration##############################   
         self.GenAcqParams = NiConfig.GenAcqConfig(name='NI DAQ Configuration')
         self.Parameters.addChild(self.GenAcqParams)
@@ -183,18 +187,24 @@ class MainWindow(Qt.QWidget):
             self.VgInd = 0
             
             self.treepar.setParameters(self.Parameters, showTop=False)
+            
             self.GenKwargs = self.GenAcqParams.GetGenParams()
             self.ScopeKwargs = self.GenAcqParams.GetRowParams()
             self.ScopeChns = self.GenAcqParams.GetRowsNames()
             self.DemodKwargs = self.DemodParams.GetParams()
+            self.SweepsKwargs = self.SwParams.GetSweepsParams()
             self.DcSaveKwargs =  self.SaveSwParams.GetParams()
-            self.VdSweepVals = self.GenAcqParams.VdSweepVals
-            self.VgSweepVals = self.GenAcqParams.VgSweepVals
+            
+            self.SwEnable = self.SweepsKwargs['Enable']
+            self.VdSweepVals = self.SweepsKwargs['VdSweep']
+            self.VgSweepVals = self.SweepsKwargs['VgSweep']
             
             self.threadAqc = DataAcq.DataAcquisitionThread(GenConfig=self.GenKwargs,
                                                            Channels=self.ScopeChns, 
                                                            ScopeConfig=self.ScopeKwargs,
-                                                           Vd=self.VdSweepVals[0]) #empieza por el primer valor del sweep Vd
+                                                           SwEnable = self.SwEnable,
+                                                           VgArray = self.VgSweepVals,
+                                                           VdValue=self.VdSweepVals[0]) #empieza por el primer valor del sweep Vd
             self.threadAqc.NewMuxData.connect(self.on_NewSample)
             
             self.Gen_Destroy_PsdPlotter()
@@ -208,19 +218,21 @@ class MainWindow(Qt.QWidget):
                                                          Signal=self.threadAqc.Signal,
                                                          **self.DemodKwargs)
                 self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
-                self.threadStbDet = StbDet.StbDetThread(MaxSlope=self.DemodConfig.param('MaxSlope').value(),
-                                                        TimeOut=self.DemodConfig.param('TimeOut').value(),
-                                                        nChannels=self.ScopeKwargs['NRow']*len(self.GenAcqParams.Freqs),
-                                                        ChnName=self.DemodParams.GetChannels(self.GenAcqParams.Rows, 
-                                                                      self.GenAcqParams.GetCarriers()),
-                                                        PlotterDemodKwargs=self.DemodPsdPlotParams.GetParams(),
-                                                        VdVals=self.VdSweepVals,
-                                                        VgVals=self.VgSweepVals)
+                
+                if self.SwEnable is True:
+                    self.threadStbDet = StbDet.StbDetThread(MaxSlope=self.SweepsKwargs['MaxSlope'],
+                                                            TimeOut=self.SweepsKwargs['TimeOut'],
+                                                            nChannels=self.ScopeKwargs['NRow']*len(self.GenAcqParams.Freqs),
+                                                            ChnName=self.DemodParams.GetChannels(self.GenAcqParams.Rows, 
+                                                                          self.GenAcqParams.GetCarriers()),
+                                                            PlotterDemodKwargs=self.DemodPsdPlotParams.GetParams(),
+                                                            VdVals=self.VdSweepVals,
+                                                            VgVals=self.VgSweepVals)
+                    self.threadStbDet.NextVg.connect(self.on_NextVg)
+                    self.threadStbDet.initTimer() #TimerPara el primer Sweep
+                    self.threadStbDet.start()
                 
                 self.threadDemodAqc.start()
-                self.threadStbDet.NextVg.connect(self.on_NextVg)
-                self.threadStbDet.initTimer() #TimerPara el primer Sweep
-                self.threadStbDet.start()
                  
             self.threadAqc.DaqInterface.SetSignal(self.threadAqc.Signal)
             self.threadAqc.start()
@@ -229,7 +241,8 @@ class MainWindow(Qt.QWidget):
         else:
             print('stopped')
             self.threadAqc.NewMuxData.disconnect()
-            self.threadStbDet.NextVg.disconnect()
+            if self.SwEnable is True:
+                self.threadStbDet.NextVg.disconnect()
             self.threadAqc.DaqInterface.Stop()
             self.threadAqc.terminate()
             self.threadAqc = None

@@ -36,40 +36,12 @@ ConfigParam =  {'name': 'AcqConfig',
                                     'value': 0.5,
                                     'siPrefix': True,
                                     'suffix': 's'},
-                                   {'name': 'VgSweep',
-                                    'type': 'group',
-                                    'children': ({'name':'Vinit',
-                                                  'type':'float',
-                                                  'value':0,
-                                                  'siPrefix':True,
-                                                  'suffix':'V'},
-                                                 {'name':'Vfinal',
-                                                  'type':'float',
-                                                  'value':-0.4,
-                                                  'siPrefix':True,
-                                                  'suffix':'V'},
-                                                 {'name':'Vstep',
-                                                  'type':'float',
-                                                  'value':-0.01,
-                                                  'siPrefix':True,
-                                                  'suffix':'V'},)},
-                                   {'name': 'VdSweep',
-                                    'type': 'group',
-                                    'children': ({'name':'Vinit',
-                                                  'type':'float',
-                                                  'value':0.02,
-                                                  'siPrefix':True,
-                                                  'suffix':'V'},
-                                                 {'name':'Vfinal',
-                                                  'type':'float',
-                                                  'value':0.2,
-                                                  'siPrefix':True,
-                                                  'suffix':'V'},
-                                                 {'name':'Vstep',
-                                                  'type':'float',
-                                                  'value':0.01,
-                                                  'siPrefix':True,
-                                                  'suffix':'V'},)}, 
+                                   {'name': 'CMVoltage',
+                                    'title': 'Common Mode Voltage',
+                                    'value': 0.0,
+                                    'type': 'float',
+                                    'siPrefix': True,
+                                    'suffix': 'V'},
                                    {'name': 'AcqVRange',
                                     'title': 'Voltage Range',
                                     'type': 'list',
@@ -234,6 +206,11 @@ CarrierParam = {'name':'ColX',
                              'type': 'float',
                              'siPrefix': True,
                              'suffix': 'º'},
+                            {'name': 'Amplitude',
+                             'value': 0.25,
+                             'type': 'float',
+                             'siPrefix': True,
+                             'suffix': 'V'},
                             )
                }
 
@@ -247,16 +224,9 @@ class GenAcqConfig(pTypes.GroupParameter):
         self.Fs = self.AcqConfig.param('Fs')
         self.BufferSize = self.AcqConfig.param('BufferSize')
         self.FetchTime = self.AcqConfig.param('tFetch')
-#        self.Vcm = self.AcqConfig.param('CMVoltage')
+        self.Vcm = self.AcqConfig.param('CMVoltage')
         self.NRows = self.AcqConfig.param('NRow')
         self.GainBoard = self.AcqConfig.param('GainBoard')
-        
-        self.VgParams = self.AcqConfig.param('VgSweep')
-        self.VdParams = self.AcqConfig.param('VdSweep')
-
-        self.VgParams.sigTreeStateChanged.connect(self.on_Sweeps_Changed)
-        self.VdParams.sigTreeStateChanged.connect(self.on_Sweeps_Changed)
-        self.on_Sweeps_Changed()
         
         self.Fs.sigValueChanged.connect(self.on_Config_Changed)
         self.BufferSize.sigValueChanged.connect(self.on_Config_Changed)
@@ -289,17 +259,7 @@ class GenAcqConfig(pTypes.GroupParameter):
         tF = BS/Fs
         self.FetchTime.setValue(tF)
         self.on_FreqSig_Changed()
-        
-    def on_Sweeps_Changed(self):
-        self.VgSweepVals = np.arange(self.VgParams.param('Vinit').value(),
-                                     self.VgParams.param('Vfinal').value(),
-                                     self.VgParams.param('Vstep').value())
-        
-        self.VdSweepVals = np.arange(self.VdParams.param('Vinit').value(),
-                                     self.VdParams.param('Vfinal').value(),
-                                     self.VdParams.param('Vstep').value())
-        print('hola')
-        print(self.VgSweepVals, self.VdSweepVals)
+
   ##############################RowsConfig##############################             
     def on_RowsConfig_Changed(self):
         self.Rows = []
@@ -331,8 +291,6 @@ class GenAcqConfig(pTypes.GroupParameter):
                                  }, 
                   'Fs': 2000000.0, 
                   'BufferSize': 1000000, 
-                  'VgSweep': [,,],
-                  'VdSweep': [,,],
                   'AcqVRange': 1,
                   'NRow': 8,  
                   'GainBoard': 10000.0
@@ -349,12 +307,6 @@ class GenAcqConfig(pTypes.GroupParameter):
                     Scope['RowsConfig'][Config.name()][Values.name()] = Values.value()
         for Config in self.AcqConfig.children():
             if Config.name() =='tFetch':
-                continue
-            if Config.name() == 'VgSweep':
-                Scope[Config.name()]=self.VgSweepVals
-                continue
-            if Config.name() == 'VdSweep':
-                Scope[Config.name()]=self.VdSweepVals
                 continue
                 
             Scope[Config.name()] = Config.value()
@@ -416,8 +368,6 @@ class GenAcqConfig(pTypes.GroupParameter):
             cc['name'] = col
 #            cc['children'][2]['value'] = 2*cc['children'][1]['value']
             self.CarrierConfig.addChild(cc)
-#        for p in self.CarrierConfig.children():
-#            p.param('Frequency').sigValueChanged.connect(self.on_FreqSig_Changed)
         
     def GetGenParams(self):       
         """
@@ -426,28 +376,16 @@ class GenAcqConfig(pTypes.GroupParameter):
         
         Generator: {'ColsConfig': {'Col1': {'Frequency': 100000.0, 
                                             'Phase': 0, 
-                                            'Amplitude': 0, 
-                                            'Gain': 0, 
-                                            'Resource': 'PXI1Slot2', 
-                                            'Index': 0}, 
+                                            'Amplitude': 0, }, 
                                    'Col2': {'Frequency': 100000.0, 
                                             'Phase': 0, 
-                                            'Amplitude': 0, 
-                                            'Gain': 0, 
-                                            'Resource': 'PXI1Slot2', 
-                                            'Index': 1}, 
+                                            'Amplitude': 0, }, 
                                    'Col3': {'Frequency': 100000.0, 
                                             'Phase': 0, 
-                                            'Amplitude': 0, 
-                                            'Gain': 0, 
-                                            'Resource': 'PXI1Slot3', 
-                                            'Index': 0}, 
+                                            'Amplitude': 0, }, 
                                    'Col4': {'Frequency': 100000.0, 
                                             'Phase': 0, 
-                                            'Amplitude': 0, 
-                                            'Gain': 0, 
-                                            'Resource': 'PXI1Slot3', 
-                                            'Index': 1}}, 
+                                            'Amplitude': 0,}}, 
                     }
             
         """

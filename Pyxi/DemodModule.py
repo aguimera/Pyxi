@@ -43,21 +43,20 @@ DemodulParams = ({'name': 'DemodConfig',
                                 'type': 'list',
                                 'values': ['Real', 'Imag', 'Angle', 'Abs'],
                                 'value': 'Abs'},
-                               {'name': 'MaxSlope',
-                                'title':'Maximum Slope',
-                                'type': 'float',
-                                'value': 1e-10},
-                               {'name': 'TimeOut',
-                                'title':'Max Time for Stabilization',
-                                'type': 'int',
-                                'value': 10,
-                                'siPrefix': True,
-                                'suffix': 's'},
+#                               {'name': 'MaxSlope',
+#                                'title':'Maximum Slope',
+#                                'type': 'float',
+#                                'value': 1e-10},
+#                               {'name': 'TimeOut',
+#                                'title':'Max Time for Stabilization',
+#                                'type': 'int',
+#                                'value': 10,
+#                                'siPrefix': True,
+#                                'suffix': 's'},
                               )
                 })
                   
 class DemodParameters(pTypes.GroupParameter):
-#    FsChanged = None
     
     def __init__(self, **kwargs):
         pTypes.GroupParameter.__init__(self, **kwargs)
@@ -74,10 +73,6 @@ class DemodParameters(pTypes.GroupParameter):
         self.FiltOrder = self.DemConfig.param('FiltOrder')
         self.OutType = self.DemConfig.param('OutType')
         
-#    def on_FsDem_changed(self):
-#        if FsChanged is not None:
-#            FsChanged(Fs)
-#        self.on_DSFact_changed()
     def ReCalc_DSFact(self, BufferSize):
         while BufferSize%self.DSFact.value() != 0:
             self.DSFact.setValue(self.DSFact.value()+1)
@@ -143,9 +138,6 @@ class Demod():
         self.FiltR = Filter(Fs, self.FsOut/2, 'lp', Order)
         self.FiltI = Filter(Fs, self.FsOut/2, 'lp', Order)
 
-#        step = 2*np.pi*(Fc/Fs)
-#        print('steo', step)
-#        self.vcoi = np.exp(1j*(step*np.arange(FetchSize)))
         self.vcoi = Signal
         
     def Apply(self, SigIn):    
@@ -163,24 +155,6 @@ class Demod():
         complexDem = RSrdem + (RSidem*1j)
 
         return complexDem
-
-#def DemodProc(Iin, Fs, Fc, Samps, DownFact, Order=2):
-#    dem = Demod(Fs=Fs, 
-#                Fc=Fc, 
-#                FetchSize=Samps, 
-#                DownFact=DownFact, 
-#                Order=Order)
-#    DemOut = np.array([])
-#    for IndDemod in np.arange(0, Iin.size, Samps):  
-#        SigIn = Iin[IndDemod:(IndDemod+Samps)]
-#        if not SigIn.size == Samps:
-#            continue
-#
-#        Complexdem = dem.Apply(SigIn)
-#        DemOut = np.append(DemOut, Complexdem)
-#        
-#    print(Fc, 'end')
-#    return DemOut
 
 class DemodThread(Qt.QThread):
     NewData = Qt.pyqtSignal()

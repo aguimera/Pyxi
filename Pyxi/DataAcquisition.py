@@ -25,11 +25,9 @@ import Pyxi.StabDetector as StbDet
 class DataAcquisitionThread(Qt.QThread):
     NewMuxData = Qt.pyqtSignal()
 
-    def __init__(self, GenConfig, Channels, ScopeConfig, Vd, AvgIndex=5):
+    def __init__(self, GenConfig, Channels, ScopeConfig, SwEnable, VgArray, VdValue, AvgIndex=5):
         super(DataAcquisitionThread, self).__init__()
-        print(Channels)
-        print(ScopeConfig)
-        print(GenConfig)
+
         self.DaqInterface = CoreMod.ChannelsConfig(ChannelsScope=Channels,
                                                    Range=ScopeConfig['AcqVRange'],
                                                    GenConfig=GenConfig)
@@ -40,17 +38,21 @@ class DataAcquisitionThread(Qt.QThread):
         self.FsScope = ScopeConfig['Fs']
         self.EveryN = ScopeConfig['BufferSize']
 
-        self.VcmValues = ScopeConfig['VgSweep'] #array de Sweep Vgs
-
-        self.Vcm = self.VcmValues[0] #se empieza el sweep con el primer valor
+        
         self.gain = ScopeConfig['GainBoard']
         self.ColsConfig = GenConfig['ColsConfig']
         self.Col1 = self.ColsConfig['Col1']
         self.Freq = self.Col1['Frequency']
         self.phase = self.Col1['Phase']
-        self.OutSignal(Amp=Vd)
         
-        self.Scopeconfig = ScopeConfig
+        if SwEnable is True:
+            self.VcmValues = VgArray#array de Sweep Vgs
+            self.Vcm = self.VcmValues[0] #se empieza el sweep con el primer valor
+            self.OutSignal(Amp=VdValue)            
+        else:
+            self.Vcm =ScopeConfig['CMVoltage']
+            self.OutSignal(Amp=GenConfig['ColsConfig']['Col1']['Amplitude']) 
+        
         
     def OutSignal(self, Amp):
 
@@ -59,11 +61,10 @@ class DataAcquisitionThread(Qt.QThread):
 
             
     def run(self, *args, **kwargs):
-#        self.Start()
+
         self.DaqInterface.StartAcquisition(Fs=self.FsScope, 
                                            EveryN=self.EveryN,
                                            Vgs=self.Vcm,
-#                                           Signal=self.Signal
                                            )
 #DemodTest with SigTest
 #        ModSig=np.float64(self.Col1['Amplitude']*0.1*np.exp(1j*(2*np.pi*(1e3/self.FsScope)*np.arange(self.GenSize))))
