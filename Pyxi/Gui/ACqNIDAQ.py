@@ -175,6 +175,7 @@ class MainWindow(Qt.QWidget):
     def on_PSDEnable_changed(self):
          if self.threadAqc is not None: 
              self.Gen_Destroy_PsdPlotter() 
+    def on_PlotEnable_changed(self):
          if self.threadAqc is not None: 
              self.Gen_Destroy_Plotters()
     def on_RefreshTimePlt_changed(self):
