@@ -29,6 +29,7 @@ import Pyxi.GenAqcCondigModule as NiConfig
 import Pyxi.DemodModule as DemMod
 import Pyxi.StabDetector as StbDet
 import Pyxi.SaveSweepModule as SaveSw
+import Pyxi.SaveDicts as SaveDc
 
 
 class MainWindow(Qt.QWidget):
@@ -52,8 +53,8 @@ class MainWindow(Qt.QWidget):
                                                          name='Record File')
         self.Parameters.addChild(self.FileParams)
         
-        self.SaveSwParams = SaveSw.SaveSweepParameters(QTparent=self,
-                                                         name='Sweeps File')
+        self.SaveSwParams = SaveDc.SaveSweepParameters(QTparent=self,
+                                                        name='Sweeps File')
         self.Parameters.addChild(self.SaveSwParams)
  ##############################Configuration##############################   
         self.GenAcqParams = NiConfig.GenAcqConfig(name='NI DAQ Configuration')
@@ -186,6 +187,7 @@ class MainWindow(Qt.QWidget):
             self.ScopeKwargs = self.GenAcqParams.GetRowParams()
             self.ScopeChns = self.GenAcqParams.GetRowsNames()
             self.DemodKwargs = self.DemodParams.GetParams()
+            self.DcSaveKwargs =  self.SaveSwParams.GetParams()
             self.VdSweepVals = self.GenAcqParams.VdSweepVals
             self.VgSweepVals = self.GenAcqParams.VgSweepVals
             
@@ -338,12 +340,16 @@ class MainWindow(Qt.QWidget):
             self.VdInd = 0
             self.threadStbDet.VdIndex= self.VdInd 
             self.threadStbDet.NextVg.disconnect()
-            self.threadStbDet.stop()
-            
             #guardar el archivo ACDC en el formato correcto
             DCDict = self.threadStbDet.SaveDCAC.DevDCVals
             ACDict = self.threadStbDet.SaveDCAC.DevACVals
-            self.SaveSwParams.SaveDicts(DCDict, ACDict)
+#            self.SaveSwParams.SaveDicts(DCDict, ACDict)
+            print(self.DcSaveKwargs)
+            self.threadStbDet.SaveDCAC.SaveDicts(DCDict, ACDict, **self.DcSaveKwargs)
+#            DcSaveKwargs
+            self.threadStbDet.stop()
+            
+
 
 ##############################Savind Files##############################  
     def SaveFiles(self):

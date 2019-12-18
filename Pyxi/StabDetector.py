@@ -52,6 +52,7 @@ class StbDetThread(Qt.QThread):
                 trend = np.polyval(self.ptrend, x)
                 
                 slope = lnr(x, trend)[0] 
+                print('ESTA ES LA PENDIENTE', slope)
                 if slope <= self.MaxSlope:
 
                     self.DCIdCalc()
