@@ -101,6 +101,19 @@ class MainWindow(Qt.QWidget):
 
         self.Parameters.addChild(self.DemodPlotParams)
         
+        #############Instancias para cambios###################################
+        self.GenAcqParams.param('CarriersConfig').sigTreeStateChanged.connect(self.on_CarriersConfig_changed)
+        self.GenAcqParams.param('AcqConfig').param('Fs').sigValueChanged.connect(self.on_Fs_changed)
+        self.GenAcqParams.param('AcqConfig').param('NRow').sigValueChanged.connect(self.on_NRow_changed)
+        self.DemodConfig.param('DSFact').sigValueChanged.connect(self.on_DSFact_changed)
+        self.PlotParams.param('PlotEnable').sigValueChanged.connect(self.on_PlotEnable_changed)
+        self.PsdPlotParams.param('PSDEnable').sigValueChanged.connect(self.on_PSDEnable_changed)
+        self.PlotParams.param('RefreshTime').sigValueChanged.connect(self.on_RefreshTimePlt_changed)
+        self.PlotParams.param('ViewTime').sigValueChanged.connect(self.on_SetViewTimePlt_changed)
+        self.DemodPlotParams.param('RefreshTime').sigValueChanged.connect(self.on_RefreshTimeDemod_changed)
+        self.DemodPlotParams.param('ViewTime').sigValueChanged.connect(self.on_SetViewTimeDemod_changed)
+        
+#        
         self.Parameters.sigTreeStateChanged.connect(self.on_Params_changed)
         self.treepar = ParameterTree()
         self.treepar.setParameters(self.Parameters, showTop=False)
@@ -135,49 +148,49 @@ class MainWindow(Qt.QWidget):
         print('  change:    %s'% change)
         print('  data:      %s'% str(data))
         print('  ----------')
-  
-        if childName == 'NI DAQ Configuration.CarriersConfig':
-            self.DemodPlotParams.SetChannels(self.DemodParams.GetChannels(self.GenAcqParams.Rows, 
-                                                                          self.GenAcqParams.GetCarriers())
-                                                                          )
+ ##############################Changes Emits##############################    
+    
+    def on_CarriersConfig_changed(self):
+        self.DemodPlotParams.SetChannels(self.DemodParams.GetChannels(self.GenAcqParams.Rows, 
+                                                                      self.GenAcqParams.GetCarriers())
+                                         )
+        
+    def on_Fs_changed(self):
+         self.PlotParams.param('Fs').setValue(self.GenAcqParams.Fs.value())
+         self.PsdPlotParams.param('Fs').setValue(self.GenAcqParams.Fs.value())
+         self.DemodConfig.param('FsDemod').setValue(self.GenAcqParams.Fs.value())
+    
+    def on_DSFact_changed(self):
+        self.DemodParams.ReCalc_DSFact(self.GenAcqParams.BufferSize.value())
+        self.DemodPsdPlotParams.param('Fs').setValue(self.DemodParams.DSFs.value())
+        if self.DemodParams.DSFs.value() >= np.min(self.GenAcqParams.Freqs):
+            print('WARNING: FsDemod is higher than FsMin')
+      
+    def on_NRow_changed(self):
+         self.PlotParams.SetChannels(self.GenAcqParams.GetRows())
+         self.DemodPlotParams.SetChannels(self.DemodParams.GetChannels(self.GenAcqParams.Rows, 
+                                                                       self.GenAcqParams.GetCarriers())
+                                             )        
 
-        if childName == 'NI DAQ Configuration.AcqConfig.Fs':
-            self.PlotParams.param('Fs').setValue(self.GenAcqParams.Fs.value())
-            self.PsdPlotParams.param('Fs').setValue(self.GenAcqParams.Fs.value())
-            self.DemodConfig.param('FsDemod').setValue(self.GenAcqParams.Fs.value())
-            
-        if childName == 'NI DAQ Configuration.AcqConfig.NRow':
-            self.PlotParams.SetChannels(self.GenAcqParams.GetRows())
-            self.DemodPlotParams.SetChannels(self.DemodParams.GetChannels(self.GenAcqParams.Rows, 
-                                                                          self.GenAcqParams.GetCarriers())
-                                             )
+    def on_PSDEnable_changed(self):
+         if self.threadAqc is not None: 
+             self.Gen_Destroy_PsdPlotter() 
+         if self.threadAqc is not None: 
+             self.Gen_Destroy_Plotters()
+    def on_RefreshTimePlt_changed(self):
+         if self.threadPlotter is not None: 
+             self.threadPlotter.SetRefreshTime(self.PlotParams.param('RefreshTime'))
+    def on_SetViewTimePlt_changed(self): 
+         if self.threadPlotter is not None: 
+             self.threadPlotter.SetViewTime(self.PlotParams.param('ViewTime')) 
+    def on_RefreshTimeDemod_changed(self):
+         if self.threadDemodPlotter is not None:  
+             self.threadDemodPlotter.SetRefreshTime(self.DemodPlotParams.param('RefreshTime').value())
+    def on_SetViewTimeDemod_changed(self): 
+         if self.threadDemodPlotter is not None:  
+             self.threadDemodPlotter.SetViewTime(self.DemodPlotParams.param('ViewTime').value()) 
         
-        if childName == 'Demod Options.DemodConfig.DSFact':
-            self.DemodParams.ReCalc_DSFact(self.GenAcqParams.BufferSize.value())
-#                    
-        if childName == 'Demod Options.DemodConfig.DSFs':
-            self.DemodPsdPlotParams.param('Fs').setValue(data)
-            self.DemodPlotParams.param('Fs').setValue(data)
-            if data >= np.min(self.GenAcqParams.Freqs):
-                print('WARNING: FsDemod is higher than FsMin')
-        
-        if self.threadPlotter is not None: 
-            if childName == 'Plot options.RefreshTime':
-                self.threadPlotter.SetRefreshTime(data)    
-            if childName == 'Plot options.ViewTime':
-                self.threadPlotter.SetViewTime(data)  
-                
-        if self.threadDemodPlotter is not None:         
-            if childName == 'Demod Plot options.RefreshTime':
-                self.threadDemodPlotter.SetRefreshTime(data)       
-            if childName == 'Demod Plot options.ViewTime':
-                self.threadDemodPlotter.SetViewTime(data) 
-         
-        if self.threadAqc is not None:  
-            if childName == 'Plot options.PlotEnable' or childName == 'Demod Plot options.PlotEnable' :
-                self.Gen_Destroy_Plotters()
-            if childName == 'PSD Plot Options.PSDEnable' or childName == 'Demod PSD Options.PSDEnable':
-                self.Gen_Destroy_PsdPlotter() 
+ 
         
  ##############################START##############################          
     def on_btnStart(self):       
