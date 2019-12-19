@@ -8,7 +8,7 @@ from PyQt5 import Qt
 from scipy.signal import welch
 import numpy as np
 
-import PyCont.PlotModule as PltBuffer2D
+import PyqtTools.PlotModule as PltBuffer2D
 
 class CalcPSD(Qt.QThread):
     PSDDone = Qt.pyqtSignal()

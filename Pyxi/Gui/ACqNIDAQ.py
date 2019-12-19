@@ -25,11 +25,11 @@ import Pyxi.DataAcquisition as DataAcq
 import Pyxi.GenAqcModule as NiConfig
 import Pyxi.StabDetector as StbDet
 
-import PyCont.FileModule as FileMod
-import PyCont.PlotModule as PltMod
-import PyCont.DemodModule as DemMod
-import PyCont.SweepsModule as SwMod
-import PyCont.SaveDictsModule as SaveDc
+import PyqtTools.FileModule as FileMod
+import PyqtTools.PlotModule as PltMod
+import PyqtTools.DemodModule as DemMod
+import PyqtTools.SweepsModule as SwMod
+import PyqtTools.SaveDictsModule as SaveDc
 
 
 class MainWindow(Qt.QWidget):

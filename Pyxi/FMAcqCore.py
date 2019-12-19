@@ -5,7 +5,7 @@ Created on Mon Nov 18 12:20:11 2019
 @author: Lucia
 """
 
-import PyCont.DaqInterface as DaqInt
+import PyqtTools.DaqInterface as DaqInt
 import numpy as np
 
 # Daq card connections mapping 'Chname':(AI+, AI-)
@@ -46,8 +46,26 @@ class ChannelsConfig():
     DataDoneEvent = None
     
     def __init__(self, ChannelsScope, Range, GenConfig,  AcqDiff=True, ChVcm='ao0', ChCol1='ao1'):
-        print('InitChannels')
         
+    '''Initialazion for Channels Configuration:
+       ChannelsScope: List. Contains the name of the Acquisition Channels to be used
+                       ['Ch01', 'Ch02', 'Ch03', 'Ch04', 'Ch05', 'Ch06', 'Ch07', 'Ch08']
+       Range: float. Acquisition Range
+       GenConfig: dictionary. Contains Generation information for each Column.
+                    {'ColsConfig': {'Col1': {'Frequency': 30000.0, 
+                                             'Phase': 0, 
+                                             'Amplitude': 0.25, 
+                                             'Analog': True, 
+                                             'Digital': False}
+                                    }
+                    }   
+      AcqDiff: bool. Specifies if the Acquisition is Differential or Single
+      ChVcm: str. Name of the output channel for common mode voltage
+      ChCol1: str. Name ofthe output channel for Column0.
+    
+    '''
+        print('InitChannels')
+
         self._InitAnalogOutputs(ChVcm=ChVcm,
                                 ChVd=ChCol1)
         self.ChNamesList = sorted(ChannelsScope)
@@ -95,6 +113,12 @@ class ChannelsConfig():
         self.VdOut = DaqInt.WriteAnalog((ChVd,))   
         
     def StartAcquisition(self, Fs, EveryN, Vgs):
+        '''Starts the generation of the signals in the different channels 
+           and starts de acquisition process.
+           Fs: float. Sampling Frequency for generation and acquisition
+           EveryN: int. Size of the Buffer to acquire
+           Vgs: float. Value of Gate-Source Voltage (Common Mode Voltage)     
+        '''
         print('StartAcquisition')
         print('DSig set')
         

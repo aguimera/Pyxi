@@ -9,7 +9,7 @@ import numpy as np
 from scipy.stats import linregress as lnr
 
 import Pyxi.CalcPSD as PSD
-import PyCont.SaveDictsModule as SaveDicts
+import PyqtTools.SaveDictsModule as SaveDicts
 
 class StbDetThread(Qt.QThread):
     NextVg = Qt.pyqtSignal()
