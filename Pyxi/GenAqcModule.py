@@ -291,6 +291,7 @@ class GenAcqConfig(pTypes.GroupParameter):
                                  }, 
                   'Fs': 2000000.0, 
                   'BufferSize': 1000000, 
+                  'CMVoltage': 0.0,
                   'AcqVRange': 1,
                   'NRow': 8,  
                   'GainBoard': 10000.0
