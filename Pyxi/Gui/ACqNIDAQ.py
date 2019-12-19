@@ -36,50 +36,56 @@ class MainWindow(Qt.QWidget):
     ''' Main Window '''
     def __init__(self):      
         super(MainWindow, self).__init__()
-        
-        self.setFocusPolicy(Qt.Qt.WheelFocus)       
-        layout = Qt.QVBoxLayout(self) 
-        
+
+        self.setFocusPolicy(Qt.Qt.WheelFocus)
+        layout = Qt.QVBoxLayout(self)
+
         self.btnStart = Qt.QPushButton("Start Gen and Adq!")
         layout.addWidget(self.btnStart)
+
  ##############################Save############################## 
         self.SaveStateParams = FileMod.SaveSateParameters(QTparent=self,
-                                                          name='State')        
+                                                          name='State')
         self.Parameters = Parameter.create(name='params',
                                            type='group',
                                            children=(self.SaveStateParams,))
+
  ##############################File##############################         
         self.FileParams = FileMod.SaveFileParameters(QTparent=self,
-                                                         name='Record File')
+                                                     name='Record File')
         self.Parameters.addChild(self.FileParams)
 
   ##############################Sweep Save##############################       
         self.SaveSwParams = SaveDc.SaveSweepParameters(QTparent=self,
-                                                        name='Sweeps File')
+                                                       name='Sweeps File')
         self.Parameters.addChild(self.SaveSwParams)
+
  ##############################Sweep Config##############################
         self.SwParams = SwMod.SweepsConfig(name='Sweeps Configuration')
         self.Parameters.addChild(self.SwParams)
+
  ##############################Configuration##############################   
         self.GenAcqParams = NiConfig.GenAcqConfig(name='NI DAQ Configuration')
         self.Parameters.addChild(self.GenAcqParams)
-      
+
  ##############################NormalPlots##############################         
         self.PsdPlotParams = PltMod.PSDParameters(name='PSD Plot Options')
         self.PsdPlotParams.param('Fs').setValue(self.GenAcqParams.Fs.value())
         self.PsdPlotParams.param('Fmin').setValue(50)
         self.PsdPlotParams.param('nAvg').setValue(50)
         self.Parameters.addChild(self.PsdPlotParams)
-        
+
         self.PlotParams = PltMod.PlotterParameters(name='Plot options')
         self.PlotParams.SetChannels(self.GenAcqParams.GetRows())
         self.PlotParams.param('Fs').setValue(self.GenAcqParams.Fs.value())
 
         self.Parameters.addChild(self.PlotParams)
+
  ##############################Demodulation##############################         
-        self.DemodParams = DemMod.DemodParameters(name='Demod Options')     
+        self.DemodParams = DemMod.DemodParameters(name='Demod Options')  
         self.Parameters.addChild(self.DemodParams)
         self.DemodConfig = self.DemodParams.param('DemodConfig')
+
  ##############################Demodulation Plots##############################         
         self.DemodPsdPlotParams = PltMod.PSDParameters(name='Demod PSD Options')
         self.DemodPsdPlotParams.param('Fs').setValue(
@@ -89,18 +95,18 @@ class MainWindow(Qt.QWidget):
         self.DemodPsdPlotParams.param('Fmin').setValue(50)
         self.DemodPsdPlotParams.param('nAvg').setValue(50)
         self.Parameters.addChild(self.DemodPsdPlotParams)
-        
+
         self.DemodPlotParams = PltMod.PlotterParameters(name='Demod Plot options')
         self.DemodPlotParams.SetChannels(self.DemodParams.GetChannels(self.GenAcqParams.Rows, 
                                                                     self.GenAcqParams.GetCarriers())
-                                      )
+                                        )
         self.DemodPlotParams.param('Fs').setValue(
                                                 (self.DemodConfig.param('FsDemod').value())
                                                 /(self.DemodConfig.param('DSFact').value())
                                                 )
 
         self.Parameters.addChild(self.DemodPlotParams)
-        
+
         #############Instancias para cambios###################################
         self.GenAcqParams.param('CarriersConfig').sigTreeStateChanged.connect(self.on_CarriersConfig_changed)
         self.GenAcqParams.param('AcqConfig').param('Fs').sigValueChanged.connect(self.on_Fs_changed)
@@ -112,19 +118,19 @@ class MainWindow(Qt.QWidget):
         self.PlotParams.param('ViewTime').sigValueChanged.connect(self.on_SetViewTimePlt_changed)
         self.DemodPlotParams.param('RefreshTime').sigValueChanged.connect(self.on_RefreshTimeDemod_changed)
         self.DemodPlotParams.param('ViewTime').sigValueChanged.connect(self.on_SetViewTimeDemod_changed)
-        
-#        
+
+
         self.Parameters.sigTreeStateChanged.connect(self.on_Params_changed)
         self.treepar = ParameterTree()
         self.treepar.setParameters(self.Parameters, showTop=False)
         self.treepar.setWindowTitle('pyqtgraph example: Parameter Tree')
-        
+
         layout.addWidget(self.treepar)
-        
+
         self.setGeometry(550, 10, 300, 700)
         self.setWindowTitle('MainWindow')
         self.btnStart.clicked.connect(self.on_btnStart)
-#        
+
         self.threadAqc = None
         self.threadSave = None
         self.threadPlotter = None
@@ -134,8 +140,8 @@ class MainWindow(Qt.QWidget):
         self.threadDemodPlotter = None
         self.threadDemodPsdPlotter = None
         self.threadStbDet = None
-        
- ##############################Changes Control##############################         
+
+##############################Changes Control##############################         
     def on_Params_changed(self, param, changes):
         print("tree changes:")
         for param, change, data in changes:
@@ -148,60 +154,63 @@ class MainWindow(Qt.QWidget):
         print('  change:    %s'% change)
         print('  data:      %s'% str(data))
         print('  ----------')
- ##############################Changes Emits##############################    
-    
+
+##############################Changes Emits##############################    
     def on_CarriersConfig_changed(self):
         self.DemodPlotParams.SetChannels(self.DemodParams.GetChannels(self.GenAcqParams.Rows, 
                                                                       self.GenAcqParams.GetCarriers())
                                          )
-        
+
     def on_Fs_changed(self):
-         self.PlotParams.param('Fs').setValue(self.GenAcqParams.Fs.value())
-         self.PsdPlotParams.param('Fs').setValue(self.GenAcqParams.Fs.value())
-         self.DemodConfig.param('FsDemod').setValue(self.GenAcqParams.Fs.value())
-    
+        self.PlotParams.param('Fs').setValue(self.GenAcqParams.Fs.value())
+        self.PsdPlotParams.param('Fs').setValue(self.GenAcqParams.Fs.value())
+        self.DemodConfig.param('FsDemod').setValue(self.GenAcqParams.Fs.value())
+
     def on_DSFact_changed(self):
         self.DemodParams.ReCalc_DSFact(self.GenAcqParams.BufferSize.value())
         self.DemodPsdPlotParams.param('Fs').setValue(self.DemodParams.DSFs.value())
         if self.DemodParams.DSFs.value() >= np.min(self.GenAcqParams.Freqs):
             print('WARNING: FsDemod is higher than FsMin')
-      
+
     def on_NRow_changed(self):
-         self.PlotParams.SetChannels(self.GenAcqParams.GetRows())
-         self.DemodPlotParams.SetChannels(self.DemodParams.GetChannels(self.GenAcqParams.Rows, 
+        self.PlotParams.SetChannels(self.GenAcqParams.GetRows())
+        self.DemodPlotParams.SetChannels(self.DemodParams.GetChannels(self.GenAcqParams.Rows, 
                                                                        self.GenAcqParams.GetCarriers())
-                                             )        
+                                         )
 
     def on_PSDEnable_changed(self):
-         if self.threadAqc is not None: 
-             self.Gen_Destroy_PsdPlotter() 
+        if self.threadAqc is not None:
+           self.Gen_Destroy_PsdPlotter()
+
     def on_PlotEnable_changed(self):
-         if self.threadAqc is not None: 
-             self.Gen_Destroy_Plotters()
+        if self.threadAqc is not None:
+           self.Gen_Destroy_Plotters()
+
     def on_RefreshTimePlt_changed(self):
-         if self.threadPlotter is not None: 
-             self.threadPlotter.SetRefreshTime(self.PlotParams.param('RefreshTime').value())
-    def on_SetViewTimePlt_changed(self): 
-         if self.threadPlotter is not None: 
-             self.threadPlotter.SetViewTime(self.PlotParams.param('ViewTime').value()) 
+        if self.threadPlotter is not None:
+           self.threadPlotter.SetRefreshTime(self.PlotParams.param('RefreshTime').value())
+
+    def on_SetViewTimePlt_changed(self):
+        if self.threadPlotter is not None:
+           self.threadPlotter.SetViewTime(self.PlotParams.param('ViewTime').value())
+
     def on_RefreshTimeDemod_changed(self):
-         if self.threadDemodPlotter is not None:  
-             self.threadDemodPlotter.SetRefreshTime(self.DemodPlotParams.param('RefreshTime').value())
-    def on_SetViewTimeDemod_changed(self): 
-         if self.threadDemodPlotter is not None:  
-             self.threadDemodPlotter.SetViewTime(self.DemodPlotParams.param('ViewTime').value()) 
-        
- 
-        
+        if self.threadDemodPlotter is not None:
+           self.threadDemodPlotter.SetRefreshTime(self.DemodPlotParams.param('RefreshTime').value())
+
+    def on_SetViewTimeDemod_changed(self):
+        if self.threadDemodPlotter is not None:
+           self.threadDemodPlotter.SetViewTime(self.DemodPlotParams.param('ViewTime').value()) 
+
  ##############################START##############################          
     def on_btnStart(self):       
         if self.threadAqc is None:
             print('started')
             self.VdInd = 0
             self.VgInd = 0
-            
+
             self.treepar.setParameters(self.Parameters, showTop=False)
-            
+
             self.GenKwargs = self.GenAcqParams.GetGenParams()
             self.ScopeKwargs = self.GenAcqParams.GetRowParams()
             self.ScopeChns = self.GenAcqParams.GetRowsNames()
@@ -212,7 +221,7 @@ class MainWindow(Qt.QWidget):
             self.SwEnable = self.SweepsKwargs['Enable']
             self.VdSweepVals = self.SweepsKwargs['VdSweep']
             self.VgSweepVals = self.SweepsKwargs['VgSweep']
-            
+
             self.threadAqc = DataAcq.DataAcquisitionThread(GenConfig=self.GenKwargs,
                                                            Channels=self.ScopeChns, 
                                                            ScopeConfig=self.ScopeKwargs,
@@ -220,34 +229,34 @@ class MainWindow(Qt.QWidget):
                                                            VgArray = self.VgSweepVals,
                                                            VdValue=self.VdSweepVals[0]) #empieza por el primer valor del sweep Vd
             self.threadAqc.NewMuxData.connect(self.on_NewSample)
-            
+
             self.Gen_Destroy_PsdPlotter()
             self.Gen_Destroy_Plotters()
-            self.SaveFiles()     
-            
-            if self.DemodConfig.param('DemEnable').value() == True:
-                self.threadDemodAqc = DemMod.DemodThread(Fcs=self.GenAcqParams.GetCarriers(), 
+            self.SaveFiles()
+
+            if self.DemodConfig.param('DemEnable').value() is True:
+                self.threadDemodAqc = DemMod.DemodThread(Fcs=self.GenAcqParams.GetCarriers(),
                                                          RowList=self.ScopeChns,
-                                                         FetchSize=self.GenAcqParams.BufferSize.value(), 
+                                                         FetchSize=self.GenAcqParams.BufferSize.value(),
                                                          Signal=self.threadAqc.Signal,
                                                          **self.DemodKwargs)
                 self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
-                
+
                 if self.SwEnable is True:
                     self.threadStbDet = StbDet.StbDetThread(MaxSlope=self.SweepsKwargs['MaxSlope'],
                                                             TimeOut=self.SweepsKwargs['TimeOut'],
                                                             nChannels=self.ScopeKwargs['NRow']*len(self.GenAcqParams.Freqs),
-                                                            ChnName=self.DemodParams.GetChannels(self.GenAcqParams.Rows, 
+                                                            ChnName=self.DemodParams.GetChannels(self.GenAcqParams.Rows,
                                                                           self.GenAcqParams.GetCarriers()),
                                                             PlotterDemodKwargs=self.DemodPsdPlotParams.GetParams(),
                                                             VdVals=self.VdSweepVals,
                                                             VgVals=self.VgSweepVals)
                     self.threadStbDet.NextVg.connect(self.on_NextVg)
-                    self.threadStbDet.initTimer() #TimerPara el primer Sweep
+                    self.threadStbDet.initTimer()#TimerPara el primer Sweep
                     self.threadStbDet.start()
-                
+
                 self.threadDemodAqc.start()
-                 
+
             self.threadAqc.DaqInterface.SetSignal(self.threadAqc.Signal)
             self.threadAqc.start()
             self.btnStart.setText("Stop Gen")
@@ -260,10 +269,10 @@ class MainWindow(Qt.QWidget):
             self.threadAqc.DaqInterface.Stop()
             self.threadAqc.terminate()
             self.threadAqc = None
-            
+
             self.StopThreads()
-            
-            self.btnStart.setText("Start Gen and Adq!")         
+
+            self.btnStart.setText("Start Gen and Adq!")
 
  ##############################New Sample Obtained##############################      
     def on_NewSample(self):
@@ -275,20 +284,20 @@ class MainWindow(Qt.QWidget):
 #            Problema: Range scope no es exacto con lo cual hay valores que no deberian saturar y saturan
 #            self.threadSave.AddData(self.threadAqc.IntData)
             self.threadSave.AddData(self.threadAqc.OutData)
-        
+
         if self.threadPlotter is not None:
             self.threadPlotter.AddData(self.threadAqc.OutData)
-            
-        if self.threadPsdPlotter is not None:  
+
+        if self.threadPsdPlotter is not None:
             self.threadPsdPlotter.AddData(self.threadAqc.OutData)
-       
-        if self.DemodConfig.param('DemEnable').value() == True:
+
+        if self.DemodConfig.param('DemEnable').value() is True:
             if self.threadDemodAqc is not None:
                 self.threadDemodAqc.AddData(self.threadAqc.OutData)
-                
+
         print('Sample time', Ts)
 
- ##############################New Sample To Demodulate##############################          
+##############################New Sample To Demodulate#########################   
     def on_NewDemodSample(self):
         if self.DemodConfig.param('OutType').value() == 'Abs':
             OutDemodData = np.abs(self.threadDemodAqc.OutDemodData)
@@ -297,12 +306,12 @@ class MainWindow(Qt.QWidget):
         elif self.DemodConfig.param('OutType').value() == 'Imag':
             OutDemodData = np.imag(self.threadDemodAqc.OutDemodData)
         elif self.DemodConfig.param('OutType').value() == 'Angle':
-            OutDemodData = np.angle(self.threadDemodAqc.OutDemodData, deg=True)   
-        
+            OutDemodData = np.angle(self.threadDemodAqc.OutDemodData, deg=True)
+
         if self.threadStbDet is not None:
             print('Demod Done')
             self.threadStbDet.AddData(OutDemodData)
-            
+
         if self.threadDemodSave is not None:
             #Yo iria haciendo aqui appends, hasta que acabase el sweep de Vgs
             #una vez acaba el sweep, guardo los valores de IDS en el diccionario
@@ -310,32 +319,32 @@ class MainWindow(Qt.QWidget):
             self.threadDemodSave.AddData(OutDemodData)
         if self.threadDemodPlotter is not None:
             self.threadDemodPlotter.AddData(OutDemodData)
-            
-        if self.threadDemodPsdPlotter is not None:  
+
+        if self.threadDemodPsdPlotter is not None:
             self.threadDemodPsdPlotter.AddData(OutDemodData)
 
-        if self.threadDemodPsdPlotter is not None:  
+        if self.threadDemodPsdPlotter is not None:
             self.threadDemodPsdPlotter.AddData(OutDemodData)
-##############################Restart Timer Stabilization##############################  
+
+##############################Restart Timer Stabilization######################
     def on_NextVg(self):
         self.threadStbDet.Timer.stop()
         self.threadStbDet.Timer.killTimer(self.threadStbDet.Id)
-        print('PARAAAAAAAAAAAAAAAAAAAAAAAA',self.VgSweepVals.shape)
         self.VgInd += 1
         if self.VgInd < len(self.VgSweepVals):
             print(self.VgInd)
             self.threadAqc.DaqInterface.VcmOut.ClearTask()
             self.threadAqc.Vcm = self.VgSweepVals[self.VgInd]
-            self.threadStbDet.VgIndex= self.VgInd 
-            self.threadStbDet.Stable= False
+            self.threadStbDet.VgIndex = self.VgInd
+            self.threadStbDet.Stable = False
             self.threadStbDet.initTimer()
             print('NEXT VGS SWEEP')
         else:
             print('END VGS SWEEP')
             self.VgInd = 0
-            self.threadStbDet.VgIndex= self.VgInd 
+            self.threadStbDet.VgIndex = self.VgInd
             self.on_NextVd()
-        
+
 ##############################Nex Vd Value##############################     
     def on_NextVd(self):
         self.threadAqc.NewMuxData.disconnect()
@@ -354,18 +363,18 @@ class MainWindow(Qt.QWidget):
             self.threadAqc.NewMuxData.connect(self.on_NewSample)
             self.threadAqc.DaqInterface.SetSignal(self.threadAqc.Signal)
             self.threadAqc.start()
-            self.threadStbDet.VdIndex= self.VdInd 
+            self.threadStbDet.VdIndex = self.VdInd
             self.threadStbDet.initTimer()
             print('NEXT VDS SWEEP')
         else:
             print('END VDS SWEEP')
             self.StopThreads()
             self.btnStart.setText("Start Gen and Adq!") 
-            #Parar thread de estabilización       
+            #Parar thread de estabilización
             self.threadStbDet.Timer.stop()
             self.threadStbDet.Timer.killTimer(self.threadStbDet.Id)
             self.VdInd = 0
-            self.threadStbDet.VdIndex= self.VdInd 
+            self.threadStbDet.VdIndex= self.VdInd
             self.threadStbDet.NextVg.disconnect()
             #guardar el archivo ACDC en el formato correcto
             DCDict = self.threadStbDet.SaveDCAC.DevDCVals
@@ -375,33 +384,31 @@ class MainWindow(Qt.QWidget):
             self.threadStbDet.SaveDCAC.SaveDicts(DCDict, ACDict, **self.DcSaveKwargs)
 #            DcSaveKwargs
             self.threadStbDet.stop()
-            
-
 
 ##############################Savind Files##############################  
     def SaveFiles(self):
         FileName = self.FileParams.param('File Path').value()
-        if FileName ==  '':
+        if FileName == '':
             print('No file')
         else:
             if os.path.isfile(FileName):
                 print('Remove File')
-                os.remove(FileName)  
+                os.remove(FileName)
             MaxSize = self.FileParams.param('MaxSize').value()
-            if self.DemodConfig.param('DemEnable').value() == False:
+            if self.DemodConfig.param('DemEnable').value() is False:
                 self.threadSave = FileMod.DataSavingThread(FileName=FileName,
                                                            nChannels=self.ScopeKwargs['NRow'],
                                                            MaxSize=MaxSize,
                                                            dtype='float' #comment when int save problem solved
                                                            )
                 self.threadSave.start()
-            
-            if self.DemodConfig.param('DemEnable').value() == True:
+
+            if self.DemodConfig.param('DemEnable').value() is True:
                 self.threadDemodSave = FileMod.DataSavingThread(FileName=FileName,
                                                                 nChannels=self.ScopeKwargs['NRow']*len(self.GenAcqParams.Freqs),
                                                                 MaxSize=MaxSize,
                                                                 dtype='float')
-                
+
                 self.threadDemodSave.start()
 
             GenName = FileName+'_GenConfig.dat'
@@ -410,108 +417,107 @@ class MainWindow(Qt.QWidget):
             if os.path.isfile(GenName):
                 print('Overwriting  file')
                 OutGen = input('y/n + press(Enter)')
-                if OutGen =='y':
+                if OutGen == 'y':
                     FileMod.GenArchivo(GenName, self.GenKwargs)
             else:
                 FileMod.GenArchivo(GenName, self.GenKwargs)
-                
+
             if os.path.isfile(ScopeName):
                 print('Overwriting  file')
                 OutScope = input('y/n + press(Enter)')
-                if OutScope =='y':
+                if OutScope == 'y':
                     FileMod.GenArchivo(ScopeName, self.ScopeKwargs)
             else:
                 FileMod.GenArchivo(ScopeName, self.ScopeKwargs)
-                
+
             if os.path.isfile(DemodName):
                 print('Overwriting  file')
                 OutScope = input('y/n + press(Enter)')
-                if OutScope =='y':
+                if OutScope == 'y':
                     FileMod.GenArchivo(DemodName, self.DemodKwargs)
             else:
                 FileMod.GenArchivo(DemodName, self.DemodKwargs)
-                
+
  ##############################Generate and Destroy Plots##############################      
     def Gen_Destroy_Plotters(self):
         if self.threadPlotter is None:
-            if self.PlotParams.param('PlotEnable').value() == True:
+            if self.PlotParams.param('PlotEnable').value() is True:
                 PlotterKwargs = self.PlotParams.GetParams()
                 self.threadPlotter = PltMod.Plotter(**PlotterKwargs)
                 self.threadPlotter.start()
         if self.threadPlotter is not None:
-            if self.PlotParams.param('PlotEnable').value() == False:
+            if self.PlotParams.param('PlotEnable').value() is False:
                 self.threadPlotter.stop()
                 self.threadPlotter = None
-                
+
         if self.threadDemodPlotter is None:
-            if self.DemodPlotParams.param('PlotEnable').value() == True:
+            if self.DemodPlotParams.param('PlotEnable').value() is True:
                 PlotterDemodKwargs = self.DemodPlotParams.GetParams()
                 self.threadDemodPlotter = PltMod.Plotter(**PlotterDemodKwargs)
                 self.threadDemodPlotter.start()
         if self.threadDemodPlotter is not None:
-            if self.DemodPlotParams.param('PlotEnable').value() == False:
+            if self.DemodPlotParams.param('PlotEnable').value() is False:
                 self.threadDemodPlotter.stop()
                 self.threadDemodPlotter = None
 
     def Gen_Destroy_PsdPlotter(self):
         if self.threadPsdPlotter is None:
-            if self.PsdPlotParams.param('PSDEnable').value() == True:
+            if self.PsdPlotParams.param('PSDEnable').value() is True:
                 PlotterKwargs = self.PlotParams.GetParams()
                 self.threadPsdPlotter = PltMod.PSDPlotter(ChannelConf=PlotterKwargs['ChannelConf'],
                                                           nChannels=self.ScopeKwargs['NRow'],
                                                           **self.PsdPlotParams.GetParams())
-                self.threadPsdPlotter.start() 
+                self.threadPsdPlotter.start()
         if self.threadPsdPlotter is not None:
-            if self.PsdPlotParams.param('PSDEnable').value() == False:
+            if self.PsdPlotParams.param('PSDEnable').value() is False:
                 self.threadPsdPlotter.stop()
-                self.threadPsdPlotter = None 
-                
+                self.threadPsdPlotter = None
+
         if self.threadDemodPsdPlotter is None:
-            if self.DemodPsdPlotParams.param('PSDEnable').value() == True:
+            if self.DemodPsdPlotParams.param('PSDEnable').value() is True:
                 PlotterDemodKwargs = self.DemodPlotParams.GetParams()
                 self.threadDemodPsdPlotter = PltMod.PSDPlotter(ChannelConf=PlotterDemodKwargs['ChannelConf'],
                                                                nChannels=self.ScopeKwargs['NRow']*len(self.GenAcqParams.Freqs),
                                                                **self.DemodPsdPlotParams.GetParams())
-                self.threadDemodPsdPlotter.start() 
+                self.threadDemodPsdPlotter.start()
         if self.threadDemodPsdPlotter is not None:
-            if self.DemodPsdPlotParams.param('PSDEnable').value() == False:
+            if self.DemodPsdPlotParams.param('PSDEnable').value() is False:
                 self.threadDemodPsdPlotter.stop()
-                self.threadDemodPsdPlotter = None   
-        
+                self.threadDemodPsdPlotter = None
+
  ##############################STOP##############################          
     def StopThreads(self):
         if self.threadSave is not None:
             self.threadSave.stop()
             self.threadSave = None
-                
+
         if self.threadDemodAqc is not None:
             self.threadDemodAqc.stop()
             self.threadDemodAqc = None
-        
+
         if self.threadPlotter is not None:
             self.threadPlotter.stop()
             self.threadPlotter = None
-            
+
         if self.threadPsdPlotter is not None:
             self.threadPsdPlotter.stop()
             self.threadPsdPlotter = None
-            
+
         if self.threadDemodSave is not None:
             self.threadDemodSave.stop()
             self.threadDemodSave = None
-            
+
         if self.threadDemodPlotter is not None:
             self.threadDemodPlotter.stop()
             self.threadDemodPlotter = None
-        
+
         if self.threadDemodPsdPlotter is not None:
             self.threadDemodPsdPlotter.stop()
-            self.threadDemodPsdPlotter = None   
-        
+            self.threadDemodPsdPlotter = None
+
  ##############################MAIN##############################  
 if __name__ == '__main__':
     app = Qt.QApplication([])
-    mw  = MainWindow()
+    mw = MainWindow()
     mw.show()
-    app.exec_()        
-                     
+    app.exec_()
