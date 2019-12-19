@@ -13,6 +13,13 @@ import PyqtTools.PlotModule as PltBuffer2D
 class CalcPSD(Qt.QThread):
     PSDDone = Qt.pyqtSignal()
     def __init__(self, Fs, nFFT, nAvg, nChannels, scaling):
+        '''Initialization of the thread that is used to calculate the PSD
+           Fs: float. Sampling Frequency
+           nFFT: float.
+           nAvg: int.
+           nChannels: int. Number of acquisition channels (rows) active
+           scaling: str. Two options, Density or Spectrum
+        '''
         super(CalcPSD, self).__init__()
 
         self.scaling = scaling

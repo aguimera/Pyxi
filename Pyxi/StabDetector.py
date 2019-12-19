@@ -14,6 +14,28 @@ import PyqtTools.SaveDictsModule as SaveDicts
 class StbDetThread(Qt.QThread):
     NextVg = Qt.pyqtSignal()
     def __init__(self, VdVals, VgVals, MaxSlope, TimeOut, nChannels, ChnName, PlotterDemodKwargs):
+       '''Initialization for Stabilitation Detection Thread
+          VdVals: Array. Contains the values to use in the Vd Sweep.
+                          [0.1, 0.2]
+          VgVals: Array. Contains the values to use in the Vg Sweep
+                          [0., -0.1, -0.2, -0.3]
+          MaxSlope: float. Specifies the maximum slope permited to consider the system is
+                           stabilazed, so the data is correct to be acquired
+          TimeOut: float. Specifies the maximum amount of time to wait the signal
+                          to achieve MaxSlope, if TimeOut is reached the data is 
+                          save even it is not stabilazed
+          nChannels: int. Number of acquisition channels (rows) active
+          ChnName: dictionary. Specifies the name of Row+Column beign processed 
+                               and its index:
+                               {'Ch04Col1': 0, 
+                               'Ch05Col1': 1, 
+                               'Ch06Col1': 2}
+          PlotterDemodKwargs: dictionary. Contains Demodulation Configuration an parameters
+                                          {'Fs': 5000.0, 
+                                          'nFFT': 8.0, 
+                                          'scaling': 'density', 
+                                          'nAvg': 50}
+       '''
        super(StbDetThread, self).__init__() 
        self.ToStabData = None
        self.Stable = False
@@ -21,7 +43,6 @@ class StbDetThread(Qt.QThread):
        
        self.MaxSlope = MaxSlope
        self.TimeOut = TimeOut
-       print(TimeOut)
        
        self.VgIndex=0
        self.VdIndex=0
