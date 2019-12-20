@@ -9,17 +9,11 @@ from __future__ import print_function
 import os
 
 import numpy as np
-from scipy.signal import welch
 import time
-import copy
-import pickle
 
 from PyQt5 import Qt
-from PyQt5.QtWidgets import QFileDialog
 
-import pyqtgraph.parametertree.parameterTypes as pTypes
-from pyqtgraph.parametertree import Parameter, ParameterTree, ParameterItem, registerParameterType
-from itertools import  cycle
+from pyqtgraph.parametertree import Parameter, ParameterTree
 
 import Pyxi.DataAcquisition as DataAcq
 import Pyxi.GenAqcModule as NiConfig
@@ -34,7 +28,7 @@ import PyqtTools.SaveDictsModule as SaveDc
 
 class MainWindow(Qt.QWidget):
     ''' Main Window '''
-    def __init__(self):      
+    def __init__(self):
         super(MainWindow, self).__init__()
 
         self.setFocusPolicy(Qt.Qt.WheelFocus)
@@ -43,32 +37,32 @@ class MainWindow(Qt.QWidget):
         self.btnStart = Qt.QPushButton("Start Gen and Adq!")
         layout.addWidget(self.btnStart)
 
- ##############################Save############################## 
+# #############################Save##############################
         self.SaveStateParams = FileMod.SaveSateParameters(QTparent=self,
                                                           name='State')
         self.Parameters = Parameter.create(name='params',
                                            type='group',
                                            children=(self.SaveStateParams,))
 
- ##############################File##############################         
+# #############################File##############################
         self.FileParams = FileMod.SaveFileParameters(QTparent=self,
                                                      name='Record File')
         self.Parameters.addChild(self.FileParams)
 
-  ##############################Sweep Save##############################       
+# #############################Sweep Save##############################
         self.SaveSwParams = SaveDc.SaveSweepParameters(QTparent=self,
                                                        name='Sweeps File')
         self.Parameters.addChild(self.SaveSwParams)
 
- ##############################Sweep Config##############################
+# #############################Sweep Config##############################
         self.SwParams = SwMod.SweepsConfig(name='Sweeps Configuration')
         self.Parameters.addChild(self.SwParams)
 
- ##############################Configuration##############################   
+# #############################Configuration##############################
         self.GenAcqParams = NiConfig.GenAcqConfig(name='NI DAQ Configuration')
         self.Parameters.addChild(self.GenAcqParams)
 
- ##############################NormalPlots##############################         
+# #############################NormalPlots##############################
         self.PsdPlotParams = PltMod.PSDParameters(name='PSD Plot Options')
         self.PsdPlotParams.param('Fs').setValue(self.GenAcqParams.Fs.value())
         self.PsdPlotParams.param('Fmin').setValue(50)
@@ -81,12 +75,12 @@ class MainWindow(Qt.QWidget):
 
         self.Parameters.addChild(self.PlotParams)
 
- ##############################Demodulation##############################         
+# #############################Demodulation##############################
         self.DemodParams = DemMod.DemodParameters(name='Demod Options')
         self.Parameters.addChild(self.DemodParams)
         self.DemodConfig = self.DemodParams.param('DemodConfig')
 
- ##############################Demodulation Plots##############################         
+# #############################Demodulation Plots############################
         self.DemodPsdPlotParams = PltMod.PSDParameters(name='Demod PSD Options')
         self.DemodPsdPlotParams.param('Fs').setValue(
                                                     (self.DemodConfig.param('FsDemod').value())
@@ -107,7 +101,7 @@ class MainWindow(Qt.QWidget):
 
         self.Parameters.addChild(self.DemodPlotParams)
 
-        #############Instancias para cambios###################################
+        # ############Instancias para cambios#################################
         self.GenAcqParams.param('CarriersConfig').sigTreeStateChanged.connect(self.on_CarriersConfig_changed)
         self.GenAcqParams.param('AcqConfig').param('Fs').sigValueChanged.connect(self.on_Fs_changed)
         self.GenAcqParams.param('AcqConfig').param('NRow').sigValueChanged.connect(self.on_NRow_changed)
@@ -140,7 +134,7 @@ class MainWindow(Qt.QWidget):
         self.threadDemodPsdPlotter = None
         self.threadStbDet = None
 
-##############################Changes Control##############################         
+# #############################Changes Control##############################
     def on_Params_changed(self, param, changes):
         print("tree changes:")
         for param, change, data in changes:
@@ -149,12 +143,12 @@ class MainWindow(Qt.QWidget):
                 childName = '.'.join(path)
             else:
                 childName = param.name()
-        print('  parameter: %s'% childName)
-        print('  change:    %s'% change)
-        print('  data:      %s'% str(data))
+        print('  parameter: %s' % childName)
+        print('  change:    %s' % change)
+        print('  data:      %s' % str(data))
         print('  ----------')
 
-##############################Changes Emits##############################    
+# #############################Changes Emits##############################
     def on_CarriersConfig_changed(self):
         self.DemodPlotParams.SetChannels(self.DemodParams.GetChannels(self.GenAcqParams.Rows, 
                                                                       self.GenAcqParams.GetCarriers())
@@ -201,8 +195,8 @@ class MainWindow(Qt.QWidget):
         if self.threadDemodPlotter is not None:
             self.threadDemodPlotter.SetViewTime(self.DemodPlotParams.param('ViewTime').value()) 
 
- ##############################START##############################          
-    def on_btnStart(self):  
+# #############################START##############################
+    def on_btnStart(self):
         if self.threadAqc is None:
             print('started')
             self.VdInd = 0
@@ -273,7 +267,7 @@ class MainWindow(Qt.QWidget):
 
             self.btnStart.setText("Start Gen and Adq!")
 
- ##############################New Sample Obtained##############################      
+# #############################New Sample Obtained############################
     def on_NewSample(self):
         ''' Visualization of streaming data-WorkThread. '''
         Ts = time.time() - self.OldTime
@@ -297,7 +291,7 @@ class MainWindow(Qt.QWidget):
 
         print('Sample time', Ts)
 
-##############################New Sample To Demodulate#########################   
+# #############################New Sample To Demodulate#######################
     def on_NewDemodSample(self):
         if self.DemodConfig.param('OutType').value() == 'Abs':
             OutDemodData = np.abs(self.threadDemodAqc.OutDemodData)
@@ -326,7 +320,7 @@ class MainWindow(Qt.QWidget):
         if self.threadDemodPsdPlotter is not None:
             self.threadDemodPsdPlotter.AddData(OutDemodData)
 
-##############################Restart Timer Stabilization######################
+# #############################Restart Timer Stabilization####################
     def on_NextVg(self):
         self.threadStbDet.Timer.stop()
         self.threadStbDet.Timer.killTimer(self.threadStbDet.Id)
@@ -345,7 +339,7 @@ class MainWindow(Qt.QWidget):
             self.threadStbDet.VgIndex = self.VgInd
             self.on_NextVd()
 
-##############################Nex Vd Value##############################     
+# #############################Nex Vd Value##############################
     def on_NextVd(self):
         self.threadAqc.NewMuxData.disconnect()
         self.threadAqc.DaqInterface.Stop()
@@ -358,8 +352,9 @@ class MainWindow(Qt.QWidget):
             self.threadAqc = DataAcq.DataAcquisitionThread(GenConfig=self.GenKwargs,
                                                            Channels=self.ScopeChns, 
                                                            ScopeConfig=self.ScopeKwargs,
-#                                                           VcmVals=self.VgSweepVals,
-                                                           Vd=self.VdValue)
+                                                           SwEnable=self.SwEnable,
+                                                           VgArray=self.VgSweepVals,
+                                                           VdValue=self.VdValue)
             self.threadAqc.NewMuxData.connect(self.on_NewSample)
             self.threadAqc.DaqInterface.SetSignal(self.threadAqc.Signal)
             self.threadAqc.start()
@@ -376,18 +371,15 @@ class MainWindow(Qt.QWidget):
             self.VdInd = 0
             self.threadStbDet.VdIndex = self.VdInd
             self.threadStbDet.NextVg.disconnect()
-            # guardar el archivo ACDC en el formato correcto
             DCDict = self.threadStbDet.SaveDCAC.DevDCVals
             ACDict = self.threadStbDet.SaveDCAC.DevACVals
-#            self.SaveSwParams.SaveDicts(DCDict, ACDict)
             print(self.DcSaveKwargs)
             self.threadStbDet.SaveDCAC.SaveDicts(DCDict,
                                                  ACDict,
                                                  **self.DcSaveKwargs)
-#            DcSaveKwargs
             self.threadStbDet.stop()
 
-##############################Savind Files##############################  
+# #############################Savind Files##############################
     def SaveFiles(self):
         FileName = self.FileParams.param('File Path').value()
         if FileName == '':
@@ -440,7 +432,7 @@ class MainWindow(Qt.QWidget):
             else:
                 FileMod.GenArchivo(DemodName, self.DemodKwargs)
 
- ##############################Generate and Destroy Plots##############################      
+# #############################Generate and Destroy Plots#####################
     def Gen_Destroy_Plotters(self):
         if self.threadPlotter is None:
             if self.PlotParams.param('PlotEnable').value() is True:
@@ -487,7 +479,7 @@ class MainWindow(Qt.QWidget):
                 self.threadDemodPsdPlotter.stop()
                 self.threadDemodPsdPlotter = None
 
- ##############################STOP##############################          
+# #############################STOP##############################
     def StopThreads(self):
         if self.threadSave is not None:
             self.threadSave.stop()
@@ -517,7 +509,9 @@ class MainWindow(Qt.QWidget):
             self.threadDemodPsdPlotter.stop()
             self.threadDemodPsdPlotter = None
 
- ##############################MAIN##############################  
+# #############################MAIN##############################
+
+
 if __name__ == '__main__':
     app = Qt.QApplication([])
     mw = MainWindow()
