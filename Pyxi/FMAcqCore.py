@@ -44,22 +44,26 @@ class ChannelsConfig():
     # Events list
     DataEveryNEvent = None
     DataDoneEvent = None
-    
-    def __init__(self, ChannelsScope, Range, GenConfig,  AcqDiff=True, ChVcm='ao0', ChCol1='ao1'):
-        
+
+    def __init__(self, ChannelsScope, Range, GenConfig,  AcqDiff=True,
+                 ChVcm='ao0', ChCol1='ao1'):
         '''Initialazion for Channels Configuration:
-           ChannelsScope: List. Contains the name of the Acquisition Channels to be used
-                           ['Ch01', 'Ch02', 'Ch03', 'Ch04', 'Ch05', 'Ch06', 'Ch07', 'Ch08']
+           ChannelsScope: List. Contains the name of the Acquisition Channels
+                                to be used
+                           ['Ch01', 'Ch02', 'Ch03', 'Ch04', 'Ch05', 'Ch06',
+                           'Ch07', 'Ch08']
            Range: float. Acquisition Range
-           GenConfig: dictionary. Contains Generation information for each Column.
-                        {'ColsConfig': {'Col1': {'Frequency': 30000.0, 
-                                                 'Phase': 0, 
-                                                 'Amplitude': 0.25, 
-                                                 'Analog': True, 
+           GenConfig: dictionary. Contains Generation information for each
+                                  Column.
+                        {'ColsConfig': {'Col1': {'Frequency': 30000.0,
+                                                 'Phase': 0,
+                                                 'Amplitude': 0.25,
+                                                 'Analog': True,
                                                  'Digital': False}
                                         }
-                        }   
-           AcqDiff: bool. Specifies if the Acquisition is Differential or Single
+                        }
+           AcqDiff: bool. Specifies if the Acquisition is Differential or
+                          Single
            ChVcm: str. Name of the output channel for common mode voltage
            ChCol1: str. Name ofthe output channel for Column0.
         '''
@@ -81,7 +85,7 @@ class ChannelsConfig():
                 self.Cols.append(Col)
         self.MuxChannelNames = MuxChannelNames
         print(self.MuxChannelNames)
-        
+
     def _InitAnalogInputs(self):
         print('InitAnalogInputs')
         self.SChannelIndex = {}
@@ -90,52 +94,50 @@ class ChannelsConfig():
         index = 0
         sortindex = 0
         for ch in self.ChNamesList:
-            #Output+ is always read
-            InChans.append(aiChannels[ch][0]) #only Output+
+            InChans.append(aiChannels[ch][0])  # only Output+
             self.SChannelIndex[ch] = (index, sortindex)
             index += 1
             print(ch, 'Single -->', aiChannels[ch][0])
             print('SortIndex ->', self.SChannelIndex[ch])
         print('Input ai', InChans)
 
-        self.AnalogInputs = DaqInt.ReadAnalog(InChans=InChans, 
+        self.AnalogInputs = DaqInt.ReadAnalog(InChans=InChans,
                                               Diff=self.AcqD,
                                               Range=self.Range)
         # events linking
         self.AnalogInputs.EveryNEvent = self.EveryNEventCallBack
         self.AnalogInputs.DoneEvent = self.DoneEventCallBack
-        
+
     def _InitAnalogOutputs(self, ChVcm, ChVd):
         print('ChVds ->', ChVd)
         print('ChVcm ->', ChVcm)
         self.VcmOut = DaqInt.WriteAnalog((ChVcm,))
-        self.VdOut = DaqInt.WriteAnalog((ChVd,))   
-        
+        self.VdOut = DaqInt.WriteAnalog((ChVd,))
+
     def StartAcquisition(self, Fs, EveryN, Vgs):
-        '''Starts the generation of the signals in the different channels 
+        '''Starts the generation of the signals in the different channels
            and starts de acquisition process.
            Fs: float. Sampling Frequency for generation and acquisition
            EveryN: int. Size of the Buffer to acquire
-           Vgs: float. Value of Gate-Source Voltage (Common Mode Voltage)     
+           Vgs: float. Value of Gate-Source Voltage (Common Mode Voltage)
         '''
         print('StartAcquisition')
         print('DSig set')
-        
-        self.nBlocks = EveryN       
+
+        self.nBlocks = EveryN
         self.SetVcm(Vcm=Vgs)
         self.OutputShape = (len(self.MuxChannelNames), int(EveryN))
 
         self.AnalogInputs.ReadContData(Fs=Fs,
                                        EverySamps=self.nBlocks)
 
-    def SetVcm(self,Vcm):
+    def SetVcm(self, Vcm):
         self.VcmOut.SetVal(Vcm)
-        
+
     def SetSignal(self, Signal):
         self.VdOut.SetContSignal(Signal=Signal,
                                  nSamps=len(Signal))
-        
-    
+
     def _SortChannels(self, data, SortDict):
         print('SortChannels')
         print(data.shape)
@@ -144,9 +146,9 @@ class ChannelsConfig():
         aiData = np.zeros((samps, len(SortDict)))
         for chn, inds in sorted(SortDict.items()):
             aiData[:, inds[1]] = data[:, inds[0]]
-            
+
         return aiData
-    
+
     def EveryNEventCallBack(self, Data):
         print('EveryNEventCallBack')
         _DataEveryNEvent = self.DataEveryNEvent
@@ -161,7 +163,6 @@ class ChannelsConfig():
 
         self.AnalogInputs.StopContData()
         self.VcmOut.ClearTask()
-        self.VcmOut=None
+        self.VcmOut = None
         self.VdOut.ClearTask()
-        self.VdOut=None
-        
+        self.VdOut = None
