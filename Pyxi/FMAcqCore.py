@@ -109,8 +109,8 @@ class ChannelsConfig():
         self.AnalogInputs.DoneEvent = self.DoneEventCallBack
 
     def _InitAnalogOutputs(self, ChVcm, ChVd):
-        print('ChVds ->', ChVd)
-        print('ChVcm ->', ChVcm)
+#        print('ChVds ->', ChVd)
+#        print('ChVcm ->', ChVcm)
         self.VcmOut = DaqInt.WriteAnalog((ChVcm,))
         self.VdOut = DaqInt.WriteAnalog((ChVd,))
 
@@ -121,8 +121,8 @@ class ChannelsConfig():
            EveryN: int. Size of the Buffer to acquire
            Vgs: float. Value of Gate-Source Voltage (Common Mode Voltage)
         '''
-        print('StartAcquisition')
-        print('DSig set')
+#        print('StartAcquisition')
+#        print('DSig set')
 
         self.nBlocks = EveryN
         self.SetVcm(Vcm=Vgs)
@@ -139,8 +139,8 @@ class ChannelsConfig():
                                  nSamps=len(Signal))
 
     def _SortChannels(self, data, SortDict):
-        print('SortChannels')
-        print(data.shape)
+#        print('SortChannels')
+#        print(data.shape)
         # Sort by aianalog input
         (samps, inch) = data.shape
         aiData = np.zeros((samps, len(SortDict)))
@@ -150,7 +150,7 @@ class ChannelsConfig():
         return aiData
 
     def EveryNEventCallBack(self, Data):
-        print('EveryNEventCallBack')
+#        print('EveryNEventCallBack')
         _DataEveryNEvent = self.DataEveryNEvent
 
         _DataEveryNEvent(Data)

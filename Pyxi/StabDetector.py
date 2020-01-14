@@ -54,7 +54,7 @@ class StbDetThread(Qt.QThread):
 
         self.Timer = Qt.QTimer()
         self.Timer.moveToThread(self)
-        print('nchannels', nChannels)
+#        print('nchannels', nChannels)
         self.threadCalcPSD = PSD.CalcPSD(nChannels=nChannels,
                                          **PlotterDemodKwargs)
         self.threadCalcPSD.PSDDone.connect(self.on_PSDDone)
@@ -96,13 +96,13 @@ class StbDetThread(Qt.QThread):
 
         if self.Stable is False:
             self.ToStabData = NewData
-            print('SaveDatos')
+#            print('SaveDatos')
             self.Datos = self.ToStabData  # se guardan los datos para que no se sobreescriban
         if self.Stable is True:
             self.threadCalcPSD.AddData(NewData)
 
     def DCIdCalc(self):
-        print('DATA STAB')
+#        print('DATA STAB')
         # se descoencta el timer
         self.Timer.stop()
         self.Timer.killTimer(self.Id)
@@ -127,7 +127,7 @@ class StbDetThread(Qt.QThread):
                                  SwVdsInd=self.VdIndex)
 
     def on_PSDDone(self):
-        print('PSD DONE RECIBED')
+#        print('PSD DONE RECIBED')
         self.freqs = self.threadCalcPSD.ff
         self.PSDdata = self.threadCalcPSD.psd
         # se desactiva el thread para calcular PSD
@@ -141,7 +141,7 @@ class StbDetThread(Qt.QThread):
 
     def on_NextVg(self):
         # Y se emite la señal para el siguiente sweep de VG
-        print('NEXTVG EMIT')
+#        print('NEXTVG EMIT')
         self.NextVg.emit()
 
     def stop(self):
