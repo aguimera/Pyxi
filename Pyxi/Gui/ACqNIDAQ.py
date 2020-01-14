@@ -232,7 +232,7 @@ class MainWindow(Qt.QWidget):
                                                          RowList=self.ScopeChns,
                                                          FetchSize=self.GenAcqParams.BufferSize.value(),
                                                          Signal=self.threadAqc.Vcoi,
-                                                         GainBoard=self.ScopeKwargs['GainBoard'],
+                                                         Gain=self.ScopeKwargs['GainBoard'],
                                                          **self.DemodKwargs)
                 self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
 
