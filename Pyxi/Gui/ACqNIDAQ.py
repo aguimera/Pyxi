@@ -231,7 +231,8 @@ class MainWindow(Qt.QWidget):
                 self.threadDemodAqc = DemMod.DemodThread(Fcs=self.GenAcqParams.GetCarriers(),
                                                          RowList=self.ScopeChns,
                                                          FetchSize=self.GenAcqParams.BufferSize.value(),
-                                                         Signal=self.threadAqc.Signal,
+                                                         Signal=self.threadAqc.Vcoi,
+                                                         GainBoard=self.ScopeKwargs['GainBoard'],
                                                          **self.DemodKwargs)
                 self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
 
@@ -287,7 +288,7 @@ class MainWindow(Qt.QWidget):
 
         if self.DemodConfig.param('DemEnable').value() is True:
             if self.threadDemodAqc is not None:
-                self.threadDemodAqc.AddData(self.threadAqc.OutData)
+                self.threadDemodAqc.AddData(self.threadAqc.OutDataVolts)
 
         print('Sample time', Ts)
 

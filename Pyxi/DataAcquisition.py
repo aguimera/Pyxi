@@ -92,6 +92,7 @@ class DataAcquisitionThread(Qt.QThread):
     def OutSignal(self, Amp):
         step = 2*np.pi*(self.Freq/self.FsScope)
         self.Signal = np.float64(Amp*np.exp(1j*(step*np.arange(self.EveryN))))
+        self.Vcoi = np.float64(1*np.exp(1j*(step*np.arange(self.EveryN))))
 
     def run(self, *args, **kwargs):
         self.DaqInterface.StartAcquisition(Fs=self.FsScope,
@@ -110,5 +111,6 @@ class DataAcquisitionThread(Qt.QThread):
         loop.exec_()
 
     def NewData(self, aiData):
+        self.OutDataVolts = aiData
         self.OutData = aiData/self.gain
         self.NewMuxData.emit()
