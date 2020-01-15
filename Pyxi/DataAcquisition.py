@@ -91,8 +91,9 @@ class DataAcquisitionThread(Qt.QThread):
 
     def OutSignal(self, Amp):
         step = 2*np.pi*(self.Freq/self.FsScope)
-        self.Signal = np.float64(Amp*np.exp(1j*(step*np.arange(self.EveryN))))
-        self.Vcoi = 1*np.exp(1j*(step*np.arange(self.EveryN)))
+        t = np.arange(0, ((1/self.FsScope)*(self.EveryN)), 1/self.FsScope)
+        self.Signal = Amp*np.cos(self.Freq*2*np.pi*t)
+        self.Vcoi = np.complex128(1*np.exp(1j*(step*np.arange(self.EveryN))))
 
     def run(self, *args, **kwargs):
         self.DaqInterface.StartAcquisition(Fs=self.FsScope,
