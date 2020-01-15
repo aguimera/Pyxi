@@ -72,7 +72,7 @@ class ChannelsConfig():
         self._InitAnalogOutputs(ChVcm=ChVcm,
                                 ChVd=ChCol1)
         self.ChNamesList = sorted(ChannelsScope)
-        print(self.ChNamesList)
+        # print(self.ChNamesList)
         self.AcqD = AcqDiff
         self.Range = Range
         self._InitAnalogInputs()
@@ -84,7 +84,7 @@ class ChannelsConfig():
                 MuxChannelNames.append(Row + Col)
                 self.Cols.append(Col)
         self.MuxChannelNames = MuxChannelNames
-        print(self.MuxChannelNames)
+        # print(self.MuxChannelNames)
 
     def _InitAnalogInputs(self):
         print('InitAnalogInputs')
@@ -97,9 +97,9 @@ class ChannelsConfig():
             InChans.append(aiChannels[ch][0])  # only Output+
             self.SChannelIndex[ch] = (index, sortindex)
             index += 1
-            print(ch, 'Single -->', aiChannels[ch][0])
-            print('SortIndex ->', self.SChannelIndex[ch])
-        print('Input ai', InChans)
+            # print(ch, 'Single -->', aiChannels[ch][0])
+            # print('SortIndex ->', self.SChannelIndex[ch])
+        # print('Input ai', InChans)
 
         self.AnalogInputs = DaqInt.ReadAnalog(InChans=InChans,
                                               Diff=self.AcqD,

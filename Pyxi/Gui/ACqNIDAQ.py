@@ -314,7 +314,7 @@ class MainWindow(Qt.QWidget):
             OutDemodData = np.angle(self.threadDemodAqc.OutDemodData, deg=True)
 
         if self.threadStbDet is not None:
-            print('Demod Done')
+            # print('Demod Done')
             self.threadStbDet.AddData(OutDemodData)
 
         if self.threadDemodSave is not None:
@@ -337,13 +337,13 @@ class MainWindow(Qt.QWidget):
         self.threadStbDet.Timer.killTimer(self.threadStbDet.Id)
         self.VgInd += 1
         if self.VgInd < len(self.VgSweepVals):
-            print(self.VgInd)
+            # print(self.VgInd)
             self.threadAqc.DaqInterface.VcmOut.ClearTask()
             self.threadAqc.Vcm = self.VgSweepVals[self.VgInd]
             self.threadStbDet.VgIndex = self.VgInd
             self.threadStbDet.Stable = False
             self.threadStbDet.initTimer()
-            print('NEXT VGS SWEEP')
+            # print('NEXT VGS SWEEP')
         else:
             print('END VGS SWEEP')
             self.VgInd = 0
@@ -371,7 +371,7 @@ class MainWindow(Qt.QWidget):
             self.threadAqc.start()
             self.threadStbDet.VdIndex = self.VdInd
             self.threadStbDet.initTimer()
-            print('NEXT VDS SWEEP')
+            # print('NEXT VDS SWEEP')
         else:
             print('END VDS SWEEP')
             self.StopThreads()
@@ -384,7 +384,7 @@ class MainWindow(Qt.QWidget):
             self.threadStbDet.NextVg.disconnect()
             DCDict = self.threadStbDet.SaveDCAC.DevDCVals
             ACDict = self.threadStbDet.SaveDCAC.DevACVals
-            print(self.DcSaveKwargs)
+            # print(self.DcSaveKwargs)
             self.threadStbDet.SaveDCAC.SaveDicts(DCDict,
                                                  ACDict,
                                                  **self.DcSaveKwargs)
