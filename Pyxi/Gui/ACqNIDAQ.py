@@ -108,6 +108,8 @@ class MainWindow(Qt.QWidget):
         self.DemodConfig.param('DSFact').sigValueChanged.connect(self.on_DSFact_changed)
         self.PlotParams.param('PlotEnable').sigValueChanged.connect(self.on_PlotEnable_changed)
         self.PsdPlotParams.param('PSDEnable').sigValueChanged.connect(self.on_PSDEnable_changed)
+        self.DemodPlotParams.param('PlotEnable').sigValueChanged.connect(self.on_DemodPlotEnable_changed)
+        self.DemodPsdPlotParams.param('PSDEnable').sigValueChanged.connect(self.on_DemodPSDEnable_changed)
         self.PlotParams.param('RefreshTime').sigValueChanged.connect(self.on_RefreshTimePlt_changed)
         self.PlotParams.param('ViewTime').sigValueChanged.connect(self.on_SetViewTimePlt_changed)
         self.DemodPlotParams.param('RefreshTime').sigValueChanged.connect(self.on_RefreshTimeDemod_changed)
@@ -178,7 +180,15 @@ class MainWindow(Qt.QWidget):
     def on_PlotEnable_changed(self):
         if self.threadAqc is not None:
             self.Gen_Destroy_Plotters()
+            
+    def on_DemodPSDEnable_changed(self):
+        if self.threadAqc is not None:
+            self.Gen_Destroy_PsdPlotter()
 
+    def on_DemodPlotEnable_changed(self):
+        if self.threadAqc is not None:
+            self.Gen_Destroy_Plotters()
+            
     def on_RefreshTimePlt_changed(self):
         if self.threadPlotter is not None:
             self.threadPlotter.SetRefreshTime(self.PlotParams.param('RefreshTime').value())
