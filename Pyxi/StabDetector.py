@@ -113,18 +113,14 @@ class StbDetThread(Qt.QThread):
         # se activa el thread para calcular PSD
         self.threadCalcPSD.start()
         # se obtiene el punto para cada Row
-        DCIds = np.ndarray((self.Datos.shape[1], 1))
+        self.DCIds = np.ndarray((self.Datos.shape[1], 1))
         for ind in range(self.Datos.shape[1]):
             Data = np.abs(self.Datos[:, ind])
             x = np.arange(Data.size)
             self.ptrend = np.polyfit(x, Data, 1)
 
-            DCIds[ind] = (self.ptrend[-1])/np.sqrt(2)  # Se toma el ultimo valor
-
-        # Se guardan los valores DC
-        self.SaveDCAC.SaveDCDict(Ids=DCIds,
-                                 SwVgsInd=self.VgIndex,
-                                 SwVdsInd=self.VdIndex)
+            self.DCIds[ind] = (self.ptrend[-1])/np.sqrt(2)  # Se toma el ultimo valor
+        # print('DCIDS', DCIds)    
 
     def on_PSDDone(self):
 #        print('PSD DONE RECIBED')
@@ -132,6 +128,10 @@ class StbDetThread(Qt.QThread):
         self.PSDdata = self.threadCalcPSD.psd
         # se desactiva el thread para calcular PSD
         self.threadCalcPSD.stop()
+        # Se guardan los valores DC
+        self.SaveDCAC.SaveDCDict(Ids=self.DCIds,
+                                 SwVgsInd=self.VgIndex,
+                                 SwVdsInd=self.VdIndex)
         # Se guarda en AC dicts
         self.SaveDCAC.SaveACDict(psd=self.PSDdata,
                                  ff=self.freqs,
