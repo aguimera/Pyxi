@@ -34,10 +34,10 @@ class CalcPSD(Qt.QThread):
         while True:
             if self.Buffer.IsFilled():
                 self.ff, self.psd = welch(self.Buffer,
-                                fs=self.Fs,
-                                nperseg=self.nFFT,
-                                scaling=self.scaling,
-                                axis=0)
+                                          fs=self.Fs,
+                                          nperseg=self.nFFT,
+                                          scaling=self.scaling,
+                                          axis=0)
 #                print('PSD DONE EMIT')
                 self.PSDDone.emit()
 
@@ -51,3 +51,4 @@ class CalcPSD(Qt.QThread):
     def stop(self):
         self.Buffer.Reset()
         self.terminate()
+        
