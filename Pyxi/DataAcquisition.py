@@ -50,7 +50,9 @@ class DataAcquisitionThread(Qt.QThread):
                                                              'Index': 6},
                                                     'Ch08': {'Enable': True,
                                                              'Index': 7}},
-                                     'Fs': 2000000.0,
+                                     'FsGen':,
+                                     'GenSize':,
+                                     'FsScope': 2000000.0,
                                      'BufferSize': 20000,
                                      'CMVoltage': 0.0,
                                      'AcqVRange': 1,
@@ -72,7 +74,9 @@ class DataAcquisitionThread(Qt.QThread):
         self.Channels = Channels
         self.DaqInterface.DataEveryNEvent = self.NewData
         self.AvgIndex = AvgIndex
-        self.FsScope = ScopeConfig['Fs']
+        self.FsGen = ScopeConfig['FsGen']
+        self.GenSize = ScopeConfig['GenSize']
+        self.FsScope = ScopeConfig['FsScope']
         self.EveryN = ScopeConfig['BufferSize']
 
         self.gain = ScopeConfig['GainBoard']
@@ -90,10 +94,10 @@ class DataAcquisitionThread(Qt.QThread):
             self.OutSignal(Amp=GenConfig['ColsConfig']['Col1']['Amplitude'])
 
     def OutSignal(self, Amp):
-        step = 2*np.pi*(self.Freq/self.FsScope)
-        t = np.arange(0, ((1/self.FsScope)*(self.EveryN)), 1/self.FsScope)
+        stepScope = 2*np.pi*(self.Freq/self.FsScope)
+        t = np.arange(0, ((1/self.FsGen)*(self.GenSize)), 1/self.FsGen)
         self.Signal = Amp*np.cos(self.Freq*2*np.pi*t)
-        self.Vcoi = np.complex128(1*np.exp(1j*(step*np.arange(self.EveryN))))
+        self.Vcoi = np.complex128(1*np.exp(1j*(stepScope*np.arange(self.EveryN))))
 
     def run(self, *args, **kwargs):
         self.DaqInterface.StartAcquisition(Fs=self.FsScope,

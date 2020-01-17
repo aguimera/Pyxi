@@ -134,9 +134,11 @@ class ChannelsConfig():
     def SetVcm(self, Vcm):
         self.VcmOut.SetVal(Vcm)
 
-    def SetSignal(self, Signal):
+    def SetSignal(self, Signal, FsGen=2e6, FsBase='20MHzTimebase'):
         self.VdOut.SetContSignal(Signal=Signal,
-                                 nSamps=len(Signal))
+                                 nSamps=len(Signal),
+                                 FsBase=FsBase,
+                                 FsDiv=FsGen)
 
     def _SortChannels(self, data, SortDict):
 #        print('SortChannels')

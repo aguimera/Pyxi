@@ -11,8 +11,21 @@ import copy
 
 ConfigParam = {'name': 'AcqConfig',
                        'type': 'group',
-                       'children': ({'name': 'Fs',
-                                     'title': 'Sampling Rate',
+                       'children': ({'name': 'FsGen',
+                                     'title': 'Gen Sampling Rate',
+                                     'type': 'float',
+                                     'value': 2e6,
+                                     'siPrefix': True,
+                                     'suffix': 'Hz'},
+                                    {'name': 'GenSize',
+                                     'title': 'Gen BufferSize',
+                                     'type': 'float',
+                                     'readonly': True,
+                                     'value': 20e3,
+                                     'siPrefix': True,
+                                     'suffix': 'Hz'},
+                                    {'name': 'FsScope',
+                                     'title': 'Acq Sampling Rate',
                                      'type': 'float',
                                      'value': 2e6,
                                      'siPrefix': True,
@@ -52,7 +65,7 @@ ConfigParam = {'name': 'AcqConfig',
                                      'suffix': 'Chan'},
                                     {'name': 'GainBoard',
                                      'titel': 'System Gain',
-                                     'value': (10e3),
+                                     'value': (5e3),
                                      'type': 'int',
                                      'siPrefix': True,
                                      'suffix': 'Ohms'},)
@@ -313,14 +326,16 @@ class GenAcqConfig(pTypes.GroupParameter):
         pTypes.GroupParameter.__init__(self, **kwargs)
         self.addChild(ConfigParam)
         self.AcqConfig = self.param('AcqConfig')
-        self.Fs = self.AcqConfig.param('Fs')
+        self.FsGen = self.AcqConfig.param('FsGen')
+        self.GenSize = self.AcqConfig.param('GenSize')
+        self.FsScope = self.AcqConfig.param('FsScope')
         self.BufferSize = self.AcqConfig.param('BufferSize')
         self.FetchTime = self.AcqConfig.param('tFetch')
         self.Vcm = self.AcqConfig.param('CMVoltage')
         self.NRows = self.AcqConfig.param('NRow')
         self.GainBoard = self.AcqConfig.param('GainBoard')
 
-        self.Fs.sigValueChanged.connect(self.on_Config_Changed)
+        self.FsScope.sigValueChanged.connect(self.on_Config_Changed)
         self.BufferSize.sigValueChanged.connect(self.on_Config_Changed)
 
         self.addChild(RowsParam)
@@ -333,19 +348,21 @@ class GenAcqConfig(pTypes.GroupParameter):
         self.CarrierConfig = self.param('CarriersConfig')
         self.ColConfig.sigTreeStateChanged.connect(self.on_ColConfig_Changed)
 
+        self.FsGen.sigValueChanged.connect(self.on_FreqSig_Changed)
         self.Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
-
-        for p in self.CarrierConfig.children():
-            p.param('Frequency').sigValueChanged.connect(self.on_FreqSig_Changed())
-
+    
         self.on_Config_Changed()
         self.on_RowsConfig_Changed()
         self.on_ColConfig_Changed()
         self.on_FreqSig_Changed()
+        
+        for p in self.CarrierConfig.children():
+            p.param('Frequency').sigValueChanged.connect(self.on_FreqSig_Changed)
+
 # #############################GeneralConfig##############################
 
     def on_Config_Changed(self):
-        Fs = self.Fs.value()
+        Fs = self.FsScope.value()
         BS = self.BufferSize.value()
         tF = self.FetchTime.value()
         tF = BS/Fs
@@ -381,7 +398,9 @@ class GenAcqConfig(pTypes.GroupParameter):
                               'Row8': {'Enable': True,
                                        'Index': 7, }
                               },
-                  'Fs': 2000000.0,
+                  'FsGen': 2e6,
+                  'GenSize': 20e3,
+                  'FsScope': 2000000.0,
                   'BufferSize': 1000000,
                   'CMVoltage': 0.0,
                   'AcqVRange': 1,
@@ -438,8 +457,8 @@ class GenAcqConfig(pTypes.GroupParameter):
 
 # #############################GenerationConfig##############################
     def on_FreqSig_Changed(self):
-        Fs = self.Fs.value()
-        Samps = self.BufferSize.value()
+        Fs = self.FsGen.value()
+        Samps = self.GenSize.value()
 
         for p in self.CarrierConfig.children():
             Fc = p.param('Frequency').value()

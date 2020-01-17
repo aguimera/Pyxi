@@ -64,14 +64,14 @@ class MainWindow(Qt.QWidget):
 
 # #############################NormalPlots##############################
         self.PsdPlotParams = PltMod.PSDParameters(name='PSD Plot Options')
-        self.PsdPlotParams.param('Fs').setValue(self.GenAcqParams.Fs.value())
+        self.PsdPlotParams.param('Fs').setValue(self.GenAcqParams.FsScope.value())
         self.PsdPlotParams.param('Fmin').setValue(50)
         self.PsdPlotParams.param('nAvg').setValue(50)
         self.Parameters.addChild(self.PsdPlotParams)
 
         self.PlotParams = PltMod.PlotterParameters(name='Plot options')
         self.PlotParams.SetChannels(self.GenAcqParams.GetRows())
-        self.PlotParams.param('Fs').setValue(self.GenAcqParams.Fs.value())
+        self.PlotParams.param('Fs').setValue(self.GenAcqParams.FsScope.value())
 
         self.Parameters.addChild(self.PlotParams)
 
@@ -103,7 +103,8 @@ class MainWindow(Qt.QWidget):
 
         # ############Instancias para cambios#################################
         self.GenAcqParams.param('CarriersConfig').sigTreeStateChanged.connect(self.on_CarriersConfig_changed)
-        self.GenAcqParams.param('AcqConfig').param('Fs').sigValueChanged.connect(self.on_Fs_changed)
+        self.GenAcqParams.param('AcqConfig').param('FsGen').sigValueChanged.connect(self.on_FsScope_changed)
+        self.GenAcqParams.param('AcqConfig').param('FsScope').sigValueChanged.connect(self.on_FsScope_changed)
         self.GenAcqParams.param('AcqConfig').param('NRow').sigValueChanged.connect(self.on_NRow_changed)
         self.DemodConfig.param('DSFact').sigValueChanged.connect(self.on_DSFact_changed)
         self.PlotParams.param('PlotEnable').sigValueChanged.connect(self.on_PlotEnable_changed)
@@ -152,14 +153,23 @@ class MainWindow(Qt.QWidget):
 
 # #############################Changes Emits##############################
     def on_CarriersConfig_changed(self):
-        self.DemodPlotParams.SetChannels(self.DemodParams.GetChannels(self.GenAcqParams.Rows, 
-                                                                      self.GenAcqParams.GetCarriers())
+        self.DemodPlotParams.SetChannels(self.DemodParams.GetChannels(
+                                              self.GenAcqParams.Rows,
+                                              self.GenAcqParams.GetCarriers())
                                          )
 
-    def on_Fs_changed(self):
-        self.PlotParams.param('Fs').setValue(self.GenAcqParams.Fs.value())
-        self.PsdPlotParams.param('Fs').setValue(self.GenAcqParams.Fs.value())
-        self.DemodConfig.param('FsDemod').setValue(self.GenAcqParams.Fs.value())
+    def on_FsScope_changed(self):
+        n = round(self.GenAcqParams.FsGen.value() /
+                  self.GenAcqParams.FsScope.value()
+                  )
+
+        self.GenAcqParams.param('AcqConfig').param('FsScope').setValue(
+                                            self.GenAcqParams.FsGen.value() / n
+                                            )
+        self.PlotParams.param('Fs').setValue(self.GenAcqParams.FsScope.value())
+        self.PsdPlotParams.param('Fs').setValue(self.GenAcqParams.FsScope.value())
+        self.DemodConfig.param('FsDemod').setValue(self.GenAcqParams.FsScope.value()
+                                                   )
 
     def on_DSFact_changed(self):
         self.DemodParams.ReCalc_DSFact(self.GenAcqParams.BufferSize.value())
@@ -169,8 +179,9 @@ class MainWindow(Qt.QWidget):
 
     def on_NRow_changed(self):
         self.PlotParams.SetChannels(self.GenAcqParams.GetRows())
-        self.DemodPlotParams.SetChannels(self.DemodParams.GetChannels(self.GenAcqParams.Rows, 
-                                                                       self.GenAcqParams.GetCarriers())
+        self.DemodPlotParams.SetChannels(self.DemodParams.GetChannels(
+                                              self.GenAcqParams.Rows,
+                                              self.GenAcqParams.GetCarriers())
                                          )
 
     def on_PSDEnable_changed(self):
@@ -180,7 +191,7 @@ class MainWindow(Qt.QWidget):
     def on_PlotEnable_changed(self):
         if self.threadAqc is not None:
             self.Gen_Destroy_Plotters()
-            
+
     def on_DemodPSDEnable_changed(self):
         if self.threadAqc is not None:
             self.Gen_Destroy_PsdPlotter()
@@ -261,7 +272,10 @@ class MainWindow(Qt.QWidget):
 
                 self.threadDemodAqc.start()
 
-            self.threadAqc.DaqInterface.SetSignal(self.threadAqc.Signal)
+            self.threadAqc.DaqInterface.SetSignal(Signal=self.threadAqc.Signal,
+                                                  FsBase='20MHzTimebase',
+                                                  FsGen=self.ScopeKwargs['FsGen']
+                                                  )
             self.threadAqc.start()
             self.btnStart.setText("Stop Gen")
             self.OldTime = time.time()
