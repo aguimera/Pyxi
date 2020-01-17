@@ -273,7 +273,7 @@ class MainWindow(Qt.QWidget):
                 self.threadDemodAqc.start()
 
             self.threadAqc.DaqInterface.SetSignal(Signal=self.threadAqc.Signal,
-                                                  FsBase='20MHzTimebase',
+                                                  FsBase="",
                                                   FsGen=self.ScopeKwargs['FsGen']
                                                   )
             self.threadAqc.start()
