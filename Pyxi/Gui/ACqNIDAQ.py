@@ -357,7 +357,7 @@ class MainWindow(Qt.QWidget):
             self.threadStbDet.VgIndex = self.VgInd
             self.threadStbDet.Stable = False
             self.threadStbDet.initTimer()
-            # print('NEXT VGS SWEEP')
+            print('NEXT VGS SWEEP')
         else:
             print('END VGS SWEEP')
             self.VgInd = 0

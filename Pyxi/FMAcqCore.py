@@ -134,7 +134,7 @@ class ChannelsConfig():
     def SetVcm(self, Vcm):
         self.VcmOut.SetVal(Vcm)
 
-    def SetSignal(self, Signal, FsGen=2e6, FsBase='20MHzTimebase'):
+    def SetSignal(self, Signal, FsGen=2e6, FsBase=""):
         self.VdOut.SetContSignal(Signal=Signal,
                                  nSamps=len(Signal),
                                  FsBase=FsBase,
@@ -164,6 +164,8 @@ class ChannelsConfig():
         print('Stopppp')
 
         self.AnalogInputs.StopContData()
+        # self.VcmOut.ClearTask()
+        # self.VcmOut.SetVal(0)
         self.VcmOut.ClearTask()
         self.VcmOut = None
         self.VdOut.ClearTask()
