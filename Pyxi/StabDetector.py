@@ -64,7 +64,7 @@ class StbDetThread(Qt.QThread):
                                             nFFT=int(PlotterDemodKwargs['nFFT']),
                                             FsDemod=PlotterDemodKwargs['Fs']
                                             )
-        self.SaveDCAC.PSDSaved.connect(self.on_NextVg)
+        self.SaveDCAC.PSDSaved.connect(self.on_NextVgs)
 
     def initTimer(self):
         self.Timer.singleShot((self.TimeOut*1000), self.DCIdCalc)
@@ -139,9 +139,10 @@ class StbDetThread(Qt.QThread):
                                  SwVdsInd=self.VdIndex
                                  )
 
-    def on_NextVg(self):
+    def on_NextVgs(self):
         # Y se emite la señal para el siguiente sweep de VG
-#        print('NEXTVG EMIT')
+        # print('NEXTVG EMIT')
+        self.Stable = False
         self.NextVg.emit()
 
     def stop(self):

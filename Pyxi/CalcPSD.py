@@ -39,6 +39,7 @@ class CalcPSD(Qt.QThread):
                                           scaling=self.scaling,
                                           axis=0)
 #                print('PSD DONE EMIT')
+                self.Buffer.Reset()
                 self.PSDDone.emit()
 
             else:

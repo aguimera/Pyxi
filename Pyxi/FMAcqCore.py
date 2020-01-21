@@ -109,8 +109,8 @@ class ChannelsConfig():
         self.AnalogInputs.DoneEvent = self.DoneEventCallBack
 
     def _InitAnalogOutputs(self, ChVcm, ChVd):
-#        print('ChVds ->', ChVd)
-#        print('ChVcm ->', ChVcm)
+        # print('ChVds ->', ChVd)
+        # print('ChVcm ->', ChVcm)
         self.VcmOut = DaqInt.WriteAnalog((ChVcm,))
         self.VdOut = DaqInt.WriteAnalog((ChVd,))
 
@@ -132,6 +132,7 @@ class ChannelsConfig():
                                        EverySamps=self.nBlocks)
 
     def SetVcm(self, Vcm):
+        print(Vcm)
         self.VcmOut.SetVal(Vcm)
 
     def SetSignal(self, Signal, FsGen=2e6, FsBase=""):
@@ -164,8 +165,8 @@ class ChannelsConfig():
         print('Stopppp')
 
         self.AnalogInputs.StopContData()
-        # self.VcmOut.ClearTask()
-        # self.VcmOut.SetVal(0)
+        self.VcmOut.StopTask()
+        self.VcmOut.SetVal(0)
         self.VcmOut.ClearTask()
         self.VcmOut = None
         self.VdOut.ClearTask()

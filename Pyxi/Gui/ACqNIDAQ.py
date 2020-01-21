@@ -352,10 +352,12 @@ class MainWindow(Qt.QWidget):
         self.VgInd += 1
         if self.VgInd < len(self.VgSweepVals):
             # print(self.VgInd)
-            self.threadAqc.DaqInterface.VcmOut.ClearTask()
-            self.threadAqc.Vcm = self.VgSweepVals[self.VgInd]
+            self.threadAqc.DaqInterface.VcmOut.StopTask()
+            # self.threadAqc.Vcm = self.VgSweepVals[self.VgInd]
+            self.threadAqc.DaqInterface.SetVcm(Vcm=self.VgSweepVals[self.VgInd])
+            # print(self.VgSweepVals[self.VgInd])
             self.threadStbDet.VgIndex = self.VgInd
-            self.threadStbDet.Stable = False
+            # self.threadStbDet.Stable = False
             self.threadStbDet.initTimer()
             print('NEXT VGS SWEEP')
         else:
