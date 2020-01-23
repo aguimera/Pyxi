@@ -67,7 +67,7 @@ class StbDetThread(Qt.QThread):
         self.SaveDCAC.PSDSaved.connect(self.on_NextVgs)
 
     def initTimer(self):
-        self.Timer.singleShot((self.TimeOut*1000), self.DCIdCalc)
+        self.Timer.singleShot((self.TimeOut*1000), self.printTime)
         self.Id = self.Timer.timerId()
 
     def run(self):
@@ -100,7 +100,11 @@ class StbDetThread(Qt.QThread):
             self.Datos = self.ToStabData  # se guardan los datos para que no se sobreescriban
         if self.Stable is True:
             self.threadCalcPSD.AddData(NewData)
-
+            
+    def printTime(self):
+        print('TimeOut')
+        self.DCIdCalc()
+        
     def DCIdCalc(self):
 #        print('DATA STAB')
         # se descoencta el timer
