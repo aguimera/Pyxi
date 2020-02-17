@@ -53,7 +53,9 @@ class StbDetThread(Qt.QThread):
         self.VdIndex = 0
 
         self.Timer = Qt.QTimer()
-        self.Timer.moveToThread(self)
+        # self.Timer.setSingleShot(True)
+        self.Timer.timeout.connect(self.printTime)
+        # self.Timer.moveToThread(self)
 #        print('nchannels', nChannels)
         self.threadCalcPSD = PSD.CalcPSD(nChannels=nChannels,
                                          **PlotterDemodKwargs)
@@ -66,9 +68,9 @@ class StbDetThread(Qt.QThread):
                                             )
         self.SaveDCAC.PSDSaved.connect(self.on_NextVgs)
 
-    def initTimer(self):
-        self.Timer.singleShot((self.TimeOut*1000), self.printTime)
-        self.Id = self.Timer.timerId()
+    # def initTimer(self):
+    #     self.Timer.timeout.connect(self.printTime)
+    #     # self.Id = self.Timer.timerId()
 
     def run(self):
         while True:
@@ -82,7 +84,9 @@ class StbDetThread(Qt.QThread):
                 slope = lnr(x, trend)[0]
                 # print('ESTA ES LA PENDIENTE', slope)
                 if np.abs(slope) <= self.MaxSlope:
-
+                    print('slope is -->', np.abs(slope))
+                    self.Timer.stop()
+                    self.Timer.timeout.disconnect()
                     self.DCIdCalc()
 
                 self.ToStabData = None
@@ -103,14 +107,14 @@ class StbDetThread(Qt.QThread):
             
     def printTime(self):
         print('TimeOut')
+        # self.Timer.stop()
+        # self.Timer.killTimer(self.Id)
+        self.Timer.stop()
+        self.Timer.timeout.disconnect()
         self.DCIdCalc()
         
     def DCIdCalc(self):
 #        print('DATA STAB')
-        # se descoencta el timer
-        self.Timer.stop()
-        self.Timer.killTimer(self.Id)
-
         self.ToStabData = None
         # se activa el flag de estable
         self.Stable = True

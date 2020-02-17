@@ -267,7 +267,8 @@ class MainWindow(Qt.QWidget):
                                                             VdVals=self.VdSweepVals,
                                                             VgVals=self.VgSweepVals)
                     self.threadStbDet.NextVg.connect(self.on_NextVg)
-                    self.threadStbDet.initTimer()  # TimerPara el primer Sweep
+                    # self.threadStbDet.initTimer()  # TimerPara el primer Sweep
+                    self.threadStbDet.Timer.start(self.SweepsKwargs['TimeOut']*1000)
                     self.threadStbDet.start()
 
                 self.threadDemodAqc.start()
@@ -332,9 +333,6 @@ class MainWindow(Qt.QWidget):
             self.threadStbDet.AddData(OutDemodData)
 
         if self.threadDemodSave is not None:
-            # Yo iria haciendo aqui appends, hasta que acabase el sweep de Vgs
-            # una vez acaba el sweep, guardo los valores de IDS en el
-            # dict DC, y calculo los PSD para guardar en el diccionario AC
             self.threadDemodSave.AddData(OutDemodData)
         if self.threadDemodPlotter is not None:
             self.threadDemodPlotter.AddData(OutDemodData)
@@ -347,8 +345,9 @@ class MainWindow(Qt.QWidget):
 
 # #############################Restart Timer Stabilization####################
     def on_NextVg(self):
-        self.threadStbDet.Timer.stop()
-        self.threadStbDet.Timer.killTimer(self.threadStbDet.Id)
+        # self.threadStbDet.Timer.stop()
+        # self.threadStbDet.Timer.killTimer(self.threadStbDet.Id)
+        # self.threadStbDet.Timer.disconnect()
         self.VgInd += 1
         if self.VgInd < len(self.VgSweepVals):
             # print(self.VgInd)
@@ -358,7 +357,9 @@ class MainWindow(Qt.QWidget):
             # print(self.VgSweepVals[self.VgInd])
             self.threadStbDet.VgIndex = self.VgInd
             # self.threadStbDet.Stable = False
-            self.threadStbDet.initTimer()
+            # self.threadStbDet.initTimer()
+            self.threadStbDet.Timer.timeout.connect(self.threadStbDet.printTime)
+            self.threadStbDet.Timer.start(self.SweepsKwargs['TimeOut']*1000)
             print('NEXT VGS SWEEP')
         else:
             print('END VGS SWEEP')
@@ -386,15 +387,18 @@ class MainWindow(Qt.QWidget):
             self.threadAqc.DaqInterface.SetSignal(self.threadAqc.Signal)
             self.threadAqc.start()
             self.threadStbDet.VdIndex = self.VdInd
-            self.threadStbDet.initTimer()
+            # self.threadStbDet.initTimer()
+            self.threadStbDet.Timer.timeout.connect(self.threadStbDet.printTime)
+            self.threadStbDet.Timer.start(self.SweepsKwargs['TimeOut']*1000)
             # print('NEXT VDS SWEEP')
         else:
             print('END VDS SWEEP')
             self.StopThreads()
             self.btnStart.setText("Start Gen and Adq!")
             # Parar thread de estabilización
-            self.threadStbDet.Timer.stop()
-            self.threadStbDet.Timer.killTimer(self.threadStbDet.Id)
+            # self.threadStbDet.Timer.stop()
+            # self.threadStbDet.Timer.killTimer(self.threadStbDet.Id)
+            # self.threadStbDet.Timer.disconnect()
             self.VdInd = 0
             self.threadStbDet.VdIndex = self.VdInd
             self.threadStbDet.NextVg.disconnect()
