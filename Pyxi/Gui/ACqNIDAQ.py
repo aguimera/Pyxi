@@ -170,10 +170,19 @@ class MainWindow(Qt.QWidget):
         self.PsdPlotParams.param('Fs').setValue(self.GenAcqParams.FsScope.value())
         self.DemodConfig.param('FsDemod').setValue(self.GenAcqParams.FsScope.value()
                                                    )
+        self.DemodPsdPlotParams.param('Fs').setValue(
+                                                    (self.DemodConfig.param('FsDemod').value())
+                                                    /(self.DemodConfig.param('DSFact').value())
+                                                    )
+        self.DemodPlotParams.param('Fs').setValue(
+                                                (self.DemodConfig.param('FsDemod').value())
+                                                /(self.DemodConfig.param('DSFact').value())
+                                                )
 
     def on_DSFact_changed(self):
         self.DemodParams.ReCalc_DSFact(self.GenAcqParams.BufferSize.value())
         self.DemodPsdPlotParams.param('Fs').setValue(self.DemodParams.DSFs.value())
+        self.DemodPlotParams.param('Fs').setValue(self.DemodParams.DSFs.value())
         if self.DemodParams.DSFs.value() >= np.min(self.GenAcqParams.Freqs):
             print('WARNING: FsDemod is higher than FsMin')
 
