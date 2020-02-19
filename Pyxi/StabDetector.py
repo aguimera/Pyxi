@@ -6,7 +6,7 @@ Created on Wed Dec 11 11:49:36 2019
 """
 from PyQt5 import Qt
 import numpy as np
-from scipy.stats import linregress as lnr
+#from scipy.stats import linregress as lnr
 
 import Pyxi.CalcPSD as PSD
 import PyqtTools.SaveDictsModule as SaveDicts
@@ -79,9 +79,9 @@ class StbDetThread(Qt.QThread):
                 Data = np.abs(self.ToStabData[:,0])#se mira la estabilización en la priemra row adquirida
                 x = np.arange(Data.size)
                 self.ptrend = np.polyfit(x, Data, 1)
-                trend = np.polyval(self.ptrend, x)
-
-                slope = lnr(x, trend)[0]
+#                trend = np.polyval(self.ptrend, x)
+                slope = np.polyfit(x, Data[0:20], 1)[0]
+#                slope = lnr(x, trend)[0]
                 # print('ESTA ES LA PENDIENTE', slope)
                 if np.abs(slope) <= self.MaxSlope:
                     print('slope is -->', np.abs(slope))
@@ -104,7 +104,7 @@ class StbDetThread(Qt.QThread):
             self.Datos = self.ToStabData  # se guardan los datos para que no se sobreescriban
         if self.Stable is True:
             self.threadCalcPSD.AddData(NewData)
-            
+
     def printTime(self):
         print('TimeOut')
         # self.Timer.stop()
@@ -112,9 +112,9 @@ class StbDetThread(Qt.QThread):
         self.Timer.stop()
         self.Timer.timeout.disconnect()
         self.DCIdCalc()
-        
+
     def DCIdCalc(self):
-#        print('DATA STAB')
+        # print('DATA STAB')
         self.ToStabData = None
         # se activa el flag de estable
         self.Stable = True
@@ -128,10 +128,10 @@ class StbDetThread(Qt.QThread):
             self.ptrend = np.polyfit(x, Data, 1)
 
             self.DCIds[ind] = (self.ptrend[-1])/np.sqrt(2)  # Se toma el ultimo valor
-        # print('DCIDS', DCIds)    
+        # print('DCIDS', DCIds)
 
     def on_PSDDone(self):
-#        print('PSD DONE RECIBED')
+        # print('PSD DONE RECIBED')
         self.freqs = self.threadCalcPSD.ff
         self.PSDdata = self.threadCalcPSD.psd
         # se desactiva el thread para calcular PSD
