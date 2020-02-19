@@ -242,7 +242,7 @@ class MainWindow(Qt.QWidget):
             self.DcSaveKwargs = self.SaveSwParams.GetParams()
 
             self.SwEnable = self.SweepsKwargs['Enable']
-            self.VdSweepVals = self.SweepsKwargs['VdSweep']
+            self.VdSweepVals = np.sqrt(2)*self.SweepsKwargs['VdSweep']
             self.VgSweepVals = self.SweepsKwargs['VgSweep']
 
             self.threadAqc = DataAcq.DataAcquisitionThread(GenConfig=self.GenKwargs,

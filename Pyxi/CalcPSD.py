@@ -33,7 +33,7 @@ class CalcPSD(Qt.QThread):
     def run(self, *args, **kwargs):
         while True:
             if self.Buffer.IsFilled():
-                self.ff, self.psd = welch(self.Buffer/np.sqrt(2),
+                self.ff, self.psd = welch(self.Buffer,
                                           fs=self.Fs,
                                           nperseg=self.nFFT,
                                           scaling=self.scaling,

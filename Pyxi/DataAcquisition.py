@@ -117,6 +117,6 @@ class DataAcquisitionThread(Qt.QThread):
 
     def NewData(self, aiData):
         # print(self.Vcm)
-        self.OutDataVolts = aiData
-        self.OutData = aiData/self.gain
+        self.OutDataVolts = aiData/np.sqrt(2) # (RMS)
+        self.OutData = (aiData/self.gain)/np.sqrt(2) # (RMS)
         self.NewMuxData.emit()

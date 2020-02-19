@@ -80,7 +80,7 @@ class StbDetThread(Qt.QThread):
                 x = np.arange(Data.size)
                 self.ptrend = np.polyfit(x, Data, 1)
 #                trend = np.polyval(self.ptrend, x)
-                slope = np.polyfit(x, Data[0:20], 1)[0]
+                slope = np.polyfit(x[0:20], Data[0:20], 1)[0]
 #                slope = lnr(x, trend)[0]
                 # print('ESTA ES LA PENDIENTE', slope)
                 if np.abs(slope) <= self.MaxSlope:
