@@ -433,6 +433,8 @@ class MainWindow(Qt.QWidget):
                 self.threadSave = FileMod.DataSavingThread(FileName=FileName,
                                                            nChannels=self.ScopeKwargs['NRow'],
                                                            MaxSize=MaxSize,
+                                                           Fs = self.GenAcqParams.FsScope,
+                                                           ChnNames=self.ScopeChns,
                                                            dtype='float' #comment when int save problem solved
                                                            )
                 self.threadSave.start()
@@ -441,6 +443,9 @@ class MainWindow(Qt.QWidget):
                 self.threadDemodSave = FileMod.DataSavingThread(FileName=FileName,
                                                                 nChannels=self.ScopeKwargs['NRow']*len(self.GenAcqParams.Freqs),
                                                                 MaxSize=MaxSize,
+                                                                Fs = self.DemodParams.DSFs.value(),
+                                                                ChnNames=self.DemodParams.GetChannelsNames(self.GenAcqParams.Rows,
+                                                                                                           self.GenAcqParams.GetCarriers()),
                                                                 dtype='float')
 
                 self.threadDemodSave.start()
