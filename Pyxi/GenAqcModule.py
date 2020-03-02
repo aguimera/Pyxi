@@ -454,24 +454,6 @@ class GenAcqConfig(pTypes.GroupParameter):
 
         return RowNames
     
-    def GetRowsColsNames(self):
-        '''
-        Generates a array with names of rows
-
-        RowNames=[]
-        '''
-        Cols=[]
-        for Config in self.CarrierConfig.children():
-            Cols.append(Config.name())
-            
-        RowColsNames = []
-        for Config in self.RowsConfig.children():
-            if Config.param('Enable').value() is True:
-                for Col in Cols:
-                    RowColsNames.append(Config.name()+Col)
-        RowColsNames = np.array(RowColsNames, dtype='S10')
-
-        return RowColsNames
 
 # #############################GenerationConfig##############################
     def on_FreqSig_Changed(self):

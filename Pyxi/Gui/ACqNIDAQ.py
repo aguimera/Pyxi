@@ -433,10 +433,9 @@ class MainWindow(Qt.QWidget):
                 self.threadSave = FileMod.DataSavingThread(FileName=FileName,
                                                            nChannels=self.ScopeKwargs['NRow'],
                                                            MaxSize=MaxSize,
-                                                           Fs=self.GenAcqParams.FsScope.value(),
-                                                           # ChnNames=self.GenAcqParams.GetRowsColsNames,
-                                                            ChnNames=self.DemodParams.GetChannelsNames(self.GenAcqParams.Rows,
-                                                                                                        self.GenAcqParams.GetCarriers()),
+                                                           # Fs=self.GenAcqParams.FsScope.value(),
+                                                            # ChnNames=self.DemodParams.GetChannelsNames(self.GenAcqParams.Rows,
+                                                            #                                             self.GenAcqParams.GetCarriers()),
                                                                 
                                                            # ChnNames=np.array(self.ScopeChns, dtype='S10'),
                                                            dtype='float' #comment when int save problem solved
@@ -447,9 +446,9 @@ class MainWindow(Qt.QWidget):
                 self.threadDemodSave = FileMod.DataSavingThread(FileName=FileName,
                                                                 nChannels=self.ScopeKwargs['NRow']*len(self.GenAcqParams.Freqs),
                                                                 MaxSize=MaxSize,
-                                                                Fs = self.DemodParams.DSFs.value(),
-                                                                ChnNames=self.DemodParams.GetChannelsNames(self.GenAcqParams.Rows,
-                                                                                                           self.GenAcqParams.GetCarriers()),
+                                                                # Fs = self.DemodParams.DSFs.value(),
+                                                                # ChnNames=self.DemodParams.GetChannelsNames(self.GenAcqParams.Rows,
+                                                                #                                            self.GenAcqParams.GetCarriers()),
                                                                 dtype='float')
 
                 self.threadDemodSave.start()
