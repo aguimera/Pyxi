@@ -69,7 +69,9 @@ class DataAcquisitionThread(Qt.QThread):
 
         self.DaqInterface = CoreMod.ChannelsConfig(ChannelsScope=Channels,
                                                    Range=ScopeConfig['AcqVRange'],
-                                                   GenConfig=GenConfig)
+                                                   GenConfig=GenConfig,
+                                                   AcqDiff=True
+                                                   )
 
         self.Channels = Channels
         self.DaqInterface.DataEveryNEvent = self.NewData
@@ -99,7 +101,7 @@ class DataAcquisitionThread(Qt.QThread):
         self.Signal = Amp*np.cos(self.Freq*2*np.pi*t)
         self.Vcoi = np.complex128(1*np.exp(1j*(stepScope*np.arange(self.EveryN))))
 
-    def run(self, *args, **kwargs): 
+    def run(self, *args, **kwargs):
         self.DaqInterface.StartAcquisition(Fs=self.FsScope,
                                            EveryN=self.EveryN,
                                            Vgs=self.Vcm,
@@ -117,6 +119,6 @@ class DataAcquisitionThread(Qt.QThread):
 
     def NewData(self, aiData):
         # print(self.Vcm)
-        self.OutDataVolts = aiData/np.sqrt(2) # (RMS)
-        self.OutData = (aiData/self.gain)/np.sqrt(2) # (RMS)
+        self.OutDataVolts = aiData/np.sqrt(2)  # (RMS)
+        self.OutData = (aiData/self.gain)/np.sqrt(2)  # (RMS)
         self.NewMuxData.emit()
