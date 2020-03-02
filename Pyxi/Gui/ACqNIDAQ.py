@@ -433,8 +433,8 @@ class MainWindow(Qt.QWidget):
                 self.threadSave = FileMod.DataSavingThread(FileName=FileName,
                                                            nChannels=self.ScopeKwargs['NRow'],
                                                            MaxSize=MaxSize,
-                                                           Fs = self.GenAcqParams.FsScope,
-                                                           ChnNames=self.ScopeChns,
+                                                           Fs=self.GenAcqParams.FsScope.value(),
+                                                           # ChnNames=np.array(self.ScopeChns, dtype='S10'),
                                                            dtype='float' #comment when int save problem solved
                                                            )
                 self.threadSave.start()
