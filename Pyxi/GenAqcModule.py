@@ -6,7 +6,7 @@ Created on Tue Nov 26 09:42:31 2019
 """
 
 import pyqtgraph.parametertree.parameterTypes as pTypes
-
+import numpy as np
 import copy
 
 ConfigParam = {'name': 'AcqConfig',
@@ -450,10 +450,28 @@ class GenAcqConfig(pTypes.GroupParameter):
         '''
         RowNames = []
         for Config in self.RowsConfig.children():
-            if Config.param('Enable').value() is True:
-                RowNames.append(Config.name())
+            RowNames.append(Config.name())
 
         return RowNames
+    
+    def GetRowsColsNames(self):
+        '''
+        Generates a array with names of rows
+
+        RowNames=[]
+        '''
+        Cols=[]
+        for Config in self.CarrierConfig.children():
+            Cols.append(Config.name())
+            
+        RowColsNames = []
+        for Config in self.RowsConfig.children():
+            if Config.param('Enable').value() is True:
+                for Col in Cols:
+                    RowColsNames.append(Config.name()+Col)
+        RowColsNames = np.array(RowColsNames, dtype='S10')
+
+        return RowColsNames
 
 # #############################GenerationConfig##############################
     def on_FreqSig_Changed(self):

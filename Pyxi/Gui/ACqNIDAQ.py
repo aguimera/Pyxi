@@ -434,8 +434,10 @@ class MainWindow(Qt.QWidget):
                                                            nChannels=self.ScopeKwargs['NRow'],
                                                            MaxSize=MaxSize,
                                                            Fs=self.GenAcqParams.FsScope.value(),
-                                                           ChnNames=self.DemodParams.GetChannelsNames(self.GenAcqParams.Rows,
-                                                                                                      self.GenAcqParams.GetCarriers()),
+                                                           # ChnNames=self.GenAcqParams.GetRowsColsNames,
+                                                            ChnNames=self.DemodParams.GetChannelsNames(self.GenAcqParams.Rows,
+                                                                                                        self.GenAcqParams.GetCarriers()),
+                                                                
                                                            # ChnNames=np.array(self.ScopeChns, dtype='S10'),
                                                            dtype='float' #comment when int save problem solved
                                                            )
