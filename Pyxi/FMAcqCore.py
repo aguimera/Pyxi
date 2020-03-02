@@ -73,6 +73,7 @@ class ChannelsConfig():
                                 ChVd=ChCol1)
         self.ChNamesList = sorted(ChannelsScope)
         # print(self.ChNamesList)
+        # OutScope = input('y/n + press(Enter)')
         self.AcqD = AcqDiff
         self.Range = Range
         self._InitAnalogInputs()

@@ -449,8 +449,8 @@ class GenAcqConfig(pTypes.GroupParameter):
         RowNames=[]
         '''
         RowNames = []
-        for Config in self.RowsConfig.children():
-            RowNames.append(Config.name())
+        for Rw in self.Rows:
+            RowNames.append(Rw)
 
         return RowNames
     
