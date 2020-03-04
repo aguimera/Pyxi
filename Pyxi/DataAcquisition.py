@@ -93,7 +93,7 @@ class DataAcquisitionThread(Qt.QThread):
             self.OutSignal(Amp=VdValue)
         else:
             self.Vcm = ScopeConfig['CMVoltage']
-            self.OutSignal(Amp=GenConfig['ColsConfig']['Col1']['Amplitude'])
+            self.OutSignal(Amp=np.sqrt(2)*GenConfig['ColsConfig']['Col1']['Amplitude'])
 
     def OutSignal(self, Amp):
         stepScope = 2*np.pi*(self.Freq/self.FsScope)

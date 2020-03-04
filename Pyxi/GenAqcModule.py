@@ -314,7 +314,7 @@ CarrierParam = {'name': 'ColX',
                               'value': 0.25,
                               'type': 'float',
                               'siPrefix': True,
-                              'suffix': 'V'},
+                              'suffix': 'VRMS'},
                              )
                 }
 
