@@ -17,8 +17,8 @@ import Pyxi.FMAcqCore as CoreMod
 class DataAcquisitionThread(Qt.QThread):
     NewMuxData = Qt.pyqtSignal()
 
-    def __init__(self, GenConfig, Channels, ScopeConfig, SwEnable,
-                 VgArray, VdValue, AvgIndex=5):
+    def __init__(self, GenConfig, Channels, ScopeConfig, SwEnable=False,
+                 VgArray=None, VdValue=None, AvgIndex=5):
         '''Initialization of the Thread for Acquisition
            GenConfig: dictionary. Configuration for each generation column
                                    {'ColsConfig': {'Col1':{'Frequency':30000.0,

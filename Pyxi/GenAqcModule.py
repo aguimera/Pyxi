@@ -454,6 +454,25 @@ class GenAcqConfig(pTypes.GroupParameter):
 
         return RowNames
     
+    def GetChannelsNames(self, Rows, Fcs):
+        '''Function that returns an array with the names of demodulation
+           channels in dtype S10
+            ['Ch01Col1',
+             'Ch02Col1',
+             'Ch03Col1',
+             'Ch04Col1',
+             'Ch05Col1',
+             'Ch06Col1',
+             'Ch07Col1',
+             'Ch08Col1',
+            ]
+        '''
+        ChnNames = []
+        for r in Rows:
+            for col, f in Fcs.items():
+                ChnNames.append(r+col)
+        Chns = np.array(ChnNames, dtype='S10')
+        return Chns
 
 # #############################GenerationConfig##############################
     def on_FreqSig_Changed(self):
