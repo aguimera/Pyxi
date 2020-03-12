@@ -45,7 +45,7 @@ class ChannelsConfig():
     DataEveryNEvent = None
     DataDoneEvent = None
 
-    def __init__(self, ChannelsScope, Range, GenConfig,  AcqDiff=True,
+    def __init__(self, ChannelsScope, Range, GenConfig,  AcqDiff=False,
                  ChVcm='ao0', ChCol1='ao1'):
         '''Initialazion for Channels Configuration:
            ChannelsScope: List. Contains the name of the Acquisition Channels

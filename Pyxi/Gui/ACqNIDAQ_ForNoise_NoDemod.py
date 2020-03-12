@@ -154,7 +154,8 @@ class MainWindow(Qt.QWidget):
 
             self.threadAqc = DataAcq.DataAcquisitionThread(GenConfig=self.GenKwargs,
                                                            Channels=self.ScopeChns, 
-                                                           ScopeConfig=self.ScopeKwargs
+                                                           ScopeConfig=self.ScopeKwargs,
+                                                           AcqDiff=False
                                                            ) 
             self.threadAqc.NewMuxData.connect(self.on_NewSample)
 
@@ -210,7 +211,7 @@ class MainWindow(Qt.QWidget):
                                                        nChannels=self.ScopeKwargs['NRow'],
                                                        MaxSize=MaxSize,
                                                        Fs=self.GenAcqParams.FsScope.value(),
-                                                       ChnNames=self.GenAcqConfig.GetChannelsNames(self.GenAcqParams.Rows,
+                                                       ChnNames=self.GenAcqParams.GetChannelsNames(self.GenAcqParams.Rows,
                                                                                                   self.GenAcqParams.GetCarriers()),            
                                                        dtype='float' #comment when int save problem solved
                                                        )

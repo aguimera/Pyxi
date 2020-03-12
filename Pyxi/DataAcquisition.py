@@ -17,7 +17,7 @@ import Pyxi.FMAcqCore as CoreMod
 class DataAcquisitionThread(Qt.QThread):
     NewMuxData = Qt.pyqtSignal()
 
-    def __init__(self, GenConfig, Channels, ScopeConfig, SwEnable=False,
+    def __init__(self, GenConfig, Channels, ScopeConfig, AcqDiff=True, SwEnable=False,
                  VgArray=None, VdValue=None, AvgIndex=5):
         '''Initialization of the Thread for Acquisition
            GenConfig: dictionary. Configuration for each generation column
@@ -70,7 +70,7 @@ class DataAcquisitionThread(Qt.QThread):
         self.DaqInterface = CoreMod.ChannelsConfig(ChannelsScope=Channels,
                                                    Range=ScopeConfig['AcqVRange'],
                                                    GenConfig=GenConfig,
-                                                   AcqDiff=True
+                                                   AcqDiff=AcqDiff
                                                    )
 
         self.Channels = Channels
