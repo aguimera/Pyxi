@@ -339,7 +339,7 @@ class MainWindow(Qt.QWidget):
 
         if self.threadStbDet is not None:
             # print('Demod Done')
-            self.threadStbDet.AddData(OutDemodData)
+            self.threadStbDet.AddData(OutDemodData/np.sqrt(2))  # (RMS)
 
         if self.threadDemodSave is not None:
             self.threadDemodSave.AddData(OutDemodData)

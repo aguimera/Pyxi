@@ -75,16 +75,19 @@ class StbDetThread(Qt.QThread):
     def run(self):
         while True:
             if self.ToStabData is not None:
-
-                Data = np.abs(self.ToStabData[:,0])#se mira la estabilización en la priemra row adquirida
-                x = np.arange(Data.size)
-                self.ptrend = np.polyfit(x, Data, 1)
-#                trend = np.polyval(self.ptrend, x)
-                slope = np.polyfit(x[0:20], Data[0:20], 1)[0]
-#                slope = lnr(x, trend)[0]
-                # print('ESTA ES LA PENDIENTE', slope)
-                if np.abs(slope) <= self.MaxSlope:
-                    print('slope is -->', np.abs(slope))
+                Data = self.ToStabData
+                r, c = Data.shape
+                x = np.arange(0, r)
+                mm, oo = np.polyfit(x, Data, 1)
+                Dev = np.abs(np.mean(mm))
+                print('Slope Calc -->', Dev)
+                # Data = np.abs(self.ToStabData[:,0])#se mira la estabilización en la priemra row adquirida
+                # x = np.arange(Data.size)
+                # self.ptrend = np.polyfit(x, Data, 1)
+                # slope = np.polyfit(x[0:20], Data[0:20], 1)[0]
+                # if np.abs(slope) <= self.MaxSlope:
+                if Dev < self.MaxSlope:
+                    print('Final slope is -->', np.abs(Dev))
                     self.Timer.stop()
                     self.Timer.timeout.disconnect()
                     self.DCIdCalc()
