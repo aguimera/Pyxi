@@ -103,6 +103,7 @@ class StbDetThread(Qt.QThread):
 
         if self.Stable is False:
             self.ToStabData = NewData
+            #afegir buffer per calcular sempre sobre el mateix temps
 #            print('SaveDatos')
             self.Datos = self.ToStabData  # se guardan los datos para que no se sobreescriban
         if self.Stable is True:
