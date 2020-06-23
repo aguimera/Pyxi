@@ -408,18 +408,20 @@ class GenAcqConfig(pTypes.GroupParameter):
                   'GainBoard': 10000.0
                   }
         '''
-        Scope = {'RowsConfig': {}, }
-        for Config in self.RowsConfig.children():
-            if Config.param('Enable').value() is True:
-                Scope['RowsConfig'][Config.name()] = {}
-                for Values in Config.children():
-                    if Values == 'Enable':
-                        continue
-                    Scope['RowsConfig'][Config.name()][Values.name()] = Values.value()
+        # Scope = {'RowsConfig': {}, }
+        # for Config in self.RowsConfig.children():
+        #     if Config.param('Enable').value() is True:
+        #         Scope['RowsConfig'][Config.name()] = {}
+        #         for Values in Config.children():
+        #             if Values.name() == 'Enable':
+        #                 continue
+        #             Scope['RowsConfig'][Config.name()][Values.name()] = Values.value()
+        Scope = {}
         for Config in self.AcqConfig.children():
             if Config.name() == 'tFetch':
                 continue
-
+            if Config.name() == 'NRow':
+                continue
             Scope[Config.name()] = Config.value()
 
         return Scope

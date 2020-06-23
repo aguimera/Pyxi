@@ -5,7 +5,7 @@ Created on Mon Nov 18 12:20:11 2019
 @author: Lucia
 """
 
-import PyqtTools.DaqInterface as DaqInt
+# import PyqtTools.DaqInterface as DaqInt
 import numpy as np
 
 # Daq card connections mapping 'Chname':(AI+, AI-)

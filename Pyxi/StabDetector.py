@@ -68,9 +68,9 @@ class StbDetThread(Qt.QThread):
                                             )
         self.SaveDCAC.PSDSaved.connect(self.on_NextVgs)
 
-    # def initTimer(self):
-    #     self.Timer.timeout.connect(self.printTime)
-    #     # self.Id = self.Timer.timerId()
+    def initTimer(self):
+        self.Timer.timeout.connect(self.printTime)
+        # self.Id = self.Timer.timerId()
 
     def run(self):
         while True:
