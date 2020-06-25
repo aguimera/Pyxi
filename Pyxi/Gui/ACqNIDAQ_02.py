@@ -438,9 +438,9 @@ class MainWindow(Qt.QWidget):
     def on_CharactEnd(self):
         print('END Charact')
         self.threadCharact.CharactEnd.disconnect()
-        self.threadCharact.SaveDCAC.SaveDicts(self.threadCharact.DCDict,
-                                             self.threadCharact.ACDict,
-                                             **self.DcSaveKwargs)
+        self.threadCharact.SaveDCAC.SaveDicts(Dcdict=self.threadCharact.DCDict,
+                                              Acdict=self.threadCharact.ACDict,
+                                              **self.DcSaveKwargs)
         self.threadAqc.NewMuxData.disconnect()
         self.threadAqc.DaqInterface.Stop()
         self.threadAqc.terminate()
