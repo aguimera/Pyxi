@@ -335,6 +335,7 @@ class MainWindow(Qt.QWidget):
             
         else:
             print('stopped')
+            self.Paused = True
             self.threadAqc.NewMuxData.disconnect()
             self.threadAqc.DaqInterface.Stop()
             self.threadAqc.terminate()
@@ -348,6 +349,11 @@ class MainWindow(Qt.QWidget):
 # #############################Pause Sweep Acquisition ####################
     def on_Sweep_paused(self):     
         print('paused')
+        LastVgsInd = self.threadCharact.VgIndex
+        LastVdsInd = self.threadCharact.VdIndex
+        DevDCDict = self.threadCharact.SaveDCAC.DevDCVals
+        if self.threadCharact.ACenable:
+            DevACDict = self.threadCharact.SaveDCAC.DevACVals
 
 # #############################New Sample Obtained############################
     def on_NewSample(self):
