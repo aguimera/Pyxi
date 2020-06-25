@@ -291,12 +291,12 @@ class MainWindow(Qt.QWidget):
 
             self.VdSweepVals = self.SweepsKwargs['VdSweep']
             self.VgSweepVals = self.SweepsKwargs['VgSweep']
-
+            
             self.threadAqc = DataAcq.DataAcquisitionThread(GenConfig=self.GenKwargs,
                                                            Channels=self.ScopeChns, 
                                                            SwEnable=True,
                                                            VgsInit=(-1)*self.VgSweepVals[0],
-                                                           VdValue=np.sqrt(2)*self.VdSweepVals[0],#empieza por el primer valor del sweep Vd
+                                                           VdValue=np.sqrt(2)*self.VdSweepVals[0],
                                                            **self.ScopeKwargs,) 
             self.threadAqc.NewMuxData.connect(self.on_NewSample)
 
@@ -335,7 +335,6 @@ class MainWindow(Qt.QWidget):
             
         else:
             print('stopped')
-            self.Paused = True
             self.threadAqc.NewMuxData.disconnect()
             self.threadAqc.DaqInterface.Stop()
             self.threadAqc.terminate()
@@ -347,13 +346,88 @@ class MainWindow(Qt.QWidget):
             
             self.StopThreads()
 # #############################Pause Sweep Acquisition ####################
-    def on_Sweep_paused(self):     
-        print('paused')
-        LastVgsInd = self.threadCharact.VgIndex
-        LastVdsInd = self.threadCharact.VdIndex
-        DevDCDict = self.threadCharact.SaveDCAC.DevDCVals
-        if self.threadCharact.ACenable:
-            DevACDict = self.threadCharact.SaveDCAC.DevACVals
+    def on_Sweep_paused(self):
+        if self.threadAqc is None:
+            print('Sweep Restarted')
+            
+            self.treepar.setParameters(self.Parameters, showTop=False)
+
+            self.GenKwargs = self.GenAcqParams.GetGenParams()
+            self.ScopeKwargs = self.GenAcqParams.GetRowParams()
+            self.ScopeChns = self.GenAcqParams.GetRowsNames()
+            self.nRows = len(self.ScopeChns)
+            self.DemodKwargs = self.DemodParams.GetParams()
+            self.SweepsKwargs = self.SwParams.GetConfigSweepsParams()
+            self.DcSaveKwargs = self.SwParams.GetSaveSweepsParams()
+
+            self.VdSweepVals = self.SweepsKwargs['VdSweep']
+            self.VgSweepVals = self.SweepsKwargs['VgSweep']
+            
+            if self.Paused:
+                self.threadAqc = DataAcq.DataAcquisitionThread(GenConfig=self.GenKwargs,
+                                                           Channels=self.ScopeChns, 
+                                                           SwEnable=True,
+                                                           VgsInit=(-1)*self.VgSweepVals[self.LastVgsInd],
+                                                           VdValue=np.sqrt(2)*self.VdSweepVals[self.LastVdsInd],
+                                                           **self.ScopeKwargs,) 
+
+            self.threadAqc.NewMuxData.connect(self.on_NewSample)
+
+            self.Gen_Destroy_PsdPlotter()
+            self.Gen_Destroy_Plotters()
+
+            self.threadDemodAqc = DemMod.DemodThread(Fcs=self.GenAcqParams.GetCarriers(),
+                                                     RowList=self.ScopeChns,
+                                                     FetchSize=self.ScopeKwargs['BufferSize'],
+                                                     Signal=self.threadAqc.Vcoi,
+                                                     Gain=self.ScopeKwargs['GainBoard'],
+                                                     **self.DemodKwargs)
+            self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
+
+            self.threadCharact = CharactCalc.StbDetThread(nChannels=self.nRows*len(self.GenAcqParams.Freqs),
+                                                          ChnName=self.DemodParams.GetChannels(self.GenAcqParams.Rows,
+                                                                                                self.GenAcqParams.GetCarriers()),
+                                                          PlotterDemodKwargs=self.DemodPsdPlotParams.GetParams(),
+                                                          **self.SweepsKwargs
+                                                          )
+            self.threadCharact.VgIndex = self.LastVgsInd
+            self.threadCharact.VdIndex = self.LastVdsInd
+            self.threadCharact.NextVg.connect(self.on_NextVg)
+            self.threadCharact.NextVd.connect(self.on_NextVd)
+            self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
+            self.threadCharact.Timer.start(self.SweepsKwargs['TimeOut']*1000)
+            self.threadCharact.start()
+
+            self.threadDemodAqc.start()
+
+            self.threadAqc.DaqInterface.SetSignal(Signal=self.threadAqc.Signal,
+                                                  FsBase="",
+                                                  FsGen=self.ScopeKwargs['FsGen']
+                                                  )
+            self.threadAqc.start()
+            self.OldTime = time.time()
+            
+        else:
+            print('paused')
+            self.Paused = True
+            
+            self.LastVgsInd = self.threadCharact.VgIndex
+            self.LastVdsInd = self.threadCharact.VdIndex
+            print(self.LastVgsInd, self.LastVdsInd)
+            self.PauseDevDCDict = self.threadCharact.SaveDCAC.DevDCVals
+            if self.threadCharact.ACenable:
+                self.PauseDevACDict = self.threadCharact.SaveDCAC.DevACVals
+
+            self.threadAqc.NewMuxData.disconnect()
+            self.threadAqc.DaqInterface.Stop()
+            self.threadAqc.terminate()
+            self.threadAqc = None
+            if self.threadCharact is not None:
+                self.threadCharact.NextVg.disconnect()
+                self.threadCharact.NextVd.disconnect()
+                self.threadCharact.CharactEnd.disconnect()
+            
+            self.StopThreads()
 
 # #############################New Sample Obtained############################
     def on_NewSample(self):
@@ -437,15 +511,44 @@ class MainWindow(Qt.QWidget):
 
     def on_CharactEnd(self):
         print('END Charact')
+        self.threadCharact.NextVg.disconnect()
+        self.threadCharact.NextVd.disconnect()
         self.threadCharact.CharactEnd.disconnect()
-        self.threadCharact.SaveDCAC.SaveDicts(Dcdict=self.threadCharact.DCDict,
-                                              Acdict=self.threadCharact.ACDict,
+        CharactDCDict = self.threadCharact.DCDict
+        CharactACDict = self.threadCharact.ACDict
+        if self.Paused:
+            for k, v in self.PauseDevDCDict.items():
+                for indexR, dato in enumerate(v['Ids']):
+                    for indexC, d in enumerate(dato):
+                        if np.isnan(d):
+                            continue
+                        else:
+                            CharactDCDict[k]['Ids'][indexR, indexC] = d
+                             
+            
+            if CharactACDict is not None:
+                self.PauseDevACDict.update(CharactACDict)
+                CharactACDict = self.PauseDevACDict
+                for k, v in self.PauseDevACDict.items():
+                    for key, val in v['PSD'].items():
+                        for indexR, dato in enumerate(val):
+                            for indexC, d in enumerate(dato):
+                                if np.isnan(d):
+                                    continue
+                                else:
+                                    CharactACDict[k]['PSD'][key][indexR, indexC] = d
+
+        self.threadCharact.SaveDCAC.SaveDicts(Dcdict=CharactDCDict,
+                                              Acdict=CharactACDict,
                                               **self.DcSaveKwargs)
         self.threadAqc.NewMuxData.disconnect()
         self.threadAqc.DaqInterface.Stop()
         self.threadAqc.terminate()
         self.threadAqc = None
         self.StopThreads()
+        
+        # dictNew.update(DictOld) 
+        # se modifica el diccionario dictNew con los pares key/value de DictOld y se sobreescriben las key coincidentes
 
 # #############################Savind Files##############################
     def SaveFiles(self):
