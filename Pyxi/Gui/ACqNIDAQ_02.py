@@ -49,7 +49,8 @@ class MainWindow(Qt.QWidget):
         self.Parameters.addChild(self.FileParams)
 
 # #############################Sweep Config##############################
-        self.SwParams = CharactTree.SweepsConfig(name='Sweeps Configuration')
+        self.SwParams = CharactTree.SweepsConfig(QTparent=self,
+                                                 name='Sweeps Configuration')
         self.Parameters.addChild(self.SwParams)
 
 # #############################Configuration##############################
@@ -226,28 +227,18 @@ class MainWindow(Qt.QWidget):
     def on_btnStart(self):
         if self.threadAqc is None:
             print('started')
-            self.VdInd = 0
-            self.VgInd = 0
-
             self.treepar.setParameters(self.Parameters, showTop=False)
 
             self.GenKwargs = self.GenAcqParams.GetGenParams()
             self.ScopeKwargs = self.GenAcqParams.GetRowParams()
             self.ScopeChns = self.GenAcqParams.GetRowsNames()
             self.DemodKwargs = self.DemodParams.GetParams()
-            self.SweepsKwargs = self.SwParams.GetSweepsParams()
-            self.DcSaveKwargs = self.SaveSwParams.GetParams()
 
-            self.SwEnable = self.SweepsKwargs['Enable']
-            self.VdSweepVals = self.SweepsKwargs['VdSweep']
-            self.VgSweepVals = self.SweepsKwargs['VgSweep']
 
             self.threadAqc = DataAcq.DataAcquisitionThread(GenConfig=self.GenKwargs,
                                                            Channels=self.ScopeChns, 
                                                            ScopeConfig=self.ScopeKwargs,
-                                                           SwEnable = self.SwEnable,
-                                                           VgArray = (-1)*self.VgSweepVals[0],
-                                                           VdValue=np.sqrt(2)*self.VdSweepVals[0]) #empieza por el primer valor del sweep Vd
+                                                           ) 
             self.threadAqc.NewMuxData.connect(self.on_NewSample)
 
             self.Gen_Destroy_PsdPlotter()
@@ -263,22 +254,6 @@ class MainWindow(Qt.QWidget):
                                                          **self.DemodKwargs)
                 self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
 
-                if self.SwEnable is True:
-                    self.threadCharact = CharactCalc.StbDetThread(MaxSlope=self.SweepsKwargs['MaxSlope'],
-                                                            TimeOut=self.SweepsKwargs['TimeOut'],
-                                                            nChannels=self.nRows*len(self.GenAcqParams.Freqs),
-                                                            ChnName=self.DemodParams.GetChannels(self.GenAcqParams.Rows,
-                                                                                                 self.GenAcqParams.GetCarriers()),
-                                                            PlotterDemodKwargs=self.DemodPsdPlotParams.GetParams(),
-                                                            VdVals=self.VdSweepVals,
-                                                            VgVals=self.VgSweepVals)
-                    self.threadCharact.NextVg.connect(self.on_NextVg)
-                    self.threadCharact.NextVd.connect(self.on_NextVd)
-                    self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
-                    # self.threadStbDet.initTimer()  # TimerPara el primer Sweep
-                    self.threadCharact.Timer.start(self.SweepsKwargs['TimeOut']*1000)
-                    self.threadCharact.start()
-
                 self.threadDemodAqc.start()
 
             self.threadAqc.DaqInterface.SetSignal(Signal=self.threadAqc.Signal,
@@ -291,8 +266,6 @@ class MainWindow(Qt.QWidget):
         else:
             print('stopped')
             self.threadAqc.NewMuxData.disconnect()
-            if self.SwEnable is True:
-                self.threadCharact.NextVg.disconnect()
             self.threadAqc.DaqInterface.Stop()
             self.threadAqc.terminate()
             self.threadAqc = None
@@ -323,13 +296,12 @@ class MainWindow(Qt.QWidget):
                                                            Channels=self.ScopeChns, 
                                                            SwEnable=True,
                                                            VgsInit=(-1)*self.VgSweepVals[0],
-                                                           VdValue=np.sqrt(2)*self.VdSweepVals[0],
-                                                           **self.ScopeKwargs,) #empieza por el primer valor del sweep Vd
+                                                           VdValue=np.sqrt(2)*self.VdSweepVals[0],#empieza por el primer valor del sweep Vd
+                                                           **self.ScopeKwargs,) 
             self.threadAqc.NewMuxData.connect(self.on_NewSample)
 
             self.Gen_Destroy_PsdPlotter()
             self.Gen_Destroy_Plotters()
-            self.SaveFiles()
 
             self.threadDemodAqc = DemMod.DemodThread(Fcs=self.GenAcqParams.GetCarriers(),
                                                      RowList=self.ScopeChns,
@@ -339,19 +311,16 @@ class MainWindow(Qt.QWidget):
                                                      **self.DemodKwargs)
             self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
 
-            self.threadCharact = CharactCalc.StbDetThread(MaxSlope=self.SweepsKwargs['MaxSlope'],
-                                                          TimeOut=self.SweepsKwargs['TimeOut'],
-                                                          nChannels=self.nRows*len(self.GenAcqParams.Freqs),
+            self.threadCharact = CharactCalc.StbDetThread(nChannels=self.nRows*len(self.GenAcqParams.Freqs),
                                                           ChnName=self.DemodParams.GetChannels(self.GenAcqParams.Rows,
                                                                                                 self.GenAcqParams.GetCarriers()),
                                                           PlotterDemodKwargs=self.DemodPsdPlotParams.GetParams(),
-                                                          VdVals=self.VdSweepVals,
-                                                          VgVals=self.VgSweepVals)
+                                                          **self.SweepsKwargs
+                                                          )
             
             self.threadCharact.NextVg.connect(self.on_NextVg)
             self.threadCharact.NextVd.connect(self.on_NextVd)
             self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
-            # self.threadStbDet.initTimer()  # TimerPara el primer Sweep
             self.threadCharact.Timer.start(self.SweepsKwargs['TimeOut']*1000)
             self.threadCharact.start()
 
@@ -367,12 +336,14 @@ class MainWindow(Qt.QWidget):
         else:
             print('stopped')
             self.threadAqc.NewMuxData.disconnect()
-            if self.SwEnable is True:
-                self.threadCharact.NextVg.disconnect()
             self.threadAqc.DaqInterface.Stop()
             self.threadAqc.terminate()
             self.threadAqc = None
-
+            if self.threadCharact is not None:
+                self.threadCharact.NextVg.disconnect()
+                self.threadCharact.NextVd.disconnect()
+                self.threadCharact.CharactEnd.disconnect()
+            
             self.StopThreads()
 # #############################Pause Sweep Acquisition ####################
     def on_Sweep_paused(self):     
@@ -432,7 +403,8 @@ class MainWindow(Qt.QWidget):
     def on_NextVg(self):
         self.threadAqc.DaqInterface.VcmOut.StopTask()
         self.threadAqc.DaqInterface.SetVcm(Vcm=(-1)*self.threadCharact.NextVgs)
-        self.threadCharact.Timer.timeout.connect(self.threadCharact.printTime)
+        # self.threadCharact.Timer.timeout.disconnect()
+        # self.threadCharact.Timer.timeout.connect(self.threadCharact.printTime)
         self.threadCharact.Timer.start(self.SweepsKwargs['TimeOut']*1000)
         print('NEXT VGS SWEEP')
 
@@ -444,11 +416,13 @@ class MainWindow(Qt.QWidget):
         self.threadAqc = None
         
         self.threadAqc = DataAcq.DataAcquisitionThread(GenConfig=self.GenKwargs,
-                                                           Channels=self.ScopeChns, 
-                                                           ScopeConfig=self.ScopeKwargs,
-                                                           SwEnable=self.SwEnable,
-                                                           VgArray=(-1)*self.VgSweepVals[0],
-                                                           VdValue=np.sqrt(2)*self.threadCharact.NextVds)
+                                                        Channels=self.ScopeChns, 
+                                                        SwEnable=True,
+                                                        VgsInit=(-1)*self.VgSweepVals[0],
+                                                        VdValue=np.sqrt(2)*self.threadCharact.NextVds,
+                                                        **self.ScopeKwargs,
+                                                         )
+     
         self.threadAqc.NewMuxData.connect(self.on_NewSample)
         self.threadAqc.DaqInterface.SetSignal(self.threadAqc.Signal)
         self.threadAqc.start()
@@ -457,14 +431,15 @@ class MainWindow(Qt.QWidget):
 
     def on_CharactEnd(self):
         print('END Charact')
-        self.StopThreads()
-        self.btnStart.setText("Start Gen and Adq!")
         self.threadCharact.CharactEnd.disconnect()
-
         self.threadCharact.SaveDCAC.SaveDicts(self.threadCharact.DCDict,
                                              self.threadCharact.ACDict,
                                              **self.DcSaveKwargs)
-        self.threadCharact.stop()
+        self.threadAqc.NewMuxData.disconnect()
+        self.threadAqc.DaqInterface.Stop()
+        self.threadAqc.terminate()
+        self.threadAqc = None
+        self.StopThreads()
 
 # #############################Savind Files##############################
     def SaveFiles(self):
