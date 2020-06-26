@@ -456,8 +456,7 @@ class MainWindow(Qt.QWidget):
     def on_NextVg(self):
         self.threadAqc.DaqInterface.VcmOut.StopTask()
         self.threadAqc.DaqInterface.SetVcm(Vcm=(-1)*self.threadCharact.NextVgs)
-        # self.threadCharact.Timer.timeout.disconnect()
-        # self.threadCharact.Timer.timeout.connect(self.threadCharact.printTime)
+
         self.threadCharact.Timer.start(self.SweepsKwargs['TimeOut']*1000)
         print('NEXT VGS SWEEP')
 
@@ -468,17 +467,17 @@ class MainWindow(Qt.QWidget):
         self.threadAqc.terminate()
         self.threadAqc = None
         
-        self.threadAqc = DataAcq.DataAcquisitionThread(GenConfig=self.GenKwargs,
-                                                        Channels=self.ScopeChns, 
-                                                        SwEnable=True,
-                                                        VgsInit=(-1)*self.VgSweepVals[0],
-                                                        VdValue=np.sqrt(2)*self.threadCharact.NextVds,
-                                                        **self.ScopeKwargs,
-                                                         )
-     
+        self.threadAqc = DataAcq.DataAcquisitionThread(**self.AcqKwargs) 
         self.threadAqc.NewMuxData.connect(self.on_NewSample)
-        self.threadAqc.DaqInterface.SetSignal(self.threadAqc.Signal)
+        self.threadAqc.OutSignal(Vds=np.sqrt(2)*self.threadCharact.NextVds)      
+        self.threadAqc.Vcm = (-1)*self.threadCharact.NextVgs
+             
+        self.threadAqc.DaqInterface.SetSignal(Signal=self.threadAqc.Signal,
+                                              FsBase="",
+                                              FsGen=self.AcqKwargs['FsGen']
+                                              )
         self.threadAqc.start()
+        
         self.threadCharact.Timer.timeout.connect(self.threadCharact.printTime)
         self.threadCharact.Timer.start(self.SweepsKwargs['TimeOut']*1000)
 
