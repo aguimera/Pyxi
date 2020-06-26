@@ -111,7 +111,7 @@ class MainWindow(Qt.QWidget):
         self.DemodPlotParams.param('ViewTime').sigValueChanged.connect(self.on_SetViewTimeDemod_changed)
         
         self.SwParams.param('SweepsConfig').param('Start/Stop Sweep').sigActivated.connect(self.on_Sweep_start)
-        self.SwParams.param('SweepsConfig').param('Pause Sweep').sigActivated.connect(self.on_Sweep_paused)
+        self.SwParams.param('SweepsConfig').param('Pause/ReStart Sweep').sigActivated.connect(self.on_Sweep_paused)
         
         self.Parameters.sigTreeStateChanged.connect(self.on_Params_changed)
         self.treepar = ParameterTree()
@@ -236,8 +236,15 @@ class MainWindow(Qt.QWidget):
                     if k == 'Amplitude':
                         self.AcqKwargs['CarrierConfig'][key][k] = np.sqrt(2)*v
             
+            # Cálculo de la tensión Vsg     
+            self.AcqKwargs['CMVoltage'] = (-1)*self.AcqKwargs['CMVoltage']
+            
             self.threadAqc = DataAcq.DataAcquisitionThread(**self.AcqKwargs) 
             self.threadAqc.NewMuxData.connect(self.on_NewSample)
+            self.threadAqc.DaqInterface.SetSignal(Signal=self.threadAqc.Signal,
+                                                  FsBase="",
+                                                  FsGen=self.AcqKwargs['FsGen']
+                                                  )
 
             self.Gen_Destroy_PsdPlotter()
             self.Gen_Destroy_Plotters()
@@ -249,12 +256,9 @@ class MainWindow(Qt.QWidget):
                                                          )
                 self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
                 self.threadDemodAqc.start()
-
-            self.threadAqc.DaqInterface.SetSignal(Signal=self.threadAqc.Signal,
-                                                  FsBase="",
-                                                  FsGen=self.AcqKwargs['FsGen']
-                                                  )
+        
             self.threadAqc.start()
+            
             self.btnStart.setText("Stop Gen")
             self.OldTime = time.time()
         else:
@@ -272,50 +276,47 @@ class MainWindow(Qt.QWidget):
     def on_Sweep_start(self):
         if self.threadAqc is None:
             print('Sweep started')
+            self.Paused = False
             
             self.treepar.setParameters(self.Parameters, showTop=False)
 
             self.AcqKwargs = self.GenAcqParams.GetAcqParams()
-            self.DemKwargs = self.GenAcqParams.GetDemThreadParams()
-            
+            self.DemKwargs = self.GenAcqParams.GetDemThreadParams()         
             self.SweepsKwargs = self.SwParams.GetConfigSweepsParams()
             self.DcSaveKwargs = self.SwParams.GetSaveSweepsParams()
           
-            self.threadAqc = DataAcq.DataAcquisitionThread(**self.AcqKwargs) 
-            self.threadAqc.NewMuxData.connect(self.on_NewSample)
-
             self.Gen_Destroy_PsdPlotter()
             self.Gen_Destroy_Plotters()
             
-            self.threadCharact = Charact.StbDetThread(nChannels=self.nRows*len(self.GenAcqParams.Freqs),
+            self.threadCharact = Charact.StbDetThread(nChannels=self.GenAcqParams.NRows.value()*len(self.GenAcqParams.Freqs),
                                                       ChnName=self.DemodParams.GetChannels(self.GenAcqParams.Rows,
                                                                                            self.GenAcqParams.GetCarriers()),
                                                       PlotterDemodKwargs=self.DemodPsdPlotParams.GetParams(),
                                                       **self.SweepsKwargs
                                                       )
-            self.threadAqc.OutSignal(Vds=self.threadCharact.NextVds)
-            self.threadAqc.Vcm = self.threadCharact.NextVgs
-            
-            self.threadDemodAqc = DemMod.DemodThread(Signal=self.threadAqc.Vcoi,
-                                                     **self.DemKwargs,
-                                                     )
-
-            self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
-
-            
             self.threadCharact.NextVg.connect(self.on_NextVg)
             self.threadCharact.NextVd.connect(self.on_NextVd)
             self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
-            self.threadCharact.Timer.start(self.SweepsKwargs['TimeOut']*1000)
-            self.threadCharact.start()
 
-            self.threadDemodAqc.start()
-
+            self.threadAqc = DataAcq.DataAcquisitionThread(**self.AcqKwargs) 
+            self.threadAqc.NewMuxData.connect(self.on_NewSample)
+            self.threadAqc.OutSignal(Vds=np.sqrt(2)*self.threadCharact.NextVds)
+            self.threadAqc.Vcm = (-1)*self.threadCharact.NextVgs
             self.threadAqc.DaqInterface.SetSignal(Signal=self.threadAqc.Signal,
                                                   FsBase="",
                                                   FsGen=self.AcqKwargs['FsGen']
                                                   )
+            
+            self.threadDemodAqc = DemMod.DemodThread(Signal=self.threadAqc.Vcoi,
+                                                     **self.DemKwargs,
+                                                     )
+            self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
+
+            self.threadCharact.Timer.start(self.SweepsKwargs['TimeOut']*1000)
+            self.threadCharact.start()
+            self.threadDemodAqc.start()
             self.threadAqc.start()
+            
             self.OldTime = time.time()
             
         else:
@@ -337,58 +338,46 @@ class MainWindow(Qt.QWidget):
             
             self.treepar.setParameters(self.Parameters, showTop=False)
 
-            self.GenKwargs = self.GenAcqParams.GetGenParams()
-            self.ScopeKwargs = self.GenAcqParams.GetRowParams()
-            self.ScopeChns = self.GenAcqParams.GetRows().keys()
-            self.nRows = len(self.ScopeChns)
-            self.DemodKwargs = self.DemodParams.GetParams()
+            self.AcqKwargs = self.GenAcqParams.GetAcqParams()
+            self.DemKwargs = self.GenAcqParams.GetDemThreadParams()       
             self.SweepsKwargs = self.SwParams.GetConfigSweepsParams()
             self.DcSaveKwargs = self.SwParams.GetSaveSweepsParams()
-
-            self.VdSweepVals = self.SweepsKwargs['VdSweep']
-            self.VgSweepVals = self.SweepsKwargs['VgSweep']
-            
-            self.threadAqc = DataAcq.DataAcquisitionThread(GenConfig=self.GenKwargs,
-                                                           Channels=self.ScopeChns, 
-                                                           SwEnable=True,
-                                                           VgsInit=(-1)*self.VgSweepVals[self.LastVgsInd],
-                                                           VdValue=np.sqrt(2)*self.VdSweepVals[self.LastVdsInd],
-                                                           **self.ScopeKwargs,) 
-
-            self.threadAqc.NewMuxData.connect(self.on_NewSample)
-
+          
             self.Gen_Destroy_PsdPlotter()
             self.Gen_Destroy_Plotters()
-
-            self.threadDemodAqc = DemMod.DemodThread(Fcs=self.GenAcqParams.GetCarriers(),
-                                                     RowList=self.ScopeChns,
-                                                     FetchSize=self.ScopeKwargs['BufferSize'],
-                                                     Signal=self.threadAqc.Vcoi,
-                                                     Gain=self.ScopeKwargs['GainBoard'],
-                                                     **self.DemodKwargs)
-            self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
-
-            self.threadCharact = Charact.StbDetThread(nChannels=self.nRows*len(self.GenAcqParams.Freqs),
+            
+            self.threadCharact = Charact.StbDetThread(nChannels=self.GenAcqParams.NRows.value()*len(self.GenAcqParams.Freqs),
                                                       ChnName=self.DemodParams.GetChannels(self.GenAcqParams.Rows,
                                                                                            self.GenAcqParams.GetCarriers()),
                                                       PlotterDemodKwargs=self.DemodPsdPlotParams.GetParams(),
                                                       **self.SweepsKwargs
-                                                      )
+                                                      )     
             self.threadCharact.VgIndex = self.LastVgsInd
-            self.threadCharact.VdIndex = self.LastVdsInd
+            self.threadCharact.VdIndex = self.LastVdsInd 
             self.threadCharact.NextVg.connect(self.on_NextVg)
             self.threadCharact.NextVd.connect(self.on_NextVd)
             self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
-            self.threadCharact.Timer.start(self.SweepsKwargs['TimeOut']*1000)
-            self.threadCharact.start()
-
-            self.threadDemodAqc.start()
-
+            
+            self.threadAqc = DataAcq.DataAcquisitionThread(**self.AcqKwargs) 
+            self.threadAqc.NewMuxData.connect(self.on_NewSample)
+            self.threadAqc.OutSignal(Vds=np.sqrt(2)*self.threadCharact.VdSweepVals[self.LastVdsInd])      
+            self.threadAqc.Vcm = (-1)*self.threadCharact.VgSweepVals[self.LastVgsInd]
             self.threadAqc.DaqInterface.SetSignal(Signal=self.threadAqc.Signal,
                                                   FsBase="",
-                                                  FsGen=self.ScopeKwargs['FsGen']
+                                                  FsGen=self.AcqKwargs['FsGen']
                                                   )
+            
+            self.threadDemodAqc = DemMod.DemodThread(Signal=self.threadAqc.Vcoi,
+                                                     **self.DemKwargs,
+                                                     )
+            self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
+            
+            
+            self.threadCharact.Timer.start(self.SweepsKwargs['TimeOut']*1000)
+            self.threadCharact.start()
+            self.threadDemodAqc.start()
             self.threadAqc.start()
+            
             self.OldTime = time.time()
             
         else:
@@ -546,7 +535,7 @@ class MainWindow(Qt.QWidget):
             MaxSize = self.FileParams.param('MaxSize').value()
             if self.DemodConfig.param('DemEnable').value() is False:
                 self.threadSave = FileMod.DataSavingThread(FileName=FileName,
-                                                           nChannels=self.nRows,
+                                                           nChannels=self.GenAcqParams.NRows.value(),
                                                            MaxSize=MaxSize,
                                                            Fs=self.GenAcqParams.FsScope.value(),
                                                            ChnNames=self.DemodParams.GetChannels(self.GenAcqParams.Rows,
@@ -558,7 +547,7 @@ class MainWindow(Qt.QWidget):
 
             if self.DemodConfig.param('DemEnable').value() is True:
                 self.threadDemodSave = FileMod.DataSavingThread(FileName=FileName,
-                                                                nChannels=self.nRows*len(self.GenAcqParams.Freqs),
+                                                                nChannels=self.GenAcqParams.NRows.value()*len(self.GenAcqParams.Freqs),
                                                                 MaxSize=MaxSize,
                                                                 Fs = self.DemodParams.DSFs.value(),
                                                                 ChnNames=self.DemodParams.GetChannels(self.GenAcqParams.Rows,
