@@ -15,18 +15,16 @@ import Pyxi.FMAcqCore as CoreMod
 class DataAcquisitionThread(Qt.QThread):
     NewMuxData = Qt.pyqtSignal()
 
-    def __init__(self, GenConfig, Channels, FsGen, GenSize, FsScope, 
+    def __init__(self, CarrierConfig, ScopeChannels, FsGen, GenSize, FsScope, 
                  BufferSize, CMVoltage, AcqVRange, GainBoard, AcqDiff=True, 
-                 SwEnable=False, VgsInit=None, VdValue=None, AvgIndex=5,):
+                 AvgIndex=5,):
         '''Initialization of the Thread for Acquisition
-           GenConfig: dictionary. Configuration for each generation column
-                                   {'ColsConfig': {'Col1':{'Frequency':30000.0,
-                                                            'Phase': 0,
-                                                            'Amplitude': 0.25,
-                                                            'Analog': True,
-                                                            'Digital': False}
-                                                }
+           CarrierConfig: dictionary. Configuration for each generation column
+                                   {'Col1':{'Frequency':30000.0,
+                                            'Phase': 0,
+                                            'Amplitude': 0.25,}
                                     }
+
            Channels:  List. Contains the name of the Acquisition Channels
                             to be used
                             ['Ch01', 'Ch02', 'Ch03', 'Ch04', 'Ch05',
@@ -66,13 +64,13 @@ class DataAcquisitionThread(Qt.QThread):
         '''
         super(DataAcquisitionThread, self).__init__()
 
-        self.DaqInterface = CoreMod.ChannelsConfig(ChannelsScope=Channels,
+        self.DaqInterface = CoreMod.ChannelsConfig(ChannelsScope=ScopeChannels,
                                                    Range=AcqVRange,
-                                                   GenConfig=GenConfig,
+                                                   GenConfig=CarrierConfig,
                                                    AcqDiff=AcqDiff
                                                    )
         
-        self.Channels = Channels
+        self.Channels = ScopeChannels
         self.DaqInterface.DataEveryNEvent = self.NewData
         self.AvgIndex = AvgIndex
         self.FsGen = FsGen
@@ -81,22 +79,19 @@ class DataAcquisitionThread(Qt.QThread):
         self.EveryN = BufferSize
 
         self.gain = GainBoard
-        self.ColsConfig = GenConfig['ColsConfig']
-        self.Col1 = self.ColsConfig['Col1']
+        self.Col1 = CarrierConfig['Col1']
         self.Freq = self.Col1['Frequency']
         self.phase = self.Col1['Phase']
+        self.Amplitude = self.Col1['Amplitude']
 
-        if SwEnable is True:
-            self.Vcm = VgsInit  # se empieza el sweep con el primer valor
-            self.OutSignal(Amp=VdValue)
-        else:
-            self.Vcm = CMVoltage
-            self.OutSignal(Amp=np.sqrt(2)*GenConfig['ColsConfig']['Col1']['Amplitude'])
 
-    def OutSignal(self, Amp):
+        self.Vcm = CMVoltage  # se empieza el sweep con el primer valor
+        self.OutSignal(Vds=self.Amplitude)
+
+    def OutSignal(self, Vds):
         stepScope = 2*np.pi*(self.Freq/self.FsScope)
         t = np.arange(0, ((1/self.FsGen)*(self.GenSize)), 1/self.FsGen)
-        self.Signal = Amp*np.cos(self.Freq*2*np.pi*t)
+        self.Signal = Vds*np.cos(self.Freq*2*np.pi*t)
         self.Vcoi = np.complex128(1*np.exp(1j*(stepScope*np.arange(self.EveryN))))
 
     def run(self, *args, **kwargs):

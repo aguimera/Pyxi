@@ -58,8 +58,6 @@ class ChannelsConfig():
                         {'ColsConfig': {'Col1': {'Frequency': 30000.0,
                                                  'Phase': 0,
                                                  'Amplitude': 0.25,
-                                                 'Analog': True,
-                                                 'Digital': False}
                                         }
                         }
            AcqDiff: bool. Specifies if the Acquisition is Differential or
@@ -81,7 +79,7 @@ class ChannelsConfig():
         self.Cols = []
         MuxChannelNames = []
         for Row in self.ChNamesList:
-            for Col, val in GenConfig['ColsConfig'].items():
+            for Col, val in GenConfig.items():
                 MuxChannelNames.append(Row + Col)
                 self.Cols.append(Col)
         self.MuxChannelNames = MuxChannelNames

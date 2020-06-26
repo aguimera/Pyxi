@@ -318,12 +318,48 @@ CarrierParam = {'name': 'ColX',
                              )
                 }
 
+DemodulParams = ({'name': 'DemodConfig',
+                  'type': 'group',
+                  'children': ({'name': 'DemEnable',
+                                'title': 'On/Off',
+                                'type': 'bool',
+                                'value': True},
+                               {'name': 'FsDemod',
+                                'type': 'float',
+                                'value': 2e6,
+                                'readonly': True,
+                                'siPrefix': True,
+                                'suffix': 'Hz'},
+                               {'name': 'DSFs',
+                                'title': 'DownSampling Fs',
+                                'type': 'float',
+                                'readonly': True,
+                                'value': 10e3,
+                                'siPrefix': True,
+                                'suffix': 'Hz'},
+                               {'name': 'DSFact',
+                                'title': 'DownSampling Factor',
+                                'type': 'int',
+                                'value': 100},
+                               {'name': 'FiltOrder',
+                                'title': 'Filter Order',
+                                'type': 'int',
+                                'value': 2},
+                               {'name': 'OutType',
+                                'title': 'Output Var Type',
+                                'type': 'list',
+                                'values': ['Real', 'Imag', 'Angle', 'Abs'],
+                                'value': 'Abs'},
+                               )
+                  })
+
 # #######################################################################
 
 
 class GenAcqConfig(pTypes.GroupParameter):
     def __init__(self, **kwargs):
         pTypes.GroupParameter.__init__(self, **kwargs)
+        ###############Config Parameters#############################
         self.addChild(ConfigParam)
         self.AcqConfig = self.param('AcqConfig')
         self.FsGen = self.AcqConfig.param('FsGen')
@@ -337,11 +373,13 @@ class GenAcqConfig(pTypes.GroupParameter):
 
         self.FsScope.sigValueChanged.connect(self.on_Config_Changed)
         self.BufferSize.sigValueChanged.connect(self.on_Config_Changed)
-
+        
+        ###############Rows Parameters#############################
         self.addChild(RowsParam)
         self.RowsConfig = self.param('RowsConfig')
         self.RowsConfig.sigTreeStateChanged.connect(self.on_RowsConfig_Changed)
-
+        
+        ###############Columns Parameters#############################
         self.addChild(ColumnsParam)
         self.ColConfig = self.param('ColumnsConfig')
         self.addChild(CarriersConfigParam)
@@ -351,10 +389,24 @@ class GenAcqConfig(pTypes.GroupParameter):
         self.FsGen.sigValueChanged.connect(self.on_FreqSig_Changed)
         self.Freqs = [p.param('Frequency').value() for p in self.CarrierConfig.children()]
     
+        ###############Demod Parameters#############################
+        self.addChild(DemodulParams)
+        self.DemConfig = self.param('DemodConfig')
+        self.DemEnable = self.DemConfig.param('DemEnable')
+        self.FsDem = self.DemConfig.param('FsDemod')
+        self.DSFs = self.DemConfig.param('DSFs')
+        self.DSFact = self.DemConfig.param('DSFact')
+        self.FiltOrder = self.DemConfig.param('FiltOrder')
+        self.OutType = self.DemConfig.param('OutType')
+
+        self.FsDem.sigValueChanged.connect(self.on_FsDem_changed)
+         
+        ###############Init Params#############################
         self.on_Config_Changed()
         self.on_RowsConfig_Changed()
         self.on_ColConfig_Changed()
         self.on_FreqSig_Changed()
+        self.on_DSFact_changed()
         
         for p in self.CarrierConfig.children():
             p.param('Frequency').sigValueChanged.connect(self.on_FreqSig_Changed)
@@ -376,105 +428,6 @@ class GenAcqConfig(pTypes.GroupParameter):
             if p.param('Enable').value():
                 self.Rows.append(p.name())
         self.NRows.setValue(len(self.Rows))
-
-    def GetRowParams(self):
-        '''
-        Generates a dictionary with Active Rows properties and Adq properties
-
-        Scope={'RowsConfig': {'Row1': {'Enable': True,
-                                       'Index': 0, },
-                              'Row2': {'Enable': True,
-                                       'Index': 1, },
-                              'Row3': {'Enable': True,
-                                       'Index': 2, },
-                              'Row4': {'Enable': True,
-                                       'Index': 3, },
-                              'Row5': {'Enable': True,
-                                       'Index': 4, },
-                              'Row6': {'Enable': True,
-                                       'Index': 5, },
-                              'Row7': {'Enable': True,
-                                       Index': 6, },
-                              'Row8': {'Enable': True,
-                                       'Index': 7, }
-                              },
-                  'FsGen': 2e6,
-                  'GenSize': 20e3,
-                  'FsScope': 2000000.0,
-                  'BufferSize': 1000000,
-                  'CMVoltage': 0.0,
-                  'AcqVRange': 1,
-                  'NRow': 8,
-                  'GainBoard': 10000.0
-                  }
-        '''
-        # Scope = {'RowsConfig': {}, }
-        # for Config in self.RowsConfig.children():
-        #     if Config.param('Enable').value() is True:
-        #         Scope['RowsConfig'][Config.name()] = {}
-        #         for Values in Config.children():
-        #             if Values.name() == 'Enable':
-        #                 continue
-        #             Scope['RowsConfig'][Config.name()][Values.name()] = Values.value()
-        Scope = {}
-        for Config in self.AcqConfig.children():
-            if Config.name() == 'tFetch':
-                continue
-            if Config.name() == 'NRow':
-                continue
-            Scope[Config.name()] = Config.value()
-
-        return Scope
-
-    def GetRows(self):
-        '''
-        Generates a dictionary with Rows Actives and their index
-
-        RowNames={'Row1': 0,
-                  'Row2': 1,
-                  'Row3': 2,
-                  'Row4': 3,
-                  'Row5': 4,
-                  'Row6': 5,
-                  'Row7': 6,
-                  'Row8': 7 }
-        '''
-        RowNames = {}
-        for i, r in enumerate(self.Rows):
-            RowNames[r] = i
-        return RowNames
-
-    def GetRowsNames(self):
-        '''
-        Generates a array with names of rows
-
-        RowNames=[]
-        '''
-        RowNames = []
-        for Rw in self.Rows:
-            RowNames.append(Rw)
-
-        return RowNames
-    
-    def GetChannelsNames(self, Rows, Fcs):
-        '''Function that returns an array with the names of demodulation
-           channels in dtype S10
-            ['Ch01Col1',
-             'Ch02Col1',
-             'Ch03Col1',
-             'Ch04Col1',
-             'Ch05Col1',
-             'Ch06Col1',
-             'Ch07Col1',
-             'Ch08Col1',
-            ]
-        '''
-        ChnNames = []
-        for r in Rows:
-            for col, f in Fcs.items():
-                ChnNames.append(r+col)
-        Chns = np.array(ChnNames, dtype='S10')
-        return Chns
 
 # #############################GenerationConfig##############################
     def on_FreqSig_Changed(self):
@@ -500,13 +453,68 @@ class GenAcqConfig(pTypes.GroupParameter):
             cc['name'] = col
 #            cc['children'][2]['value'] = 2*cc['children'][1]['value']
             self.CarrierConfig.addChild(cc)
+   
+# #############################DemodConfig##############################
+    def ReCalc_DSFact(self, BufferSize):
+        while BufferSize % self.DSFact.value() != 0:
+            self.DSFact.setValue(self.DSFact.value()+1)
+        self.on_DSFact_changed()
+        print('DSFactChangedTo'+str(self.DSFact.value()))
 
+    def on_FsDem_changed(self):
+        self.on_DSFact_changed()
+
+    def on_DSFact_changed(self):
+        DSFs = self.FsDem.value()/self.DSFact.value()
+        self.DSFs.setValue(DSFs)
+
+# #############################Get Params##############################
+    def GetRowParams(self):
+        '''
+        Generates a dictionary with Active Rows properties and Adq properties
+
+        Scope={   'FsGen': 2e6,
+                  'GenSize': 20e3,
+                  'FsScope': 2000000.0,
+                  'BufferSize': 1000000,
+                  'CMVoltage': 0.0,
+                  'AcqVRange': 1,
+                  'NRow': 8,
+                  'GainBoard': 10000.0
+                  }
+        '''
+        ScopeConfig = {}
+        for Config in self.AcqConfig.children():
+            if Config.name() == 'tFetch':
+                continue
+            if Config.name() == 'NRow':
+                continue
+            ScopeConfig[Config.name()] = Config.value()
+
+        return ScopeConfig
+    def GetRows(self):
+        '''
+        Generates a dictionary with Rows Actives and their index
+        RowNames={'Row1': 0,
+                  'Row2': 1,
+                  'Row3': 2,
+                  'Row4': 3,
+                  'Row5': 4,
+                  'Row6': 5,
+                  'Row7': 6,
+                  'Row8': 7 }
+        '''
+        RowNames = {}
+        for i, r in enumerate(self.Rows):
+            RowNames[r] = i
+        return RowNames
+    
     def GetGenParams(self):
         """
         Makes a dictionary which contains all te configuration for the
         Generator, the Columns and the waves to generate
 
-        Generator: {'ColsConfig': {'Col1': {'Frequency': 100000.0,
+        'CarrierConfig': {'Col1': {'Frequency': 100000.0,
                                             'Phase': 0,
                                             'Amplitude': 0, },
                                    'Col2': {'Frequency': 100000.0,
@@ -517,25 +525,18 @@ class GenAcqConfig(pTypes.GroupParameter):
                                             'Amplitude': 0, },
                                    'Col4': {'Frequency': 100000.0,
                                             'Phase': 0,
-                                            'Amplitude': 0,}},
+                                            'Amplitude': 0,}
+                                   },
                     }
 
         """
-        self.Generator = {'ColsConfig': {}, }
+        CarrierConfig = {}
         for Config in self.CarrierConfig.children():
-            self.Generator['ColsConfig'][Config.name()] = {}
+            CarrierConfig[Config.name()] = {}
             for Values in Config.children():
-                self.Generator['ColsConfig'][Config.name()][Values.name()] = Values.value()
+                CarrierConfig[Config.name()][Values.name()] = Values.value()
 
-        for Config in self.ColConfig.children():
-            for Values in Config.children():
-                if Values.name() == 'Enable':
-                    if Values.value() is False:
-                        break
-                    continue
-                self.Generator['ColsConfig'][Config.name()][Values.name()] = Values.value()
-
-        return self.Generator
+        return CarrierConfig
 
     def GetCarriers(self):
         """
@@ -552,3 +553,61 @@ class GenAcqConfig(pTypes.GroupParameter):
             Carriers[p.name()] = p.param('Frequency').value()
 
         return Carriers
+ 
+    def GetDemodParams(self):
+        '''Functions that return the Parameters of the Demodulation Process
+           Returns a dictionary:
+           {'FsDemod': 500000.0,
+            'DSFact': 100,
+            'FiltOrder': 2,
+            'OutType': 'Abs'}
+        '''
+        Demod = {}
+        for Config in self.DemConfig.children():
+            if Config.name() == 'DemEnable':
+                continue
+            if Config.name() == 'DSFs':
+                continue
+            Demod[Config.name()] = Config.value()
+        return Demod
+    
+    def GetAcqParams(self):
+        AcqKwargs = {'CarrierConfig': self.GetGenParams(),
+                     'ScopeChannels': self.GetRows().keys(),
+                     }
+        AcqKwargs.update(self.GetRowParams())
+
+        return AcqKwargs
+
+    def GetDemThreadParams(self):
+        DemKwargs = {'Carriers': self.GetCarriers(),
+                     'ScopeChannels': self.GetRows().keys(),
+                     'BufferSize': self.BufferSize.value(),
+                     'Gain': self.GainBoard.value(),
+                     }
+        DemKwargs.update(self.GetDemodParams())
+        
+        return DemKwargs
+    
+    def GetChannels(self, Rows, Fcs):
+        '''Function that returns a dictionary with the names of demodulation
+           channels and indexes
+            {'Ch01Col1':0,
+             'Ch02Col1':1,
+             'Ch03Col1':2,
+             'Ch04Col1':3,
+             'Ch05Col1':4,
+             'Ch06Col1':5,
+             'Ch07Col1':6,
+             'Ch08Col1':7,
+            }
+        '''
+        DemChnNames = {}
+        i = 0
+        for r in Rows:
+            for col, f in Fcs.items():
+                DemChnNames[r+col] = i
+                i = i + 1
+        return DemChnNames
+
+    
