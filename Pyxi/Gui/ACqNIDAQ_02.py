@@ -18,13 +18,11 @@ from pyqtgraph.parametertree import Parameter, ParameterTree
 import Pyxi.DataAcquisition_02 as DataAcq
 import Pyxi.GenAqcModule as NiConfig
 
-import PyqtTools.CalcCharacterization_Class as CharactCalc
+
 import PyqtTools.FileModule as FileMod
 import PyqtTools.PlotModule as PltMod
 import PyqtTools.DemodModule as DemMod
 import PyqtTools.CharacterizationModule as Charact
-import PyqtTools.Characterization_Tree as CharactTree
-
 
 class MainWindow(Qt.QWidget):
     ''' Main Window '''
