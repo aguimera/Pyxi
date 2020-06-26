@@ -22,6 +22,7 @@ import PyqtTools.CalcCharacterization_Class as CharactCalc
 import PyqtTools.FileModule as FileMod
 import PyqtTools.PlotModule as PltMod
 import PyqtTools.DemodModule as DemMod
+import PyqtTools.CharacterizationModule as Charact
 import PyqtTools.Characterization_Tree as CharactTree
 
 
@@ -49,8 +50,8 @@ class MainWindow(Qt.QWidget):
         self.Parameters.addChild(self.FileParams)
 
 # #############################Sweep Config##############################
-        self.SwParams = CharactTree.SweepsConfig(QTparent=self,
-                                                 name='Sweeps Configuration')
+        self.SwParams = Charact.SweepsConfig(QTparent=self,
+                                             name='Sweeps Configuration')
         self.Parameters.addChild(self.SwParams)
 
 # #############################Configuration##############################
@@ -311,12 +312,12 @@ class MainWindow(Qt.QWidget):
                                                      **self.DemodKwargs)
             self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
 
-            self.threadCharact = CharactCalc.StbDetThread(nChannels=self.nRows*len(self.GenAcqParams.Freqs),
-                                                          ChnName=self.DemodParams.GetChannels(self.GenAcqParams.Rows,
-                                                                                                self.GenAcqParams.GetCarriers()),
-                                                          PlotterDemodKwargs=self.DemodPsdPlotParams.GetParams(),
-                                                          **self.SweepsKwargs
-                                                          )
+            self.threadCharact = Charact.StbDetThread(nChannels=self.nRows*len(self.GenAcqParams.Freqs),
+                                                      ChnName=self.DemodParams.GetChannels(self.GenAcqParams.Rows,
+                                                                                           self.GenAcqParams.GetCarriers()),
+                                                      PlotterDemodKwargs=self.DemodPsdPlotParams.GetParams(),
+                                                      **self.SweepsKwargs
+                                                      )
             
             self.threadCharact.NextVg.connect(self.on_NextVg)
             self.threadCharact.NextVd.connect(self.on_NextVd)
@@ -363,8 +364,7 @@ class MainWindow(Qt.QWidget):
             self.VdSweepVals = self.SweepsKwargs['VdSweep']
             self.VgSweepVals = self.SweepsKwargs['VgSweep']
             
-            if self.Paused:
-                self.threadAqc = DataAcq.DataAcquisitionThread(GenConfig=self.GenKwargs,
+            self.threadAqc = DataAcq.DataAcquisitionThread(GenConfig=self.GenKwargs,
                                                            Channels=self.ScopeChns, 
                                                            SwEnable=True,
                                                            VgsInit=(-1)*self.VgSweepVals[self.LastVgsInd],
@@ -384,12 +384,12 @@ class MainWindow(Qt.QWidget):
                                                      **self.DemodKwargs)
             self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
 
-            self.threadCharact = CharactCalc.StbDetThread(nChannels=self.nRows*len(self.GenAcqParams.Freqs),
-                                                          ChnName=self.DemodParams.GetChannels(self.GenAcqParams.Rows,
-                                                                                                self.GenAcqParams.GetCarriers()),
-                                                          PlotterDemodKwargs=self.DemodPsdPlotParams.GetParams(),
-                                                          **self.SweepsKwargs
-                                                          )
+            self.threadCharact = Charact.StbDetThread(nChannels=self.nRows*len(self.GenAcqParams.Freqs),
+                                                      ChnName=self.DemodParams.GetChannels(self.GenAcqParams.Rows,
+                                                                                           self.GenAcqParams.GetCarriers()),
+                                                      PlotterDemodKwargs=self.DemodPsdPlotParams.GetParams(),
+                                                      **self.SweepsKwargs
+                                                      )
             self.threadCharact.VgIndex = self.LastVgsInd
             self.threadCharact.VdIndex = self.LastVdsInd
             self.threadCharact.NextVg.connect(self.on_NextVg)
