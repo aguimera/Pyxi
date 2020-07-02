@@ -312,7 +312,7 @@ class MainWindow(Qt.QWidget):
                                                      )
             self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
 
-            self.threadCharact.Timer.start(self.SweepsKwargs['TimeOut']*1000)
+            # self.threadCharact.Timer.start(self.SweepsKwargs['TimeOut']*1000)
             self.threadCharact.start()
             self.threadDemodAqc.start()
             self.threadAqc.start()
@@ -325,10 +325,13 @@ class MainWindow(Qt.QWidget):
             self.threadAqc.DaqInterface.Stop()
             self.threadAqc.terminate()
             self.threadAqc = None
+
             if self.threadCharact is not None:
                 self.threadCharact.NextVg.disconnect()
                 self.threadCharact.NextVd.disconnect()
+                self.threadCharact.stop()
                 self.threadCharact.CharactEnd.disconnect()
+                self.threadCharact = None
             
             self.StopThreads()
 # #############################Pause Sweep Acquisition ####################
@@ -373,7 +376,7 @@ class MainWindow(Qt.QWidget):
             self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
             
             
-            self.threadCharact.Timer.start(self.SweepsKwargs['TimeOut']*1000)
+            # self.threadCharact.Timer.start(self.SweepsKwargs['TimeOut']*1000)
             self.threadCharact.start()
             self.threadDemodAqc.start()
             self.threadAqc.start()
@@ -398,7 +401,9 @@ class MainWindow(Qt.QWidget):
             if self.threadCharact is not None:
                 self.threadCharact.NextVg.disconnect()
                 self.threadCharact.NextVd.disconnect()
+                self.threadCharact.stop()
                 self.threadCharact.CharactEnd.disconnect()
+                self.threadCharact = None
             
             self.StopThreads()
 
@@ -457,7 +462,7 @@ class MainWindow(Qt.QWidget):
         self.threadAqc.DaqInterface.VcmOut.StopTask()
         self.threadAqc.DaqInterface.SetVcm(Vcm=(-1)*self.threadCharact.NextVgs)
 
-        self.threadCharact.Timer.start(self.SweepsKwargs['TimeOut']*1000)
+        # self.threadCharact.Timer.start(self.SweepsKwargs['TimeOut']*1000)
         print('NEXT VGS SWEEP')
 
 # #############################Nex Vd Value##############################
@@ -478,8 +483,8 @@ class MainWindow(Qt.QWidget):
                                               )
         self.threadAqc.start()
         
-        self.threadCharact.Timer.timeout.connect(self.threadCharact.printTime)
-        self.threadCharact.Timer.start(self.SweepsKwargs['TimeOut']*1000)
+        # self.threadCharact.Timer.timeout.connect(self.threadCharact.printTime)
+        # self.threadCharact.Timer.start(self.SweepsKwargs['TimeOut']*1000)
 
     def on_CharactEnd(self):
         print('END Charact')
