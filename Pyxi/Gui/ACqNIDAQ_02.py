@@ -286,7 +286,7 @@ class MainWindow(Qt.QWidget):
             self.DcSaveKwargs = self.SwParams.GetSaveSweepsParams()
           
             self.Gen_Destroy_PsdPlotter()
-            self.Gen_Destroy_Plotters()
+            # self.Gen_Destroy_Plotters()
             
             self.threadCharact = Charact.StbDetThread(nChannels=self.GenAcqParams.NRows.value()*len(self.GenAcqParams.Freqs),
                                                       ChnName=self.DemodParams.GetChannels(self.GenAcqParams.Rows,
@@ -347,7 +347,7 @@ class MainWindow(Qt.QWidget):
             self.DcSaveKwargs = self.SwParams.GetSaveSweepsParams()
           
             self.Gen_Destroy_PsdPlotter()
-            self.Gen_Destroy_Plotters()
+            # self.Gen_Destroy_Plotters()
             
             self.threadCharact = Charact.StbDetThread(nChannels=self.GenAcqParams.NRows.value()*len(self.GenAcqParams.Freqs),
                                                       ChnName=self.DemodParams.GetChannels(self.GenAcqParams.Rows,
