@@ -52,14 +52,16 @@ class MainWindow(Qt.QWidget):
 
 # #############################Save##############################
         self.SaveStateParams = FileMod.SaveSateParameters(QTparent=self,
-                                                          name='State')
+                                                          name='FileState',
+                                                          title='Save/load config')
         # self.Parameters = Parameter.create(name='params',
         #                                    type='group',
         #                                    children=(self.SaveStateParams,))
 
 # #############################File##############################
         self.FileParams = FileMod.SaveFileParameters(QTparent=self,
-                                                     name='Record File')
+                                                     name='FileDat',
+                                                     title='Save data')
         # self.Parameters.addChild(self.FileParams)
 
 # #############################Sweep Config##############################
@@ -120,7 +122,7 @@ class MainWindow(Qt.QWidget):
 
         layout.addWidget(self.treepar)
 
-        self.setGeometry(550, 10, 300, 700)
+        self.setGeometry(550, 10, 400, 700)
         self.setWindowTitle('MainWindow')
         self.btnStart.clicked.connect(self.on_btnStart)
         self.ResetGraph.clicked.connect(self.on_ResetGraph)
@@ -283,7 +285,6 @@ class MainWindow(Qt.QWidget):
                                                   )
 
             self.on_ResetGraph()
-            self.SaveFiles()
 
             if self.DemodConfig.param('DemEnable').value() is True:
                 self.threadDemodAqc = DemMod.DemodThread(Signal=self.threadAqc.Vcoi,
@@ -291,7 +292,27 @@ class MainWindow(Qt.QWidget):
                                                          )
                 self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
                 self.threadDemodAqc.start()
-        
+                Fs = self.DemodConfig.DSFs.value()
+                ChnNames = self.GenAcqParams.GetChannels(self.GenAcqParams.Rows,
+                                                         self.GenAcqParams.GetCarriers()).keys()
+                                                                
+            else:
+                Fs=self.GenAcqParams.FsScope.value(),
+                ChnNames=list(self.GenAcqParams.GetChannels(self.GenAcqParams.Rows,
+                                                       self.GenAcqParams.GetCarriers()).keys())
+                
+            ChnNames = np.array(list(ChnNames), dtype='S10')
+            if self.FileParams.param('Enabled').value():
+                FilekwArgs = {'FileName': self.FileParams.FilePath(),
+                              'nChannels': self.GenAcqParams.NRows.value(),
+                              'Fs': Fs,
+                              'ChnNames': ChnNames,
+                              'MaxSize': self.FileParams.param('MaxSize').value(),
+                              'dtype': 'float',
+                              }
+                self.threadSave = FileMod.DataSavingThread(**FilekwArgs)
+                self.threadSave.start()
+                
             self.threadAqc.start()
             
             self.btnStart.setText("Stop Gen")
@@ -447,18 +468,12 @@ class MainWindow(Qt.QWidget):
         Ts = time.time() - self.OldTime
         self.OldTime = time.time()
         if self.threadSave is not None:
-            # No usar Int hasta que se haya arreglado problema
-            # Problema: Range scope no es exacto con lo cual
-            # hay valores que no deberian saturar y saturan
-            # self.threadSave.AddData(self.threadAqc.IntData)
             self.threadSave.AddData(self.threadAqc.OutData)
 
         if self.threadPlotter is not None:
-            # print('NEWPLOTDATA')
             self.threadPlotter.AddData(self.threadAqc.OutData)
 
         if self.threadPsdPlotter is not None:
-            # print('NewPSDDATA')
             self.threadPsdPlotter.AddData(self.threadAqc.OutData)
 
         if self.DemodConfig.param('DemEnable').value() is True:
@@ -564,67 +579,6 @@ class MainWindow(Qt.QWidget):
         
         # dictNew.update(DictOld) 
         # se modifica el diccionario dictNew con los pares key/value de DictOld y se sobreescriben las key coincidentes
-
-# #############################Savind Files##############################
-    def SaveFiles(self):
-        FileName = self.FileParams.param('File Path').value()
-        if FileName == '':
-            print('No file')
-        else:
-            if os.path.isfile(FileName):
-                print('Remove File')
-                os.remove(FileName)
-            MaxSize = self.FileParams.param('MaxSize').value()
-            if self.DemodConfig.param('DemEnable').value() is False:
-                self.threadSave = FileMod.DataSavingThread(FileName=FileName,
-                                                           nChannels=self.GenAcqParams.NRows.value(),
-                                                           MaxSize=MaxSize,
-                                                           Fs=self.GenAcqParams.FsScope.value(),
-                                                           ChnNames=self.GenAcqParams.GetChannels(self.GenAcqParams.Rows,
-                                                                                                      self.GenAcqParams.GetCarriers()).keys(),            
-                                                           # ChnNames=np.array(self.ScopeChns, dtype='S10'),
-                                                           dtype='float' #comment when int save problem solved
-                                                           )
-                self.threadSave.start()
-
-            if self.DemodConfig.param('DemEnable').value() is True:
-                self.threadDemodSave = FileMod.DataSavingThread(FileName=FileName,
-                                                                nChannels=self.GenAcqParams.NRows.value()*len(self.GenAcqParams.Freqs),
-                                                                MaxSize=MaxSize,
-                                                                Fs = self.DemodConfig.DSFs.value(),
-                                                                ChnNames=self.GenAcqParams.GetChannels(self.GenAcqParams.Rows,
-                                                                                                      self.GenAcqParams.GetCarriers()).keys(),
-                                                                dtype='float'
-                                                                )
-
-                self.threadDemodSave.start()
-
-            GenName = FileName+'_GenConfig.dat'
-            ScopeName = FileName+'_ScopeConfig.dat'
-            DemodName = FileName+'_DemodConfig.dat'
-            if os.path.isfile(GenName):
-                print('Overwriting  file')
-                OutGen = input('y/n + press(Enter)')
-                if OutGen == 'y':
-                    FileMod.GenArchivo(GenName, self.GenKwargs)
-            else:
-                FileMod.GenArchivo(GenName, self.GenKwargs)
-
-            if os.path.isfile(ScopeName):
-                print('Overwriting  file')
-                OutScope = input('y/n + press(Enter)')
-                if OutScope == 'y':
-                    FileMod.GenArchivo(ScopeName, self.ScopeKwargs)
-            else:
-                FileMod.GenArchivo(ScopeName, self.ScopeKwargs)
-
-            if os.path.isfile(DemodName):
-                print('Overwriting  file')
-                OutScope = input('y/n + press(Enter)')
-                if OutScope == 'y':
-                    FileMod.GenArchivo(DemodName, self.DemodKwargs)
-            else:
-                FileMod.GenArchivo(DemodName, self.DemodKwargs)
 
 # #############################STOP##############################
     def StopThreads(self):
