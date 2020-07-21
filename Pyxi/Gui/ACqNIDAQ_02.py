@@ -310,8 +310,13 @@ class MainWindow(Qt.QWidget):
                               'MaxSize': self.FileParams.param('MaxSize').value(),
                               'dtype': 'float',
                               }
-                self.threadSave = FileMod.DataSavingThread(**FilekwArgs)
-                self.threadSave.start()
+                
+                if self.DemodConfig.param('DemEnable').value() is True:
+                    self.threadDemodSave = FileMod.DataSavingThread(**FilekwArgs)
+                    self.threadDemodSave.start()
+                else:
+                    self.threadSave = FileMod.DataSavingThread(**FilekwArgs)
+                    self.threadSave.start()
                 
             self.threadAqc.start()
             
