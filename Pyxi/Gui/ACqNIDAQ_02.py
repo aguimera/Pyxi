@@ -285,7 +285,24 @@ class MainWindow(Qt.QWidget):
                                                   )
 
             self.on_ResetGraph()
-
+            
+            # Fs=self.GenAcqParams.FsScope.value(),
+            # ChnNames=list(self.GenAcqParams.GetChannels(self.GenAcqParams.Rows,
+            #                                        self.GenAcqParams.GetCarriers()).keys())
+        
+            # ChnNames = np.array(list(ChnNames), dtype='S10')
+            # if self.FileParams.param('Enabled').value():
+            #     FilekwArgs = {'FileName': self.FileParams.FilePath(),
+            #                   'nChannels': self.GenAcqParams.NRows.value(),
+            #                   'Fs': Fs,
+            #                   'ChnNames': ChnNames,
+            #                   'MaxSize': self.FileParams.param('MaxSize').value(),
+            #                   'dtype': 'float',
+            #                   }
+                
+            #     self.threadSave = FileMod.DataSavingThread(**FilekwArgs)
+            #     self.threadSave.start()
+                
             if self.DemodConfig.param('DemEnable').value() is True:
                 self.threadDemodAqc = DemMod.DemodThread(Signal=self.threadAqc.Vcoi,
                                                          **self.DemKwargs,
@@ -295,28 +312,40 @@ class MainWindow(Qt.QWidget):
                 Fs = self.DemodConfig.DSFs.value()
                 ChnNames = self.GenAcqParams.GetChannels(self.GenAcqParams.Rows,
                                                          self.GenAcqParams.GetCarriers()).keys()
+                ChnNames = np.array(list(ChnNames), dtype='S10')
+                if self.FileParams.param('Enabled').value():
+                    FilekwArgs = {'FileName': self.FileParams.FilePath().split(".")[0]+'_Demod.h5',
+                                  'nChannels': self.GenAcqParams.NRows.value(),
+                                  'Fs': Fs,
+                                  'ChnNames': ChnNames,
+                                  'MaxSize': self.FileParams.param('MaxSize').value(),
+                                  'dtype': 'float',
+                                  }
+
+                    self.threadDemodSave = FileMod.DataSavingThread(**FilekwArgs)
+                    self.threadDemodSave.start()
+                    print('saveDemod')
+                    print(FilekwArgs['FileName'])
                                                                 
             else:
                 Fs=self.GenAcqParams.FsScope.value(),
                 ChnNames=list(self.GenAcqParams.GetChannels(self.GenAcqParams.Rows,
                                                        self.GenAcqParams.GetCarriers()).keys())
-                
-            ChnNames = np.array(list(ChnNames), dtype='S10')
-            if self.FileParams.param('Enabled').value():
-                FilekwArgs = {'FileName': self.FileParams.FilePath(),
-                              'nChannels': self.GenAcqParams.NRows.value(),
-                              'Fs': Fs,
-                              'ChnNames': ChnNames,
-                              'MaxSize': self.FileParams.param('MaxSize').value(),
-                              'dtype': 'float',
-                              }
-                
-                if self.DemodConfig.param('DemEnable').value() is True:
-                    self.threadDemodSave = FileMod.DataSavingThread(**FilekwArgs)
-                    self.threadDemodSave.start()
-                else:
+            
+                ChnNames = np.array(list(ChnNames), dtype='S10')
+                if self.FileParams.param('Enabled').value():
+                    FilekwArgs = {'FileName': self.FileParams.FilePath(),
+                                  'nChannels': self.GenAcqParams.NRows.value(),
+                                  'Fs': Fs,
+                                  'ChnNames': ChnNames,
+                                  'MaxSize': self.FileParams.param('MaxSize').value(),
+                                  'dtype': 'float',
+                                  }
+                    
                     self.threadSave = FileMod.DataSavingThread(**FilekwArgs)
                     self.threadSave.start()
+                    print('saveRow')
+                    print(FilekwArgs['FileName'])
                 
             self.threadAqc.start()
             
@@ -473,6 +502,7 @@ class MainWindow(Qt.QWidget):
         Ts = time.time() - self.OldTime
         self.OldTime = time.time()
         if self.threadSave is not None:
+            print('saveRow')
             self.threadSave.AddData(self.threadAqc.OutData)
 
         if self.threadPlotter is not None:
@@ -503,6 +533,7 @@ class MainWindow(Qt.QWidget):
             self.threadCharact.AddData(OutDemodData/np.sqrt(2))  # (RMS)
 
         if self.threadDemodSave is not None:
+            print('saveDemod')
             self.threadDemodSave.AddData(OutDemodData)
         if self.threadDemodPlotter is not None:
             # print('NewDEMODDATA')
