@@ -286,29 +286,14 @@ class MainWindow(Qt.QWidget):
 
             self.on_ResetGraph()
             
-            # Fs=self.GenAcqParams.FsScope.value(),
-            # ChnNames=list(self.GenAcqParams.GetChannels(self.GenAcqParams.Rows,
-            #                                        self.GenAcqParams.GetCarriers()).keys())
-        
-            # ChnNames = np.array(list(ChnNames), dtype='S10')
-            # if self.FileParams.param('Enabled').value():
-            #     FilekwArgs = {'FileName': self.FileParams.FilePath(),
-            #                   'nChannels': self.GenAcqParams.NRows.value(),
-            #                   'Fs': Fs,
-            #                   'ChnNames': ChnNames,
-            #                   'MaxSize': self.FileParams.param('MaxSize').value(),
-            #                   'dtype': 'float',
-            #                   }
-                
-            #     self.threadSave = FileMod.DataSavingThread(**FilekwArgs)
-            #     self.threadSave.start()
-                
             if self.DemodConfig.param('DemEnable').value() is True:
                 self.threadDemodAqc = DemMod.DemodThread(Signal=self.threadAqc.Vcoi,
                                                          **self.DemKwargs,
                                                          )
                 self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
                 self.threadDemodAqc.start()
+            
+            if self.DemodConfig.param('Save Demod').value() is True:
                 Fs = self.DemodConfig.DSFs.value()
                 ChnNames = self.GenAcqParams.GetChannels(self.GenAcqParams.Rows,
                                                          self.GenAcqParams.GetCarriers()).keys()
@@ -326,11 +311,11 @@ class MainWindow(Qt.QWidget):
                     self.threadDemodSave.start()
                     print('saveDemod')
                     print(FilekwArgs['FileName'])
-                                                                
+                    
             else:
                 Fs=self.GenAcqParams.FsScope.value(),
                 ChnNames=list(self.GenAcqParams.GetChannels(self.GenAcqParams.Rows,
-                                                       self.GenAcqParams.GetCarriers()).keys())
+                                                        self.GenAcqParams.GetCarriers()).keys())
             
                 ChnNames = np.array(list(ChnNames), dtype='S10')
                 if self.FileParams.param('Enabled').value():
@@ -344,9 +329,7 @@ class MainWindow(Qt.QWidget):
                     
                     self.threadSave = FileMod.DataSavingThread(**FilekwArgs)
                     self.threadSave.start()
-                    print('saveRow')
-                    print(FilekwArgs['FileName'])
-                
+        
             self.threadAqc.start()
             
             self.btnStart.setText("Stop Gen")
