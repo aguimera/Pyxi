@@ -9,8 +9,27 @@ from PyQt5 import Qt
 
 import numpy as np
 
-import Pyxi.FMAcqCore as CoreMod
+import Pyxi.FMAcqCore_02 as CoreMod
 
+aiChannels = {'Ch01': ('ai0', 'ai8'),
+              'Ch02': ('ai1', 'ai9'),
+              'Ch03': ('ai2', 'ai10'),
+              'Ch04': ('ai3', 'ai11'),
+              'Ch05': ('ai4', 'ai12'),
+              'Ch06': ('ai5', 'ai13'),
+              'Ch07': ('ai6', 'ai14'),
+              'Ch08': ('ai7', 'ai15'),
+              'Ch09': ('ai16', 'ai24'),
+              'Ch10': ('ai17', 'ai25'),
+              'Ch11': ('ai18', 'ai26'),
+              'Ch12': ('ai19', 'ai27'),
+              'Ch13': ('ai20', 'ai28'),
+              'Ch14': ('ai21', 'ai29'),
+              'Ch15': ('ai22', 'ai30'),
+              'Ch16': ('ai23', 'ai31'),
+              }
+
+aoChannels = ['ao0', 'ao1']
 
 class DataAcquisitionThread(Qt.QThread):
     NewMuxData = Qt.pyqtSignal()
@@ -68,7 +87,9 @@ class DataAcquisitionThread(Qt.QThread):
         self.DaqInterface = CoreMod.ChannelsConfig(ChannelsScope=ScopeChannels,
                                                    Range=AcqVRange,
                                                    ChannelsCol=ColChannels,
-                                                   AcqDiff=AcqDiff
+                                                   AcqDiff=AcqDiff,
+                                                   aiChannels=aiChannels,
+                                                   aoChannels=aoChannels
                                                    )
         
         if MeaType == 'Time':
@@ -102,7 +123,7 @@ class DataAcquisitionThread(Qt.QThread):
         self.loop.exec_()
 
     def NewDataTime(self, aiData):
-        continue
+        print('Time')
     
     def NewDataFreq(self, aiData):
         # print(self.Vcm)
@@ -114,6 +135,12 @@ class DataAcquisitionThread(Qt.QThread):
     def OutSignal(self, Vds):
         stepScope = 2*np.pi*(self.Freq/self.FsScope)
         t = np.arange(0, ((1/self.FsGen)*(self.GenSize)), 1/self.FsGen)
+        # self.Signal = np.ndarray((len(t), len(Vds)))
+        # self.Vcoi = np.ndarray((self.Signal.shape))
+        # for ind, Vd in enumerate(Vds):
+        #     self.Signal[:,ind] = Vd*np.cos(self.Freq*2*np.pi*t)
+        #     self.Vcoi = np.complex128(1*np.exp(1j*(stepScope*np.arange(self.EveryN))))
+
         self.Signal = Vds*np.cos(self.Freq*2*np.pi*t)
         self.Vcoi = np.complex128(1*np.exp(1j*(stepScope*np.arange(self.EveryN))))
 

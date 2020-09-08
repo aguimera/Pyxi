@@ -577,6 +577,7 @@ class GenAcqConfig(pTypes.GroupParameter):
     
     def GetAcqParams(self):
         AcqKwargs = {'CarrierConfig': self.GetGenParams(),
+                     'ColChannels': self.GetCarriers().keys(),
                      'ScopeChannels': self.GetRows().keys(),
                      }
         AcqKwargs.update(self.GetRowParams())
