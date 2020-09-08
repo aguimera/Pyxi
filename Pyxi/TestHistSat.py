@@ -22,7 +22,7 @@ MinRange = -0.5
 MaxRange = 0.5
 noise = np.random.normal(0,PotNoise,(GenSize+1))
 
-Sinus = Vds*np.sin(fc*2*np.pi*t)
+Sinus = Vds*np.sin(fc*2*np.pi*t) + noise
 SatSinus = np.clip(a=Sinus,
                    a_min=MinRange,
                    a_max=MaxRange
