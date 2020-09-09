@@ -279,10 +279,10 @@ class MainWindow(Qt.QWidget):
             
             self.threadAqc = DataAcq.DataAcquisitionThread(**self.AcqKwargs) 
             self.threadAqc.NewMuxData.connect(self.on_NewSample)
-            self.threadAqc.DaqInterface.SetSignal(Signal=self.threadAqc.Signal,
-                                                  FsBase="",
-                                                  FsGen=self.AcqKwargs['FsGen']
-                                                  )
+            self.threadAqc.DaqInterface.SetFreqSignal(Signal=self.threadAqc.Signal,
+                                                      FsBase="",
+                                                      FsGen=self.AcqKwargs['FsGen']
+                                                      )
 
             self.on_ResetGraph()
             
@@ -374,10 +374,10 @@ class MainWindow(Qt.QWidget):
             self.threadAqc.NewMuxData.connect(self.on_NewSample)
             self.threadAqc.OutSignal(Vds=np.sqrt(2)*self.threadCharact.NextVds)
             self.threadAqc.Vcm = (-1)*self.threadCharact.NextVgs
-            self.threadAqc.DaqInterface.SetSignal(Signal=self.threadAqc.Signal,
-                                                  FsBase="",
-                                                  FsGen=self.AcqKwargs['FsGen']
-                                                  )
+            self.threadAqc.DaqInterface.SetFreqSignal(Signal=self.threadAqc.Signal,
+                                                      FsBase="",
+                                                      FsGen=self.AcqKwargs['FsGen']
+                                                      )
             
             self.threadDemodAqc = DemMod.DemodThread(Signal=self.threadAqc.Vcoi,
                                                      **self.DemKwargs,
@@ -436,10 +436,10 @@ class MainWindow(Qt.QWidget):
             self.threadAqc.NewMuxData.connect(self.on_NewSample)
             self.threadAqc.OutSignal(Vds=np.sqrt(2)*self.threadCharact.VdSweepVals[self.LastVdsInd])      
             self.threadAqc.Vcm = (-1)*self.threadCharact.VgSweepVals[self.LastVgsInd]
-            self.threadAqc.DaqInterface.SetSignal(Signal=self.threadAqc.Signal,
-                                                  FsBase="",
-                                                  FsGen=self.AcqKwargs['FsGen']
-                                                  )
+            self.threadAqc.DaqInterface.SetFreqSignal(Signal=self.threadAqc.Signal,
+                                                      FsBase="",
+                                                      FsGen=self.AcqKwargs['FsGen']
+                                                      )
             
             self.threadDemodAqc = DemMod.DemodThread(Signal=self.threadAqc.Vcoi,
                                                      **self.DemKwargs,
@@ -549,10 +549,10 @@ class MainWindow(Qt.QWidget):
         self.threadAqc.OutSignal(Vds=np.sqrt(2)*self.threadCharact.NextVds)      
         self.threadAqc.Vcm = (-1)*self.threadCharact.NextVgs
              
-        self.threadAqc.DaqInterface.SetSignal(Signal=self.threadAqc.Signal,
-                                              FsBase="",
-                                              FsGen=self.AcqKwargs['FsGen']
-                                              )
+        self.threadAqc.DaqInterface.SetFreqSignal(Signal=self.threadAqc.Signal,
+                                                  FsBase="",
+                                                  FsGen=self.AcqKwargs['FsGen']
+                                                  )
         self.threadAqc.start()
         
         # self.threadCharact.Timer.timeout.connect(self.threadCharact.printTime)

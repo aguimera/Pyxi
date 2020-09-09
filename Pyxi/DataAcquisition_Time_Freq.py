@@ -9,8 +9,9 @@ from PyQt5 import Qt
 
 import numpy as np
 
-import Pyxi.FMAcqCore_02 as CoreMod
+import Pyxi.FMAcqCore_Time_Freq as CoreMod
 
+# estoy habrá que improtarlo de otra manera
 aiChannels = {'Ch01': ('ai0', 'ai8'),
               'Ch02': ('ai1', 'ai9'),
               'Ch03': ('ai2', 'ai10'),
@@ -84,9 +85,9 @@ class DataAcquisitionThread(Qt.QThread):
         '''
         super(DataAcquisitionThread, self).__init__()
 
-        self.DaqInterface = CoreMod.ChannelsConfig(ChannelsScope=ScopeChannels,
+        self.DaqInterface = CoreMod.ChannelsConfig(Channels=ScopeChannels,
                                                    Range=AcqVRange,
-                                                   ChannelsCol=ColChannels,
+                                                   Cols=ColChannels,
                                                    AcqDiff=AcqDiff,
                                                    aiChannels=aiChannels,
                                                    aoChannels=aoChannels
