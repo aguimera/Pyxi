@@ -26,7 +26,7 @@ class ChannelsConfig():
     def __init__(self, Channels, Cols=None, AcqDC=False, AcqAC=False,
                  ACGain=1e6, DCGain=10e3, AcqDiff=False, Range=5,
                  aiChannels=None, aoChannels=None, diChannels=None, 
-                 doChannels=None, decoder=None):
+                 doChannels=None, decoder=None, **kwargs):
         
         print('InitChannels')
         
@@ -123,7 +123,10 @@ class ChannelsConfig():
         (samps, inch) = data.shape
         sData = np.zeros((samps, len(SortDict)))
         for chn, inds in sorted(SortDict.items()):
-            sData[:, inds] = data[:, inds]
+            if chn == 'Gate':
+                sData[:, 0] = data[:, inds]
+            else:
+                sData[:, inds] = data[:, inds]
 
         return sData
 
@@ -150,6 +153,7 @@ class ChannelsConfig():
             
             else:
                 _DataEveryNEvent(Data)
+        
 
     def DoneEventCallBack(self, Data):
         print('Done callback')

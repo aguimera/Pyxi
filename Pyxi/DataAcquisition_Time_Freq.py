@@ -35,68 +35,29 @@ aoChannels = ['ao0', 'ao1']
 class DataAcquisitionThread(Qt.QThread):
     NewMuxData = Qt.pyqtSignal()
 
-    def __init__(self, CarrierConfig, ColChannels, FsGen, GenSize, 
-                 ScopeChannels, FsScope, BufferSize, CMVoltage, AcqVRange=5, 
-                 GainBoard=5e3, AcqDiff=False, AvgIndex=5, MeaType='Freq'):
-        '''Initialization of the Thread for Acquisition
-           CarrierConfig: dictionary. Configuration for each generation column
-                                   {'Col1':{'Frequency':30000.0,
-                                            'Phase': 0,
-                                            'Amplitude': 0.25,}
-                                    }
-           ColChannels: List.
-           ScopeChannels:  List. Contains the name of the Acquisition Channels
-                            to be used
-                            ['Ch01', 'Ch02', 'Ch03', 'Ch04', 'Ch05',
-                            'Ch06', 'Ch07', 'Ch08']
-           ScopeConfig: Dictionary. Configuration for acquisition and index
-                                    of enable rows
-                                    {'RowsConfig': {'Ch01': {'Enable': True,
-                                                             'Index': 0},
-                                                    'Ch02': {'Enable': True,
-                                                             'Index': 1},
-                                                    'Ch03': {'Enable': True,
-                                                             'Index': 2},
-                                                    'Ch04': {'Enable': True,
-                                                             'Index': 3},
-                                                    'Ch05': {'Enable': True,
-                                                             'Index': 4},
-                                                    'Ch06': {'Enable': True,
-                                                             'Index': 5},
-                                                    'Ch07': {'Enable': True,
-                                                             'Index': 6},
-                                                    'Ch08': {'Enable': True,
-                                                             'Index': 7}},
-                                     'FsGen':,
-                                     'GenSize':,
-                                     'FsScope': 2000000.0,
-                                     'BufferSize': 20000,
-                                     'CMVoltage': 0.0,
-                                     'AcqVRange': 1,
-                                     'NRow': 8,
-                                     'GainBoard': 10000.0}
-           SwEnable: bool. Identifies if it is a characterization sweep
-                           acquisition or a real-time continuous acquisition
-           VgArray: array. Contains the values of Common mode voltage for the
-                           sweep
-           VdValue: float. Contains the value of Vd to use in the carrier
-                           signal
-           MeaType: str. Freq or Time 
-        '''
-        super(DataAcquisitionThread, self).__init__()
+    def __init__(self, CarrierConfig=None, ColChannels=None, FsGen=None, 
+                 GenSize=None, ScopeChannels=None, FsScope=None, 
+                 BufferSize=None, CMVoltage=None, AcqVRange=5, 
+                 GainBoard=5e3, AcqDiff=False, AvgIndex=5, MeaType='Freq',
+                 ChannelsConfigKW=None, SampKw=None):
 
-        self.DaqInterface = CoreMod.ChannelsConfig(Channels=ScopeChannels,
-                                                   Range=AcqVRange,
-                                                   Cols=ColChannels,
-                                                   AcqDiff=AcqDiff,
-                                                   aiChannels=aiChannels,
-                                                   aoChannels=aoChannels
-                                                   )
+        super(DataAcquisitionThread, self).__init__()
+        
+        self.SampKw = SampKw
         
         if MeaType == 'Time':
+            self.DaqInterface = CoreMod.ChannelsConfig(**ChannelsConfigKW)
             self.DaqInterface.DataEveryNEvent = self.NewDataTime
         
         if MeaType == 'Freq':
+            self.DaqInterface = CoreMod.ChannelsConfig(Channels=ScopeChannels,
+                                                       Range=AcqVRange,
+                                                       Cols=ColChannels,
+                                                       AcqDiff=AcqDiff,
+                                                       aiChannels=aiChannels,
+                                                       aoChannels=aoChannels
+                                                       )
+            
             self.DaqInterface.DataEveryNEvent = self.NewDataFreq
             self.Channels = ScopeChannels
             self.AvgIndex = AvgIndex
@@ -114,17 +75,21 @@ class DataAcquisitionThread(Qt.QThread):
             self.OutSignal(Vds=self.Amplitude)
 
     def run(self, *args, **kwargs):
-        self.DaqInterface.StartAcquisition(Fs=self.FsScope,
-                                           EveryN=self.EveryN,
-                                           Vgs=self.Vcm,
-                                           )
-
+        if self.SampKw is None:
+            self.DaqInterface.StartAcquisition(Fs=self.FsScope,
+                                               EveryN=self.EveryN,
+                                               Vgs=self.Vcm,
+                                               )
+        else:
+            self.DaqInterface.StartAcquisition(**self.SampKw)  
 
         self.loop = Qt.QEventLoop()
         self.loop.exec_()
 
     def NewDataTime(self, aiData):
         print('Time')
+        self.aiData = aiData
+        self.NewTimeData.emit()
     
     def NewDataFreq(self, aiData):
         # print(self.Vcm)
