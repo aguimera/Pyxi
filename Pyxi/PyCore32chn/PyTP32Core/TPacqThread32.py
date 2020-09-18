@@ -25,6 +25,10 @@ SampSettingConf = ({'title': 'Channels Config',
                                   'name': 'AcqAC',
                                   'type': 'bool',
                                   'value': False},
+                                 {'title': 'Acquire DC and AC',
+                                  'name': 'AcqDCAC',
+                                  'type': 'bool',
+                                  'value': False},
                                  {'tittle': 'Channels',
                                   'name': 'Channels',
                                   'type': 'group',
@@ -305,6 +309,7 @@ class DataAcquisitionThread(Qt.QThread):
         loop = Qt.QEventLoop()
         loop.exec_()
 
-    def NewData(self, aiData):
+    def NewData(self, aiData, aiDataAC=None):
         self.aiData = aiData
+        self.aiDataAC = aiDataAC
         self.NewTimeData.emit()

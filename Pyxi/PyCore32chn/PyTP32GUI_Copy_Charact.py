@@ -207,13 +207,22 @@ class MainWindow(Qt.QWidget):
                 self.RefreshGrapg = None
 
         if self.threadCharact is not None:
-
-            self.threadCharact.AddData(self.threadAcq.aiData)  # (RMS)
+            if self.threadCharact.Stable and self.threadCharact.ACenable is True:
+                self.threadCharact.AddData(self.threadAcq.aiDataAC)
+            else:
+                self.threadCharact.AddData(self.threadAcq.aiData)  # (RMS)
 
         self.threadPlotter.AddData(self.threadAcq.aiData)
-        self.threadPSDPlotter.AddData(self.threadAcq.aiData)
+        if self.threadAcq.aiDataAC is not None:
+            self.threadPSDPlotter.AddData(self.threadAcq.aiDataAC)
+        else:
+            self.threadPSDPlotter.AddData(self.threadAcq.aiData)
         print('Sample time', Ts, np.mean(self.Tss))
 
+    # def on_dataStab(self):
+    #     self.threadAcq.DaqInterface.AnalogInputs.StopContData()
+    #     self.threadAcq.DaqInterface.AnalogInputsAC.ReadContData(Fs=self.threadAcq.DaqInterface.Fs,
+    #                                                             EverySamps=self.threadAcq.DaqInterface.EveryN)
 
     def on_Sweep_start(self):
         if self.threadAcq is None:
@@ -229,6 +238,7 @@ class MainWindow(Qt.QWidget):
                                                       PlotterDemodKwargs=self.PSDParams.GetParams(),
                                                       **self.SweepsKwargs
                                                       )
+            # self.threadCharact.DataStab.connect(self.on_dataStab)
             self.threadCharact.NextVg.connect(self.on_NextVg)
             self.threadCharact.NextVd.connect(self.on_NextVd)
             self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
@@ -300,6 +310,11 @@ class MainWindow(Qt.QWidget):
         self.threadAcq.DaqInterface.SetBias(Vgs=self.threadCharact.NextVgs,
                                             Vds=self.threadCharact.NextVds,
                                             )
+        
+        # self.threadAcq.DaqInterface.AnalogInputsAC.StopContData()
+        # self.threadAcq.DaqInterface.AnalogInputs.ReadContData(Fs=self.threadAcq.DaqInterface.Fs,
+        #                                                       EverySamps=self.threadAcq.DaqInterface.EveryN)
+        
         print('NEXT VGS SWEEP')
 
 # #############################Nex Vd Value##############################
@@ -307,6 +322,10 @@ class MainWindow(Qt.QWidget):
         self.threadAcq.DaqInterface.SetBias(Vgs=self.threadCharact.NextVgs,
                                             Vds=self.threadCharact.NextVds,
                                             )
+        
+        # self.threadAcq.DaqInterface.AnalogInputsAC.StopContData()
+        # self.threadAcq.DaqInterface.AnalogInputs.ReadContData(Fs=self.threadAcq.DaqInterface.Fs,
+        #                                                       EverySamps=self.threadAcq.DaqInterface.EveryN)
 
         
     def on_CharactEnd(self):
