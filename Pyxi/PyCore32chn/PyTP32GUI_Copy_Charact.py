@@ -106,28 +106,6 @@ class MainWindow(Qt.QWidget):
         print('  data:      %s' % str(data))
         print('  ----------')
 
-        # if childName == 'SampSettingConf.Sampling Settings.Fs':
-        #     self.PlotParams.param('Fs').setValue(data)
-        #     self.PSDParams.param('Fs').setValue(data)
-
-        # if childName == 'SampSettingConf.Sampling Settings.Vgs':
-        #     if self.threadAcq:
-        #         Vds = self.threadAcq.DaqInterface.Vds
-        #         self.threadAcq.DaqInterface.SetBias(Vgs=data, Vds=Vds)
-
-        # if childName == 'SampSettingConf.Sampling Settings.Vds':
-        #     if self.threadAcq:
-        #         Vgs = self.threadAcq.DaqInterface.Vgs
-        #         self.threadAcq.DaqInterface.SetBias(Vgs=Vgs, Vds=data)
-
-        # if childName == 'Plot options.RefreshTime':
-        #     if self.threadPlotter is not None:
-        #         self.threadPlotter.SetRefreshTime(data)
-
-        # if childName == 'Plot options.ViewTime':
-        #     if self.threadPlotter is not None:
-        #         self.threadPlotter.SetViewTime(data)
-
         if childName == 'SampSettingConf.Sampling Settings.Graph':
             print('ActionButton')
             self.RefreshGrapg = True
@@ -279,8 +257,6 @@ class MainWindow(Qt.QWidget):
             self.threadAcq = None
             
             if self.threadCharact is not None:
-                # self.threadCharact.NextVg.disconnect()
-                # self.threadCharact.NextVd.disconnect()
                 self.threadCharact.stop()
                 self.threadCharact.CharactEnd.disconnect()
                 self.threadCharact = None
