@@ -10,9 +10,32 @@ from PyQt5 import Qt
 import pyqtgraph.parametertree.parameterTypes as pTypes
 import numpy as np
 # import TPacqCore32 as CoreMod
-import PyTP32Core.TPacqCore32 as CoreMod
+# import PyTP32Core.TPacqCore32 as CoreMod
 import PyqtTools.FileModule as FileMod
+import PyqtTools.FMAcqCore_Time_Freq as CoreMod
 
+aiChannels = {'Ch09': ('ai0', 'ai8'),
+              'Ch10': ('ai1', 'ai9'),
+              'Ch11': ('ai2', 'ai10'),
+              'Ch12': ('ai3', 'ai11'),
+              'Ch13': ('ai4', 'ai12'),
+              'Ch14': ('ai5', 'ai13'),
+              'Ch15': ('ai6', 'ai14'),
+              'Ch16': ('ai7', 'ai15'),
+              'Ch01': ('ai16', 'ai24'),
+              'Ch02': ('ai17', 'ai25'),
+              'Ch03': ('ai18', 'ai26'),
+              'Ch04': ('ai19', 'ai27'),
+              'Ch05': ('ai20', 'ai28'),
+              'Ch06': ('ai21', 'ai29'),
+              'Ch07': ('ai22', 'ai30'),
+              'Ch08': ('ai23', 'ai31'),
+              }
+DOChannels = ['port0/line0:15', ]
+
+DOChannels = ['port0/line0:9', ]
+
+aoChannels = ['ao1', 'ao0']
 
 SampSettingConf = ({'title': 'Channels Config',
                     'name': 'ChsConfig',
@@ -300,7 +323,10 @@ class DataAcquisitionThread(Qt.QThread):
 
     def __init__(self, ChannelsConfigKW, SampKw):
         super(DataAcquisitionThread, self).__init__()
-        self.DaqInterface = CoreMod.ChannelsConfig(**ChannelsConfigKW)
+        self.DaqInterface = CoreMod.ChannelsConfig(aiChannels=aiChannels,
+                                                   doChannels=DOChannels,
+                                                   aoChannels=aoChannels,
+                                                   **ChannelsConfigKW)
         self.DaqInterface.DataEveryNEvent = self.NewData
         self.SampKw = SampKw
 
