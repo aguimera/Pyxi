@@ -40,6 +40,7 @@ class MainWindow(Qt.QWidget):
         layout.addWidget(self.btnAcq)
 
         self.SamplingPar = AcqMod.SampSetParam(name='SampSettingConf')
+        self.SampPar = self.SamplingPar.param('Sampling Settings')
         self.Parameters = Parameter.create(name='App Parameters',
                                            type='group',
                                            children=(self.SamplingPar,))
@@ -64,6 +65,9 @@ class MainWindow(Qt.QWidget):
         self.Parameters.sigTreeStateChanged.connect(self.on_pars_changed)
         
         self.SwParams.param('SweepsConfig').param('Start/Stop Sweep').sigActivated.connect(self.on_Sweep_start)
+        self.SampPar.sigTreeStateChanged.connect(self.on_SampsSettingConf_changed)
+        self.PlotParams.param('ViewTime').sigValueChanged.connect(self.on_RawPlot_changed)
+        self.PlotParams.param('RefreshTime').sigValueChanged.connect(self.on_RawPlot_changed)
 
         self.treepar = ParameterTree()
         self.treepar.setParameters(self.Parameters, showTop=False)
@@ -102,41 +106,51 @@ class MainWindow(Qt.QWidget):
         print('  data:      %s' % str(data))
         print('  ----------')
 
-        if childName == 'SampSettingConf.Sampling Settings.Fs':
-            self.PlotParams.param('Fs').setValue(data)
-            self.PSDParams.param('Fs').setValue(data)
+        # if childName == 'SampSettingConf.Sampling Settings.Fs':
+        #     self.PlotParams.param('Fs').setValue(data)
+        #     self.PSDParams.param('Fs').setValue(data)
 
-        if childName == 'SampSettingConf.Sampling Settings.Vgs':
-            if self.threadAcq:
-                Vds = self.threadAcq.DaqInterface.Vds
-                self.threadAcq.DaqInterface.SetBias(Vgs=data, Vds=Vds)
+        # if childName == 'SampSettingConf.Sampling Settings.Vgs':
+        #     if self.threadAcq:
+        #         Vds = self.threadAcq.DaqInterface.Vds
+        #         self.threadAcq.DaqInterface.SetBias(Vgs=data, Vds=Vds)
 
-        if childName == 'SampSettingConf.Sampling Settings.Vds':
-            if self.threadAcq:
-                Vgs = self.threadAcq.DaqInterface.Vgs
-                self.threadAcq.DaqInterface.SetBias(Vgs=Vgs, Vds=data)
+        # if childName == 'SampSettingConf.Sampling Settings.Vds':
+        #     if self.threadAcq:
+        #         Vgs = self.threadAcq.DaqInterface.Vgs
+        #         self.threadAcq.DaqInterface.SetBias(Vgs=Vgs, Vds=data)
 
-        if childName == 'Plot options.RefreshTime':
-            if self.threadPlotter is not None:
-                self.threadPlotter.SetRefreshTime(data)
+        # if childName == 'Plot options.RefreshTime':
+        #     if self.threadPlotter is not None:
+        #         self.threadPlotter.SetRefreshTime(data)
 
-        if childName == 'Plot options.ViewTime':
-            if self.threadPlotter is not None:
-                self.threadPlotter.SetViewTime(data)
-
-        if childName == 'Raw Plot.ViewTime':
-            if self.threadPlotterRaw is not None:
-                self.threadPlotterRaw.SetViewTime(data)
-
-        if childName == 'Raw Plot.RefreshTime':
-            if self.threadPlotterRaw is not None:
-                self.threadPlotterRaw.SetRefreshTime(data)
+        # if childName == 'Plot options.ViewTime':
+        #     if self.threadPlotter is not None:
+        #         self.threadPlotter.SetViewTime(data)
 
         if childName == 'SampSettingConf.Sampling Settings.Graph':
             print('ActionButton')
             self.RefreshGrapg = True
             
-
+    def on_SampsSettingConf_changed(self):
+        Fs = self.SampPar.param('Fs').value()
+        self.PlotParams.param('Fs').setValue(Fs)
+        self.PSDParams.param('Fs').setValue(Fs)
+        if self.threadAcq:
+            Vds = self.threadAcq.DaqInterface.Vds
+            VgsNew = self.SampPar.param('Vgs').value()
+            self.threadAcq.DaqInterface.SetBias(Vgs=VgsNew, Vds=Vds)
+            Vgs = self.threadAcq.DaqInterface.Vgs
+            VdsNew = self.SampPar.param('Vds').value()
+            self.threadAcq.DaqInterface.SetBias(Vgs=Vgs, Vds=VdsNew)
+    
+    def on_RawPlot_changed(self):
+        if self.threadPlotter is not None:
+            ViewTime = self.PlotParams.param('ViewTime').value()
+            RefreshTime = self.PlotParams.param('RefreshTime').value()
+            self.threadPlotter.SetViewTime(ViewTime)           
+            self.threadPlotter.SetRefreshTime(RefreshTime)
+        
     def on_NewConf(self):
         self.Parameters.sigTreeStateChanged.disconnect()
         self.PlotParams.SetChannels(self.SamplingPar.GetChannelsNames())
@@ -219,11 +233,6 @@ class MainWindow(Qt.QWidget):
             self.threadPSDPlotter.AddData(self.threadAcq.aiData)
         print('Sample time', Ts, np.mean(self.Tss))
 
-    # def on_dataStab(self):
-    #     self.threadAcq.DaqInterface.AnalogInputs.StopContData()
-    #     self.threadAcq.DaqInterface.AnalogInputsAC.ReadContData(Fs=self.threadAcq.DaqInterface.Fs,
-    #                                                             EverySamps=self.threadAcq.DaqInterface.EveryN)
-
     def on_Sweep_start(self):
         if self.threadAcq is None:
             self.Paused = False
@@ -249,31 +258,11 @@ class MainWindow(Qt.QWidget):
             self.threadAcq = AcqMod.DataAcquisitionThread(ChannelsConfigKW=GenChanKwargs,
                                                           SampKw=GenKwargs)
             self.threadAcq.NewTimeData.connect(self.on_NewSample)
-            # self.threadAcq.DaqInterface.SetBias(Vgs=self.threadCharact.NextVgs,
-            #                                     Vds=self.threadCharact.NextVds,
-            #                                     )
-            
+
             self.threadCharact.start()
             self.threadAcq.start()
             PlotterKwargs = self.PlotParams.GetParams()
 
-            FileName = self.FileParameters.FilePath()
-            print('Filename', FileName)
-            if FileName == '':
-                print('No file')
-            else:
-                if os.path.isfile(FileName):
-                    print('Remove File')
-                    os.remove(FileName)
-                MaxSize = self.FileParameters.param('MaxSize').value()
-                ch = (list(self.SamplingPar.GetChannelsNames()))
-                self.threadSave = FileMod.DataSavingThread(FileName=FileName,
-                                                           nChannels=PlotterKwargs['nChannels'],
-                                                           MaxSize=MaxSize,
-                                                           Fs=self.SamplingPar.SampSet.param('Fs').value(),
-                                                           ChnNames=np.array(ch, dtype='S10'),
-                                                           )
-                self.threadSave.start()
             self.threadPlotter = PltMod.Plotter(**PlotterKwargs)
             self.threadPlotter.start()
 
@@ -296,10 +285,6 @@ class MainWindow(Qt.QWidget):
                 self.threadCharact.CharactEnd.disconnect()
                 self.threadCharact = None
 
-            if self.threadSave is not None:
-                self.threadSave.terminate()
-                self.threadSave = None
-
             self.threadPlotter.terminate()
             self.threadPlotter = None
 
@@ -310,11 +295,7 @@ class MainWindow(Qt.QWidget):
         self.threadAcq.DaqInterface.SetBias(Vgs=self.threadCharact.NextVgs,
                                             Vds=self.threadCharact.NextVds,
                                             )
-        
-        # self.threadAcq.DaqInterface.AnalogInputsAC.StopContData()
-        # self.threadAcq.DaqInterface.AnalogInputs.ReadContData(Fs=self.threadAcq.DaqInterface.Fs,
-        #                                                       EverySamps=self.threadAcq.DaqInterface.EveryN)
-        
+
         print('NEXT VGS SWEEP')
 
 # #############################Nex Vd Value##############################
@@ -322,11 +303,6 @@ class MainWindow(Qt.QWidget):
         self.threadAcq.DaqInterface.SetBias(Vgs=self.threadCharact.NextVgs,
                                             Vds=self.threadCharact.NextVds,
                                             )
-        
-        # self.threadAcq.DaqInterface.AnalogInputsAC.StopContData()
-        # self.threadAcq.DaqInterface.AnalogInputs.ReadContData(Fs=self.threadAcq.DaqInterface.Fs,
-        #                                                       EverySamps=self.threadAcq.DaqInterface.EveryN)
-
         
     def on_CharactEnd(self):
         print('END Charact')
@@ -344,10 +320,6 @@ class MainWindow(Qt.QWidget):
         self.threadAcq.DaqInterface.Stop()
         self.threadAcq.terminate()
         self.threadAcq = None
-
-        if self.threadSave is not None:
-            self.threadSave.terminate()
-            self.threadSave = None
 
         self.threadPlotter.terminate()
         self.threadPlotter = None

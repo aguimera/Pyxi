@@ -198,7 +198,7 @@ class ChannelsConfig():
         print('Stopppp')
         self.SetBias(Vgs=0, Vds=0)
         self.AnalogInputs.StopContData()
-        self.AnalogInputsAC.StopContData()
+        # self.AnalogInputsAC.StopContData()
         if self.SwitchOut is not None:
             print('Clear Digital')
             self.SwitchOut.ClearTask()
