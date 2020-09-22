@@ -277,7 +277,7 @@ class StbDetThread(Qt.QThread):
                                   FsDemod=self.FsDemod
                                   )
         if self.ACenable:
-            self.threadCalcPSD = CalcPSD(nChannels=nChannels,
+            self.threadCalcPSD = CalcPSD(nChns=nChannels,
                                          **PlotterDemodKwargs)
             self.threadCalcPSD.PSDDone.connect(self.on_PSDDone)
             self.SaveDCAC.PSDSaved.connect(self.on_NextVgs)
@@ -443,7 +443,7 @@ class StbDetThread(Qt.QThread):
         
 class CalcPSD(Qt.QThread):
     PSDDone = Qt.pyqtSignal()
-    def __init__(self, Fs, nFFT, nAvg, nChannels, scaling, **kwargs):
+    def __init__(self, nChns, Fs, nFFT, nAvg, nChannels, scaling, **kwargs):
         '''Initialization of the thread that is used to calculate the PSD
            Fs: float. Sampling Frequency
            nFFT: float.
@@ -455,7 +455,7 @@ class CalcPSD(Qt.QThread):
 
         self.scaling = scaling
         self.nFFT = 2**nFFT
-        self.nChannels = nChannels
+        self.nChannels = nChns
         self.Fs = Fs
         self.BufferSize = self.nFFT * nAvg
         self.Buffer = PltBuffer2D.Buffer2D(self.Fs, self.nChannels,

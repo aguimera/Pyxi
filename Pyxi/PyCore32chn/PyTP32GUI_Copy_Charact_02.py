@@ -269,7 +269,7 @@ class MainWindow(Qt.QWidget):
             
             self.threadCharact = Charact.StbDetThread(nChannels=self.PlotParams.GetParams()['nChannels'],
                                                       ChnName=self.SamplingPar.GetChannelsNames(),
-                                                      PlotterDemodKwargs=self.PSDParams.GetParams(),
+                                                      PlotterDemodKwargs=self.PsdPlotParams.GetParams(),
                                                       **self.SweepsKwargs
                                                       )
             # self.threadCharact.DataStab.connect(self.on_dataStab)
@@ -303,7 +303,7 @@ class MainWindow(Qt.QWidget):
                 self.threadCharact.CharactEnd.disconnect()
                 self.threadCharact = None
 
-              if self.threadPlotter is not None:
+            if self.threadPlotter is not None:
                 self.threadPlotter.stop()
                 self.threadPlotter.terminate()
                 self.threadPlotter = None

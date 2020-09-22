@@ -10,9 +10,9 @@ from PyQt5 import Qt
 import pyqtgraph.parametertree.parameterTypes as pTypes
 import numpy as np
 # import TPacqCore32 as CoreMod
-# import PyTP32Core.TPacqCore32 as CoreMod
+import PyTP32Core.TPacqCore32 as CoreMod
 import PyqtTools.FileModule as FileMod
-import PyqtTools.FMAcqCore_Time_Freq as CoreMod
+# import PyqtTools.FMAcqCore_Time_Freq as CoreMod
 
 aiChannels = {'Ch09': ('ai0', 'ai8'),
               'Ch10': ('ai1', 'ai9'),
@@ -323,9 +323,10 @@ class DataAcquisitionThread(Qt.QThread):
 
     def __init__(self, ChannelsConfigKW, SampKw):
         super(DataAcquisitionThread, self).__init__()
-        self.DaqInterface = CoreMod.ChannelsConfig(aiChannels=aiChannels,
-                                                   doChannels=DOChannels,
-                                                   aoChannels=aoChannels,
+        self.DaqInterface = CoreMod.ChannelsConfig(
+                                                    # aiChannels=aiChannels,
+                                                    # doChannels=DOChannels,
+                                                    # aoChannels=aoChannels,
                                                    **ChannelsConfigKW)
         self.DaqInterface.DataEveryNEvent = self.NewData
         self.SampKw = SampKw

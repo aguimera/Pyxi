@@ -24,9 +24,9 @@ import PyqtTools.PlotModule as PltMod
 
 #import PyTPCore.FileModule as FileMod
 #import PyTPCore.PlotModule as PltMod
-# import PyTP32Core.TPacqThread32 as AcqMod
+import PyTP32Core.TPacqThread32 as AcqMod
 import PyTP32Core.CharacterizationModule as Charact
-import PyqtTools.DataAcquisition_Time_Freq as AcqMod
+# import PyqtTools.DataAcquisition_Time_Freq as AcqMod
 
 
 class MainWindow(Qt.QWidget):
@@ -139,7 +139,8 @@ class MainWindow(Qt.QWidget):
         if self.threadAcq is None:
             GenKwargs = self.SamplingPar.GetSampKwargs()
             GenChanKwargs = self.SamplingPar.GetChannelsConfigKwargs()
-            self.threadAcq = AcqMod.DataAcquisitionThread(MeaType='Time',
+            self.threadAcq = AcqMod.DataAcquisitionThread(
+                                                            # MeaType='Time',
                                                           ChannelsConfigKW=GenChanKwargs,
                                                           SampKw=GenKwargs)
             self.threadAcq.NewTimeData.connect(self.on_NewSample)
