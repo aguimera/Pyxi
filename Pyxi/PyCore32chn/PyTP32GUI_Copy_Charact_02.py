@@ -26,8 +26,33 @@ from PyqtTools.PlotModule import PlotterParameters as TimePltPars
 from PyqtTools.PlotModule import PSDPlotter as PSDPlt
 from PyqtTools.PlotModule import PSDParameters as PSDPltPars
 
-import PyTP32Core.CharacterizationModule as Charact
+import PyqtTools.CharacterizationModule as Charact
 import PyqtTools.DataAcquisition_Time_Freq as AcqMod
+
+
+# estoy habrá que improtarlo de otra manera
+aiChannels = {'Ch09': ('ai0', 'ai8'),
+              'Ch10': ('ai1', 'ai9'),
+              'Ch11': ('ai2', 'ai10'),
+              'Ch12': ('ai3', 'ai11'),
+              'Ch13': ('ai4', 'ai12'),
+              'Ch14': ('ai5', 'ai13'),
+              'Ch15': ('ai6', 'ai14'),
+              'Ch16': ('ai7', 'ai15'),
+              'Ch01': ('ai16', 'ai24'),
+              'Ch02': ('ai17', 'ai25'),
+              'Ch03': ('ai18', 'ai26'),
+              'Ch04': ('ai19', 'ai27'),
+              'Ch05': ('ai20', 'ai28'),
+              'Ch06': ('ai21', 'ai29'),
+              'Ch07': ('ai22', 'ai30'),
+              'Ch08': ('ai23', 'ai31'),
+              }
+DOChannels = ['port0/line0:15', ]
+
+DOChannels = ['port0/line0:9', ]
+
+aoChannels = ['ao0', 'ao1']
 
 
 class MainWindow(Qt.QWidget):
@@ -180,7 +205,11 @@ class MainWindow(Qt.QWidget):
             GenChanKwargs = self.SamplingPar.GetChannelsConfigKwargs()
             self.threadAcq = AcqMod.DataAcquisitionThread(MeaType='Time',
                                                           ChannelsConfigKW=GenChanKwargs,
-                                                          SampKw=GenKwargs)
+                                                          SampKw=GenKwargs,
+                                                          aoChannels=aoChannels,
+                                                          DOChannels=DOChannels,
+                                                          aiChannels=aiChannels,
+                                                          )
             self.threadAcq.NewTimeData.connect(self.on_NewSample)
             self.threadAcq.start()
             self.on_ResetGraph()
@@ -282,7 +311,11 @@ class MainWindow(Qt.QWidget):
             
             self.threadAcq = AcqMod.DataAcquisitionThread(MeaType='Time',
                                                           ChannelsConfigKW=GenChanKwargs,
-                                                          SampKw=GenKwargs)
+                                                          SampKw=GenKwargs,
+                                                          aoChannels=aoChannels,
+                                                          DOChannels=DOChannels,
+                                                          aiChannels=aiChannels,
+                                                          )
             self.threadAcq.NewTimeData.connect(self.on_NewSample)
 
             self.threadCharact.start()
