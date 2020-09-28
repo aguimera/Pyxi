@@ -354,13 +354,14 @@ class MainWindow(Qt.QWidget):
                                             Vds=self.threadCharact.NextVds,
                                             )
 
-        print('NEXT VGS SWEEP')
+        print('NEXT VGS SWEEP', self.threadCharact.NextVgs, self.threadCharact.NextVds)
 
 # #############################Nex Vd Value##############################
     def on_NextVd(self):        
         self.threadAcq.DaqInterface.SetBias(Vgs=self.threadCharact.NextVgs,
                                             Vds=self.threadCharact.NextVds,
                                             )
+        print('NEXT VDS SWEEP', self.threadCharact.NextVgs, self.threadCharact.NextVds)
         
     def on_CharactEnd(self):
         print('END Charact')
