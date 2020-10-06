@@ -71,6 +71,7 @@ class MainWindow(Qt.QWidget):
 # #############################Configuration##############################
         self.GenAcqParams = NiConfig.GenAcqConfig(name='NI DAQ Configuration')
         self.DemodConfig = self.GenAcqParams.param('DemodConfig')
+        # self.DemodConfig = DemMod.DemodParameters(name='DemodConfig')
 
 # #############################NormalPlots##############################
         self.PlotParams = TimePltPars(name='TimePlt',
@@ -172,10 +173,10 @@ class MainWindow(Qt.QWidget):
                                                 )
 
     def on_DSFact_changed(self):
-        self.DemodConfig.ReCalc_DSFact(self.GenAcqParams.BufferSize.value())
-        self.DemodPsdPlotParams.param('Fs').setValue(self.DemodConfig.DSFs.value())
-        self.DemodPlotParams.param('Fs').setValue(self.DemodConfig.DSFs.value())
-        if self.DemodConfig.DSFs.value() >= np.min(self.GenAcqParams.Freqs):
+        self.GenAcqParams.ReCalc_DSFact(self.GenAcqParams.BufferSize.value())
+        self.DemodPsdPlotParams.param('Fs').setValue(self.GenAcqParams.DSFs.value())
+        self.DemodPlotParams.param('Fs').setValue(self.GenAcqParams.DSFs.value())
+        if self.GenAcqParams.DSFs.value() >= np.min(self.GenAcqParams.Freqs):
             print('WARNING: FsDemod is higher than FsMin')
 
     def on_NRow_changed(self):
@@ -294,7 +295,7 @@ class MainWindow(Qt.QWidget):
                 self.threadDemodAqc.start()
             
             if self.DemodConfig.param('Save Demod').value() is True:
-                Fs = self.DemodConfig.DSFs.value()
+                Fs = self.GenAcqParams.DSFs.value()
                 ChnNames = self.GenAcqParams.GetChannels(self.GenAcqParams.Rows,
                                                          self.GenAcqParams.GetCarriers()).keys()
                 ChnNames = np.array(list(ChnNames), dtype='S10')
@@ -358,7 +359,7 @@ class MainWindow(Qt.QWidget):
             self.SweepsKwargs = self.SwParams.GetConfigSweepsParams()
             self.DcSaveKwargs = self.SwParams.GetSaveSweepsParams()
           
-            self.on_ResetGraph()
+
             
             self.threadCharact = Charact.StbDetThread(nChannels=self.GenAcqParams.NRows.value()*len(self.GenAcqParams.Freqs),
                                                       ChnName=self.GenAcqParams.GetChannels(self.GenAcqParams.Rows,
@@ -370,6 +371,7 @@ class MainWindow(Qt.QWidget):
             self.threadCharact.NextVd.connect(self.on_NextVd)
             self.threadCharact.CharactEnd.connect(self.on_CharactEnd)
 
+            print(self.AcqKwargs)
             self.threadAqc = DataAcq.DataAcquisitionThread(**self.AcqKwargs) 
             self.threadAqc.NewMuxData.connect(self.on_NewSample)
             self.threadAqc.OutSignal(Vds=np.sqrt(2)*self.threadCharact.NextVds)
@@ -383,6 +385,8 @@ class MainWindow(Qt.QWidget):
                                                      **self.DemKwargs,
                                                      )
             self.threadDemodAqc.NewData.connect(self.on_NewDemodSample)
+            
+            self.on_ResetGraph()
 
             # self.threadCharact.Timer.start(self.SweepsKwargs['TimeOut']*1000)
             self.threadCharact.start()
@@ -511,6 +515,9 @@ class MainWindow(Qt.QWidget):
         elif self.DemodConfig.param('OutType').value() == 'Angle':
             OutDemodData = np.angle(self.threadDemodAqc.OutDemodData, deg=True)
 
+        if self.AcqKwargs['AcqDiff'] is False:
+            OutDemodData = 2*OutDemodData
+            
         if self.threadCharact is not None:
             # print('Demod Done')
             self.threadCharact.AddData(OutDemodData/np.sqrt(2))  # (RMS)

@@ -68,7 +68,11 @@ ConfigParam = {'name': 'AcqConfig',
                                      'value': (5e3),
                                      'type': 'int',
                                      'siPrefix': True,
-                                     'suffix': 'Ohms'},)
+                                     'suffix': 'Ohms'},
+                                    {'name': 'AcqDiff',
+                                     'type': 'bool',
+                                     'value': True, },
+                                    )
                }
 
 RowsParam = {'name': 'RowsConfig',

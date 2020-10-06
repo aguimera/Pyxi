@@ -531,7 +531,7 @@ class MainWindow(Qt.QWidget):
 
 # #############################Restart Timer Stabilization####################
     def on_NextVg(self):
-        self.threadAqc.DaqInterface.VcmOut.StopTask()
+        self.threadAqc.DaqInterface.VgsOut.StopTask()
         self.threadAqc.DaqInterface.SetVcm(Vcm=(-1)*self.threadCharact.NextVgs)
 
         # self.threadCharact.Timer.start(self.SweepsKwargs['TimeOut']*1000)

@@ -15,7 +15,7 @@ import Pyxi.FMAcqCore as CoreMod
 class DataAcquisitionThread(Qt.QThread):
     NewMuxData = Qt.pyqtSignal()
 
-    def __init__(self, CarrierConfig, ScopeChannels, FsGen, GenSize, FsScope, 
+    def __init__(self, CarrierConfig, ScopeChannels, ColChannels, FsGen, GenSize, FsScope, 
                  BufferSize, CMVoltage, AcqVRange, GainBoard, AcqDiff=True, 
                  AvgIndex=5,):
         '''Initialization of the Thread for Acquisition
